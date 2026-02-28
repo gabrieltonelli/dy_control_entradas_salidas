@@ -4,7 +4,12 @@ import { Card, Input, Select } from '../components/FormElements';
 import { Button } from '../components/Button';
 import { Plus, Trash2, Send } from 'lucide-react';
 
+import { useMsal } from "@azure/msal-react";
+
 const MovementForm = () => {
+    const { accounts } = useMsal();
+    const currentUser = accounts[0] || {};
+
     const [legajos, setLegajos] = useState([]);
     const [lugares, setLugares] = useState([]);
     const [types, setTypes] = useState([]);
@@ -19,7 +24,7 @@ const MovementForm = () => {
             observacion: '',
             destinoDetalle: '',
             conRegreso: false,
-            usuario_app: 'gabrielt@donyeyo.com.ar' // Placeholder for MSAL user
+            usuario_app: currentUser.username || currentUser.email || 'anonymous'
         },
         articles: [],
         documents: []
@@ -109,10 +114,12 @@ const MovementForm = () => {
     };
 
     return (
-        <div style={{ maxWidth: '900px', margin: '40px auto', padding: '0 20px' }}>
+        <div className="card-anim" style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <header style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Nueva Solicitud</h1>
-                <p style={{ color: 'var(--text-muted)' }}>Complete los datos para autorizar un ingreso o egreso.</p>
+                <h1 style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--dy-blue)' }}>
+                    Nueva Solicitud<span style={{ color: 'var(--dy-red)' }}>.</span>
+                </h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Complete los datos para autorizar un ingreso o egreso.</p>
             </header>
 
             <form onSubmit={handleSubmit}>

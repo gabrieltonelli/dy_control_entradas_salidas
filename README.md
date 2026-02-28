@@ -26,6 +26,11 @@ Para que el login funcione, debe registrar la aplicación en el portal de Azure:
    - Para producción: `https://su-app.netlify.app`
 6. En **Authentication**, asegúrese de marcar `Access tokens` e `ID tokens`.
 7. Copie el **Application (client) ID** y el **Directory (tenant) ID**.
+8. En el menú de la izquierda, vaya a **Certificates & secrets** -> **Client secrets** -> **New client secret**.
+9. Escriba una descripción (ej: `Secret Control Acceso`) y elija un tiempo de expiración.
+10. Al hacer clic en **Add**, copie el **Value** del secreto generado.
+   > [!IMPORTANT]
+   > Guarde el valor del secreto inmediatamente, ya que Azure no lo volverá a mostrar después de salir de la pantalla.
 
 ---
 
@@ -40,6 +45,9 @@ DB_HOST=...
 DB_USER=...
 DB_PASS=...
 DB_NAME=Acceso_A_Planta
+AZURE_AD_CLIENT_ID=TU_CLIENT_ID
+AZURE_AD_TENANT_ID=TU_TENANT_ID
+AZURE_AD_CLIENT_SECRET=TU_CLIENT_SECRET
 ```
 
 **Client (`/client/.env`):**

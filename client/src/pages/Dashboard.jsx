@@ -21,20 +21,20 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <div style={{ padding: '40px' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        <div className="card-anim">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(to right, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        Control de Accesos
+                    <h1 style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--dy-blue)' }}>
+                        Dashboard<span style={{ color: 'var(--dy-red)' }}>.</span>
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Gestión en tiempo real de ingresos y egresos.</p>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '1.1rem' }}>Seguimiento de movimientos y autorizaciones.</p>
                 </div>
                 <Link to="/nuevo">
-                    <Button variant="primary" className="glass">
+                    <button className="primary" style={{ height: '50px', padding: '0 30px', fontSize: '1rem', boxShadow: 'var(--shadow)' }}>
                         <Plus size={20} /> Nueva Solicitud
-                    </Button>
+                    </button>
                 </Link>
-            </header>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                 {movements.map(mov => (

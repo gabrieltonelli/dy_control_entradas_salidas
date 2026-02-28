@@ -9,6 +9,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
+import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import MovementForm from './pages/MovementForm';
 
@@ -17,12 +18,12 @@ function App() {
     <MsalProvider instance={msalInstance}>
       <ProtectedRoute>
         <Router>
-          <div className="layout">
+          <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/nuevo" element={<MovementForm />} />
             </Routes>
-          </div>
+          </Layout>
         </Router>
       </ProtectedRoute>
     </MsalProvider>
