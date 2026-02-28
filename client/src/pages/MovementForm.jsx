@@ -135,6 +135,14 @@ const MovementForm = () => {
                             required
                         />
                         <Select
+                            label="Motivo"
+                            name="motivo"
+                            value={formData.movement.motivo}
+                            onChange={handleMovChange}
+                            options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
+                            required
+                        />
+                        <Select
                             label="Persona a Autorizar"
                             name="personaInterna"
                             value={formData.movement.personaInterna}
@@ -142,6 +150,12 @@ const MovementForm = () => {
                             options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
                             required
                         />
+                    </div>
+                </Card>
+
+                <Card>
+                    <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Ruta y Destino</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                         <Select
                             label="Origen"
                             name="idLugarOrigen"
@@ -158,13 +172,13 @@ const MovementForm = () => {
                             options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
                             required
                         />
+                        <Input
+                            label="Detalle del Destino (si es Exteriores)"
+                            name="destinoDetalle"
+                            value={formData.movement.destinoDetalle}
+                            onChange={handleMovChange}
+                        />
                     </div>
-                    <Input
-                        label="Detalle del Destino (si es Exteriores)"
-                        name="destinoDetalle"
-                        value={formData.movement.destinoDetalle}
-                        onChange={handleMovChange}
-                    />
                 </Card>
 
                 <Card>
@@ -211,28 +225,6 @@ const MovementForm = () => {
                         </div>
                     ))}
                     {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
-                </Card>
-
-                <Card>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Autorización</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                        <Select
-                            label="Motivo"
-                            name="motivo"
-                            value={formData.movement.motivo}
-                            onChange={handleMovChange}
-                            options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
-                            required
-                        />
-                        <Select
-                            label="Persona Autorizante"
-                            name="personaAutorizante"
-                            value={formData.movement.personaAutorizante}
-                            onChange={handleMovChange}
-                            options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
-                            required
-                        />
-                    </div>
                 </Card>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>

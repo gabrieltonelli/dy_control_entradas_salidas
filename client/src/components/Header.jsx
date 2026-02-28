@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useMsal } from "@azure/msal-react";
 import { Menu, Sun, Moon, LogOut, User } from 'lucide-react';
+import logo from '../assets/logo-don-yeyo-png-sin-fondo.png';
 
 const Header = ({ onMenuClick, theme, toggleTheme }) => {
     const { instance, accounts } = useMsal();
     const [showUserMenu, setShowUserMenu] = useState(false);
-    
+
     const user = accounts[0] || {};
     const name = user.name || user.username || "Usuario";
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -20,9 +21,9 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                 <button className="mode-toggle" onClick={onMenuClick}>
                     <Menu size={24} />
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: 'var(--dy-red)', fontWeight: 900, fontSize: '1.4rem' }}>DY</span>
-                    <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Control de Acceso</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img src={logo} alt="Don Yeyo" style={{ height: '40px', objectFit: 'contain' }} />
+                    <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800 }}>Control de Acceso</h2>
                 </div>
             </div>
 
@@ -31,8 +32,8 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
 
-                <div 
-                    className="avatar-container" 
+                <div
+                    className="avatar-container"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     style={{ position: 'relative' }}
                 >
@@ -52,7 +53,7 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                             overflow: 'hidden',
                             zIndex: 150
                         }}>
-                            <button 
+                            <button
                                 onClick={handleLogout}
                                 style={{
                                     width: '100%',
