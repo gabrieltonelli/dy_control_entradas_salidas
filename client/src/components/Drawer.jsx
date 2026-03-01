@@ -6,10 +6,8 @@ const Drawer = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
 
     const menuItems = [
-        { icon: <Home size={20} />, label: 'Dashboard', path: '/' },
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
-        { icon: <Clock size={20} />, label: 'Historial', path: '#' },
-        { icon: <Settings size={20} />, label: 'Configuración', path: '#' },
+        { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
 
     const handleClick = (path) => {

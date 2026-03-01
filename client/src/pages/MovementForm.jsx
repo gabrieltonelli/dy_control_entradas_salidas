@@ -143,7 +143,7 @@ const MovementForm = () => {
     return (
         <div className="card-anim" style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <header style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--dy-blue)' }}>
+                <h1 style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--primary)' }}>
                     Nueva Solicitud<span style={{ color: 'var(--dy-red)' }}>.</span>
                 </h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Complete los datos para autorizar un ingreso o egreso.</p>
@@ -192,7 +192,7 @@ const MovementForm = () => {
                     <div style={{ position: 'relative', zIndex: '1000' }}>
                         <Autocomplete
                             label="Persona a Autorizar"
-                            placeholder="Empiece a escribir apellido o nombre..."
+                            placeholder="Empiece a escribir apellido..."
                             value={formData.movement.personaInterna}
                             options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
                             onSelect={(opt) => {
@@ -288,10 +288,19 @@ const MovementForm = () => {
                     {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
                 </Card>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
-                    <Button variant="secondary" type="button">Cancelar</Button>
-                    <Button variant="primary" type="submit" className="glass">
-                        <Send size={18} /> Generar Solicitud
+                <div style={{ marginTop: '32px' }}>
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        style={{
+                            width: '100%',
+                            padding: '18px',
+                            fontSize: '1.25rem',
+                            fontWeight: '700',
+                            gap: '12px'
+                        }}
+                    >
+                        <Send size={20} /> Generar Solicitud
                     </Button>
                 </div>
             </form>

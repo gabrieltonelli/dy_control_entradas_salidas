@@ -186,24 +186,25 @@ export const Switch = ({ label, checked, onChange, activeLabel = 'Activado', ina
                 <div style={{
                     width: '48px',
                     height: '24px',
-                    backgroundColor: checked ? 'var(--dy-blue)' : '#cbd5e1',
+                    backgroundColor: checked ? 'var(--switch-track-active)' : 'rgba(203, 213, 225, 0.5)',
                     borderRadius: '12px',
                     position: 'relative',
-                    transition: 'background-color 0.2s ease'
+                    transition: 'background-color 0.2s ease',
+                    border: '1px solid var(--border)'
                 }}>
                     <div style={{
                         width: '18px',
                         height: '18px',
-                        backgroundColor: 'white',
+                        backgroundColor: checked ? 'var(--switch-thumb)' : '#ffffff',
                         borderRadius: '50%',
                         position: 'absolute',
-                        top: '3px',
+                        top: '2px', // Centrado con el borde de 1px
                         left: checked ? '27px' : '3px',
                         transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
                     }} />
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: checked ? 'var(--dy-blue)' : 'var(--text-muted)' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--header-text)' }}>
                     {checked ? activeLabel : inactiveLabel}
                 </span>
             </div>

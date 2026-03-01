@@ -3,7 +3,7 @@
   --dy-blue: #0d2c5c;
   --dy-red: #e40521;
   --dy-light-gray: #f8fafc;
-  
+
   /* Generic UI Tokens (Light-Mode Default) */
   --primary: var(--dy-blue);
   --primary-hover: #1a4b8c;
@@ -25,6 +25,12 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --radius: 20px;
   --radius-pill: 50px;
+
+  --btn-primary-bg: var(--dy-blue);
+  --btn-primary-text: #ffffff;
+  --switch-track-active: var(--dy-blue);
+  --switch-thumb: #ffffff;
+  --header-text: var(--dy-blue);
 }
 
 .dark-theme {
@@ -33,10 +39,22 @@
   --surface-hover: #334155;
   --text: #f8fafc;
   --text-muted: #94a3b8;
+  --primary: #f8fafc;
+  --primary-active: var(--dy-blue);
   --border: #334155;
   --glass: rgba(30, 41, 59, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+
+  --btn-primary-bg: #f8fafc;
+  --btn-primary-text: var(--dy-blue);
+  --switch-track-active: #f8fafc;
+  --switch-thumb: var(--dy-blue);
+  --header-text: #f8fafc;
+}
+
+.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 
 * {
@@ -96,8 +114,9 @@ button {
 }
 
 button.primary {
-  background-color: var(--dy-blue);
-  color: white;
+  background-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  border: none !important;
 }
 
 button.primary:hover {
@@ -199,7 +218,8 @@ select:focus {
   z-index: 100;
 }
 
-.header-left, .header-right {
+.header-left,
+.header-right {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -239,7 +259,7 @@ select:focus {
 .drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 200;
   opacity: 0;
@@ -262,7 +282,7 @@ select:focus {
   z-index: 201;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 24px;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
 }
 
 .drawer.open {

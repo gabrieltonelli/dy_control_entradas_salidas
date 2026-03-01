@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './Header';
 import Drawer from './Drawer';
+import { useTheme } from '../config/ThemeContext';
 
 const Layout = ({ children }) => {
     const [isDrawerOpen, setDrawerOpen] = useState(false);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-
-    useEffect(() => {
-        document.body.className = theme === 'dark' ? 'dark-theme' : '';
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
+    const { theme, toggleTheme } = useTheme();
 
     return (
         <div className="layout">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MsalProvider } from "@azure/msal-react";
+import { ThemeProvider } from "./config/ThemeContext";
 import { msalConfig } from "./config/msal";
 import { PublicClientApplication } from "@azure/msal-browser";
 import './index.css';
@@ -12,20 +13,24 @@ const msalInstance = new PublicClientApplication(msalConfig);
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import MovementForm from './pages/MovementForm';
+import Settings from './pages/Settings';
 
 function App() {
   return (
     <MsalProvider instance={msalInstance}>
-      <ProtectedRoute>
-        <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/nuevo" element={<MovementForm />} />
-            </Routes>
-          </Layout>
-        </Router>
-      </ProtectedRoute>
+      <ThemeProvider>
+        <ProtectedRoute>
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<MovementForm />} />
+                <Route path="/nuevo" element={<MovementForm />} />
+                <Route path="/configuracion" element={<Settings />} />
+              </Routes>
+            </Layout>
+          </Router>
+        </ProtectedRoute>
+      </ThemeProvider>
     </MsalProvider>
   );
 }

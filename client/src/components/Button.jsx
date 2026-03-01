@@ -2,8 +2,8 @@ import React from 'react';
 
 export const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
     const variants = {
-        primary: 'background-color: var(--primary); color: white;',
-        secondary: 'background-color: var(--surface); color: var(--text); border: 1px solid var(--border);',
+        primary: 'background-color: var(--btn-primary-bg); color: var(--btn-primary-text);',
+        secondary: 'background-color: var(--surface); color: var(--header-text); border: 1px solid var(--border);',
         ghost: 'background: transparent; color: var(--text);',
         danger: 'background-color: var(--error); color: white;'
     };
@@ -21,8 +21,14 @@ export const Button = ({ children, variant = 'primary', size = 'md', className =
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: '50px',
+                fontWeight: '600',
+                transition: 'all 0.2s ease',
                 ...getStyles(variants[variant]),
-                ...getStyles(sizes[size])
+                ...getStyles(sizes[size]),
+                ...props.style // Permitir que los estilos inline del padre sobrescriban
             }}
             className={`btn-${variant} ${className}`}
             {...props}
