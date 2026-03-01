@@ -56,7 +56,8 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                             minWidth: '180px',
                             borderRadius: '12px',
                             overflow: 'hidden',
-                            zIndex: 150
+                            zIndex: 150,
+                            textAlign: 'left'
                         }}>
                             {/* Re-agregar el botón de modo en el menú de usuario para mobile */}
                             <button
@@ -68,10 +69,12 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                                     borderRadius: 0,
                                     justifyContent: 'flex-start',
                                     background: 'transparent',
-                                    fontSize: '0.9rem'
+                                    fontSize: '0.9rem',
+                                    border: 'none',
+                                    textAlign: 'left'
                                 }}
                             >
-                                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                                {theme === 'light' ? <Moon size={18} style={{ marginRight: '10px', verticalAlign: 'middle' }} /> : <Sun size={18} style={{ marginRight: '10px', verticalAlign: 'middle' }} />}
                                 {theme === 'light' ? 'Modo Oscuro' : 'Modo Claro'}
                             </button>
 
@@ -85,10 +88,11 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                                     color: 'var(--error)',
                                     background: 'transparent',
                                     fontSize: '0.9rem',
-                                    border: 'none'
+                                    border: 'none',
+                                    textAlign: 'left'
                                 }}
                             >
-                                <LogOut size={18} />
+                                <LogOut size={18} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
                                 Cerrar Sesión
                             </button>
                         </div>
