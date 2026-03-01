@@ -189,7 +189,7 @@ const MovementForm = () => {
                             inactiveLabel="Sin retorno al origen - F1"
                         />
                     </div>
-                    <div style={{ position: 'relative', zIndex: '1000' }}>
+                    <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }}>
                         <Autocomplete
                             label="Persona a Autorizar"
                             placeholder="Empiece a escribir apellido..."
@@ -234,7 +234,7 @@ const MovementForm = () => {
                             required
                         />
                         <Input
-                            label="Detalle del Destino (si es Exteriores)"
+                            label="Detalle del Destino (opcional)"
                             name="destinoDetalle"
                             value={formData.movement.destinoDetalle}
                             onChange={handleMovChange}

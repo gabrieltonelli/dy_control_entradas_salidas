@@ -30,19 +30,137 @@ export const Input = ({ label, ...props }) => {
     );
 };
 
-export const Select = ({ label, options = [], includePlaceholder = false, ...props }) => {
+export const Select = ({ label, options = [], includePlaceholder = false, name, value, onChange, ...props }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const containerRef = React.useRef(null);
+
+    // Buscar label de la opción seleccionada
+    const selectedOption = options.find(opt => String(opt.id || opt.value || opt) === String(value));
+    const displayLabel = selectedOption ? (selectedOption.label || selectedOption.nombre || selectedOption) : (includePlaceholder ? '-- Seleccione --' : 'Seleccione una opción...');
+
+    // Cerrar al hacer click fuera
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSelect = (opt) => {
+        const val = opt === '' ? '' : (opt.id || opt.value || opt);
+        if (onChange) {
+            onChange({ target: { name, value: val } });
+        }
+        setIsOpen(false);
+    };
+
     return (
-        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
-            <select
-                style={{ width: '100%', outline: 'none' }}
-                {...props}
+        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block' }}>{label}</label>}
+
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    minHeight: '46px',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    color: value ? 'var(--text)' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s ease'
+                }}
             >
-                {includePlaceholder && <option value="">-- Seleccione --</option>}
-                {options.map((opt, i) => (
-                    <option key={i} value={opt.value || opt.id || opt}>{opt.label || opt.nombre || opt}</option>
-                ))}
-            </select>
+                <span style={{
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    paddingRight: '20px',
+                    fontWeight: value ? '600' : '400'
+                }}>
+                    {displayLabel}
+                </span>
+
+                <div style={{
+                    transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: 'var(--text-muted)'
+                }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+
+            {isOpen && (
+                <div className="glass card-anim" style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    right: 0,
+                    zIndex: 2000,
+                    backgroundColor: 'var(--surface)',
+                    borderRadius: 'var(--radius)',
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    border: '1px solid var(--border)',
+                    padding: '8px 0',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                }}>
+                    {includePlaceholder && (
+                        <div
+                            onClick={() => handleSelect('')}
+                            style={{
+                                padding: '10px 16px',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                color: 'var(--text-muted)',
+                                transition: 'background 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = 'var(--surface-hover)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
+                            -- Seleccione --
+                        </div>
+                    )}
+                    {options.map((opt, i) => {
+                        const optVal = opt.id || opt.value || opt;
+                        const optLabel = opt.label || opt.nombre || opt;
+                        const isSelected = String(optVal) === String(value);
+
+                        return (
+                            <div
+                                key={i}
+                                onClick={() => handleSelect(opt)}
+                                style={{
+                                    padding: '10px 16px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    color: isSelected ? 'var(--dy-red)' : 'var(--text)',
+                                    fontWeight: isSelected ? '700' : '400',
+                                    background: isSelected ? 'rgba(228, 5, 33, 0.05)' : 'transparent',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = isSelected ? 'rgba(228, 5, 33, 0.1)' : 'var(--surface-hover)'}
+                                onMouseLeave={(e) => e.target.style.background = isSelected ? 'rgba(228, 5, 33, 0.05)' : 'transparent'}
+                            >
+                                {optLabel}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };
