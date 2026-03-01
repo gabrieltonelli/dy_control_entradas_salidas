@@ -7,8 +7,6 @@ export const Card = ({ children, className = '', style = {}, ...props }) => {
                 padding: '24px',
                 borderRadius: 'var(--radius)',
                 backgroundColor: 'var(--surface)',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow)',
                 marginBottom: '16px',
                 ...style
             }}
@@ -189,8 +187,7 @@ export const Switch = ({ label, checked, onChange, activeLabel = 'Activado', ina
                     backgroundColor: checked ? 'var(--switch-track-active)' : 'rgba(203, 213, 225, 0.5)',
                     borderRadius: '12px',
                     position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    border: '1px solid var(--border)'
+                    transition: 'background-color 0.2s ease'
                 }}>
                     <div style={{
                         width: '18px',

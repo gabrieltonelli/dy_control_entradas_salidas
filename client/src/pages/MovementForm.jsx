@@ -244,9 +244,11 @@ const MovementForm = () => {
 
                 <Card>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h2 style={{ fontSize: '1.25rem' }}>Artículos / Herramientas</h2>
+                        <h2 style={{ fontSize: '1.25rem' }}>Artículos</h2>
                         <Button variant="secondary" size="sm" type="button" onClick={addArticle}>
-                            <Plus size={16} /> Agregar Artículo
+                            <Plus size={16} />
+                            <span className="desktop-only">Agregar Artículo</span>
+                            <span className="mobile-only">Agregar</span>
                         </Button>
                     </div>
                     {formData.articles.map((art, index) => (
@@ -271,7 +273,9 @@ const MovementForm = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h2 style={{ fontSize: '1.25rem' }}>Documentación</h2>
                         <Button variant="secondary" size="sm" type="button" onClick={addDocument}>
-                            <Plus size={16} /> Agregar Documento
+                            <Plus size={16} />
+                            <span className="desktop-only">Agregar Documento</span>
+                            <span className="mobile-only">Agregar</span>
                         </Button>
                     </div>
                     {formData.documents.map((doc, index) => (

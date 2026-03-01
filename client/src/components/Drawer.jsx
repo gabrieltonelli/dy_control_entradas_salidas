@@ -23,7 +23,7 @@ const Drawer = ({ isOpen, onClose }) => {
             />
             <div className={`drawer ${isOpen ? 'open' : ''} glass`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                    <h2 style={{ fontSize: '1.2rem', color: 'var(--dy-blue)' }}>Menú</h2>
+                    <h2 style={{ fontSize: '1.2rem', color: 'var(--drawer-title)' }}>Menú</h2>
                     <button className="mode-toggle" onClick={onClose}>
                         <X size={24} />
                     </button>
@@ -42,18 +42,20 @@ const Drawer = ({ isOpen, onClose }) => {
                                 background: 'transparent',
                                 color: 'var(--text)',
                                 fontWeight: 500,
-                                opacity: item.path === '#' ? 0.5 : 1
+                                opacity: item.path === '#' ? 0.5 : 1,
+                                border: 'none',
+                                textAlign: 'left'
                             }}
                         >
-                            <span style={{ color: 'var(--dy-red)' }}>{item.icon}</span>
+                            <span style={{ color: 'var(--dy-red)', marginRight: '10px', verticalAlign: 'middle' }}>{item.icon}</span>
                             {item.label}
                         </button>
                     ))}
                 </nav>
 
-                <div style={{ position: 'absolute', bottom: '40px', left: '24px', opacity: 0.7 }}>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--dy-blue)', fontWeight: 700 }}>DON YEYO S.A.</p>
-                    <p style={{ fontSize: '0.7rem' }}>v1.0.0</p>
+                <div style={{ position: 'absolute', bottom: '40px', left: '24px' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--drawer-footer)', fontWeight: 700 }}>DON YEYO S.A.</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v1.0.0</p>
                 </div>
             </div>
         </>

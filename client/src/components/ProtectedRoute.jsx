@@ -42,8 +42,7 @@ export const ProtectedRoute = ({ children }) => {
                     style={{
                         padding: '16px 40px',
                         gap: '16px',
-                        fontSize: '1.25rem',
-                        boxShadow: '0 4px 12px rgba(13, 44, 92, 0.25)'
+                        fontSize: '1.25rem'
                     }}
                 >
                     <img
