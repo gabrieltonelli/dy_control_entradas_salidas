@@ -30,6 +30,18 @@ export const Input = ({ label, ...props }) => {
     );
 };
 
+export const Textarea = ({ label, ...props }) => {
+    return (
+        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
+            <textarea
+                style={{ width: '100%', outline: 'none', minHeight: '100px', resize: 'vertical' }}
+                {...props}
+            />
+        </div>
+    );
+};
+
 export const Select = ({ label, options = [], includePlaceholder = false, name, value, onChange, ...props }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = React.useRef(null);
@@ -58,11 +70,11 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
     };
 
     return (
-        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block' }}>{label}</label>}
 
             <div
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => !props.disabled && setIsOpen(!isOpen)}
                 style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -71,7 +83,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius)',
                     color: value ? 'var(--text)' : 'var(--text-muted)',
-                    cursor: 'pointer',
+                    cursor: props.disabled ? 'not-allowed' : 'pointer',
                     fontSize: '1rem',
                     position: 'relative',
                     display: 'flex',
@@ -90,17 +102,19 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
                     {displayLabel}
                 </span>
 
-                <div style={{
-                    transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
-                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'var(--text-muted)'
-                }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m6 9 6 6 6-6" />
-                    </svg>
-                </div>
+                {!props.disabled && (
+                    <div style={{
+                        transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
+                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'var(--text-muted)'
+                    }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </div>
+                )}
             </div>
 
             {isOpen && (
@@ -323,6 +337,154 @@ export const Switch = ({ label, checked, onChange, activeLabel = 'Activado', ina
                     {checked ? activeLabel : inactiveLabel}
                 </span>
             </div>
+        </div>
+    );
+};
+export const DatePicker = ({ label, value, onChange, name, min, max, ...props }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [viewDate, setViewDate] = React.useState(new Date(value || Date.now()));
+    const containerRef = React.useRef(null);
+
+    // Formatear fecha para mostrar (DD/MM/YYYY)
+    const formatDateDisplay = (dateStr) => {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    };
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+    const handleDateSelect = (day) => {
+        const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(selectedDate.getDate()).padStart(2, '0');
+        const formatted = `${yyyy}-${mm}-${dd}`;
+
+        onChange({ target: { name, value: formatted } });
+        setIsOpen(false);
+    };
+
+    const changeMonth = (offset) => {
+        setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1));
+    };
+
+    const isDateDisabled = (day) => {
+        const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+        const dateStr = date.toISOString().split('T')[0];
+        if (min && dateStr < min) return true;
+        if (max && dateStr > max) return true;
+        return false;
+    };
+
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const weekDays = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
+
+    const days = [];
+    const totalDays = daysInMonth(viewDate.getFullYear(), viewDate.getMonth());
+    const startOffset = firstDayOfMonth(viewDate.getFullYear(), viewDate.getMonth());
+
+    for (let i = 0; i < startOffset; i++) days.push(null);
+    for (let i = 1; i <= totalDays; i++) days.push(i);
+
+    return (
+        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
+
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className="input-trigger"
+                style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minHeight: '46px'
+                }}
+            >
+                <span style={{ fontWeight: '600', color: value ? 'var(--text)' : 'var(--text-muted)' }}>
+                    {value ? formatDateDisplay(value) : 'Seleccionar fecha'}
+                </span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+            </div>
+
+            {isOpen && (
+                <div className="glass card-anim" style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    left: 0,
+                    width: '300px',
+                    zIndex: 2000,
+                    backgroundColor: 'var(--surface)',
+                    borderRadius: 'var(--radius)',
+                    padding: '16px',
+                    boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                    border: '1px solid var(--border)'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <button type="button" onClick={() => changeMonth(-1)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                        </button>
+                        <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>{monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}</span>
+                        <button type="button" onClick={() => changeMonth(1)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+                        {weekDays.map(wd => (
+                            <div key={wd} style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text)', fontWeight: '700', opacity: 0.8 }}>{wd}</div>
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                        {days.map((day, i) => {
+                            if (day === null) return <div key={`empty-${i}`} />;
+                            const disabled = isDateDisabled(day);
+                            const isSelected = value === `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                            return (
+                                <div
+                                    key={i}
+                                    onClick={() => !disabled && handleDateSelect(day)}
+                                    style={{
+                                        textAlign: 'center',
+                                        padding: '8px 0',
+                                        fontSize: '0.85rem',
+                                        borderRadius: '10px',
+                                        cursor: disabled ? 'default' : 'pointer',
+                                        backgroundColor: isSelected ? 'var(--dy-red)' : 'transparent',
+                                        color: isSelected ? '#ffffff' : (disabled ? 'var(--text-muted)' : 'var(--text)'),
+                                        fontWeight: isSelected ? '700' : '500',
+                                        transition: 'all 0.2s ease',
+                                        opacity: disabled ? 0.5 : 1
+                                    }}
+                                    onMouseEnter={(e) => !disabled && !isSelected && (e.target.style.backgroundColor = 'var(--surface-hover)')}
+                                    onMouseLeave={(e) => !disabled && !isSelected && (e.target.style.backgroundColor = 'transparent')}
+                                >
+                                    {day}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

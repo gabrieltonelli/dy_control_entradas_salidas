@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MastersService, MovementsService } from '../services/api';
-import { Card, Input, Select, Autocomplete, Switch } from '../components/FormElements';
+import { Card, Input, Select, Autocomplete, Switch, DatePicker, Textarea } from '../components/FormElements';
 import { Button } from '../components/Button';
 import { Plus, Trash2, Send } from 'lucide-react';
 
@@ -9,6 +9,9 @@ import { useMsal } from "@azure/msal-react";
 const MovementForm = () => {
     const { accounts } = useMsal();
     const currentUser = accounts[0] || {};
+
+    const today = new Date().toISOString().split('T')[0];
+    const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const capitalizeName = (str) => {
         if (!str) return '';
@@ -154,13 +157,13 @@ const MovementForm = () => {
                     <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Detalles del movimiento</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                         <Select
-                            label="Tipo de Movimiento"
+                            label="Tipo de movimiento"
                             name="idTipo"
                             value={formData.movement.idTipo}
                             onChange={handleMovChange}
                             options={types.map(t => ({ id: t.id, label: t.nombre }))}
-                            required
                             disabled
+                            required
                         />
                         <Select
                             label="Motivo"
@@ -170,12 +173,13 @@ const MovementForm = () => {
                             options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
                             required
                         />
-                        <Input
+                        <DatePicker
                             label="Fecha autorizada"
-                            type="date"
                             name="fechaHoraRegistro"
                             value={formData.movement.fechaHoraRegistro}
                             onChange={handleMovChange}
+                            min={today}
+                            max={maxDate}
                             required
                         />
                     </div>
@@ -191,7 +195,7 @@ const MovementForm = () => {
                     </div>
                     <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }}>
                         <Autocomplete
-                            label="Persona a Autorizar"
+                            label="Persona a autorizar"
                             placeholder="Empiece a escribir apellido..."
                             value={formData.movement.personaInterna}
                             options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
@@ -234,10 +238,20 @@ const MovementForm = () => {
                             required
                         />
                         <Input
-                            label="Detalle del Destino (opcional)"
+                            label={`Detalle del destino ${lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
                             name="destinoDetalle"
                             value={formData.movement.destinoDetalle}
                             onChange={handleMovChange}
+                            required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
+                        />
+                    </div>
+                    <div style={{ marginTop: '20px' }}>
+                        <Textarea
+                            label="Observación (opcional)"
+                            name="observacion"
+                            value={formData.movement.observacion}
+                            onChange={handleMovChange}
+                            placeholder="Ingrese notas o detalles adicionales aquí..."
                         />
                     </div>
                 </Card>
