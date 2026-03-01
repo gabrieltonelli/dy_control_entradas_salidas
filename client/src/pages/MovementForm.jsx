@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MastersService, MovementsService } from '../services/api';
-import { Card, Input, Select } from '../components/FormElements';
+import { Card, Input, Select, Autocomplete, Switch } from '../components/FormElements';
 import { Button } from '../components/Button';
 import { Plus, Trash2, Send } from 'lucide-react';
 
@@ -10,16 +10,30 @@ const MovementForm = () => {
     const { accounts } = useMsal();
     const currentUser = accounts[0] || {};
 
+    const capitalizeName = (str) => {
+        if (!str) return '';
+        return str.split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
+
+    const getSavedValue = (key, defaultValue) => {
+        return localStorage.getItem(`movementForm_${key}`) || defaultValue;
+    };
+
+    const dropdownKeys = ['idTipo', 'idLugarOrigen', 'idLugarDestino', 'motivo'];
+
     const [legajos, setLegajos] = useState([]);
     const [lugares, setLugares] = useState([]);
     const [types, setTypes] = useState([]);
     const [formData, setFormData] = useState({
         movement: {
-            idTipo: '',
-            personaInterna: '',
-            idLugarOrigen: '',
-            idLugarDestino: '',
-            motivo: '',
+            idTipo: getSavedValue('idTipo', '1'),
+            personaInterna: '', // Siempre vacío al cargar
+            fechaHoraRegistro: new Date().toISOString().split('T')[0], // Solo fecha para el input
+            idLugarOrigen: getSavedValue('idLugarOrigen', ''),
+            idLugarDestino: getSavedValue('idLugarDestino', ''),
+            motivo: getSavedValue('motivo', ''),
             personaAutorizante: '',
             observacion: '',
             destinoDetalle: '',
@@ -38,7 +52,14 @@ const MovementForm = () => {
                     MastersService.getLugares(),
                     MastersService.getMovementTypes()
                 ]);
-                setLegajos(l.data);
+
+                // Normalizar nombres de legajos (Capitalize)
+                const normalizedLegajos = l.data.map(item => ({
+                    ...item,
+                    apellido_nombre: capitalizeName(item.apellido_nombre)
+                }));
+
+                setLegajos(normalizedLegajos);
                 setLugares(lug.data);
                 setTypes(t.data);
             } catch (error) {
@@ -50,11 +71,17 @@ const MovementForm = () => {
 
     const handleMovChange = (e) => {
         const { name, value, type, checked } = e.target;
+        const val = type === 'checkbox' ? checked : value;
+
+        if (dropdownKeys.includes(name)) {
+            localStorage.setItem(`movementForm_${name}`, val);
+        }
+
         setFormData(prev => ({
             ...prev,
             movement: {
                 ...prev.movement,
-                [name]: type === 'checkbox' ? checked : value
+                [name]: val
             }
         }));
     };
@@ -123,8 +150,8 @@ const MovementForm = () => {
             </header>
 
             <form onSubmit={handleSubmit}>
-                <Card>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Datos Generales</h2>
+                <Card style={{ position: 'relative', zIndex: 10 }}>
+                    <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Detalles del movimiento</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                         <Select
                             label="Tipo de Movimiento"
@@ -133,6 +160,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             options={types.map(t => ({ id: t.id, label: t.nombre }))}
                             required
+                            disabled
                         />
                         <Select
                             label="Motivo"
@@ -142,26 +170,57 @@ const MovementForm = () => {
                             options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
                             required
                         />
-                        <Select
-                            label="Persona a Autorizar"
-                            name="personaInterna"
-                            value={formData.movement.personaInterna}
+                        <Input
+                            label="Fecha autorizada"
+                            type="date"
+                            name="fechaHoraRegistro"
+                            value={formData.movement.fechaHoraRegistro}
                             onChange={handleMovChange}
-                            options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
                             required
                         />
                     </div>
-                </Card>
-
-                <Card>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Ruta y Destino</h2>
+                    <div style={{ marginTop: '20px' }}>
+                        <Switch
+                            label="Retorno"
+                            name="conRegreso"
+                            checked={formData.movement.conRegreso}
+                            onChange={handleMovChange}
+                            activeLabel="Con retorno al origen - F2"
+                            inactiveLabel="Sin retorno al origen - F1"
+                        />
+                    </div>
+                    <div style={{ position: 'relative', zIndex: '1000' }}>
+                        <Autocomplete
+                            label="Persona a Autorizar"
+                            placeholder="Empiece a escribir apellido o nombre..."
+                            value={formData.movement.personaInterna}
+                            options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
+                            onSelect={(opt) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    movement: {
+                                        ...prev.movement,
+                                        personaInterna: opt.id
+                                    }
+                                }));
+                            }}
+                            required
+                        />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                         <Select
                             label="Origen"
                             name="idLugarOrigen"
                             value={formData.movement.idLugarOrigen}
                             onChange={handleMovChange}
-                            options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
+                            options={lugares
+                                .filter(l => {
+                                    const currentType = types.find(t => String(t.id) === String(formData.movement.idTipo));
+                                    // Si es saliente, no mostrar Exteriores
+                                    if (currentType?.direccion === 'saliente' && l.nombre.toLowerCase() === 'exteriores') return false;
+                                    return true;
+                                })
+                                .map(l => ({ id: l.id, label: l.nombre }))}
                             required
                         />
                         <Select
@@ -169,7 +228,9 @@ const MovementForm = () => {
                             name="idLugarDestino"
                             value={formData.movement.idLugarDestino}
                             onChange={handleMovChange}
-                            options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
+                            options={lugares
+                                .filter(l => String(l.id) !== String(formData.movement.idLugarOrigen)) // No puede ser igual al origen
+                                .map(l => ({ id: l.id, label: l.nombre }))}
                             required
                         />
                         <Input
