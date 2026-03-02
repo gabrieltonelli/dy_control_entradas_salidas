@@ -88,7 +88,48 @@ const MovementForm = () => {
 
                 setLegajos(normalizedLegajos);
                 setLugares(lug.data);
-                setTypes(t.data);
+                const movementTypes = t.data;
+                setTypes(movementTypes);
+
+                // Asignar valores por defecto si están vacíos después de cargar los datos
+                setFormData(prev => {
+                    const newMov = { ...prev.movement };
+                    let changed = false;
+
+                    // 1. Motivo
+                    if (!newMov.motivo) {
+                        newMov.motivo = 'Motivos personales';
+                        changed = true;
+                    }
+
+                    // 2. Origen (según el tipo actual)
+                    if (!newMov.idLugarOrigen && lug.data.length > 0) {
+                        const currentType = movementTypes.find(type => String(type.id) === String(newMov.idTipo));
+                        const validOrigen = lug.data.find(l => {
+                            if (currentType?.direccion === 'saliente' && l.nombre.toLowerCase() === 'exteriores') return false;
+                            return true;
+                        });
+                        if (validOrigen) {
+                            newMov.idLugarOrigen = String(validOrigen.id);
+                            changed = true;
+                        }
+                    }
+
+                    // 3. Destino (distinto al origen)
+                    if (!newMov.idLugarDestino && lug.data.length > 0) {
+                        const origin = newMov.idLugarOrigen;
+                        const validDest = lug.data.find(l => String(l.id) !== String(origin));
+                        if (validDest) {
+                            newMov.idLugarDestino = String(validDest.id);
+                            changed = true;
+                        }
+                    }
+
+                    if (changed) {
+                        return { ...prev, movement: newMov };
+                    }
+                    return prev;
+                });
             } catch (error) {
                 console.error('Error fetching masters:', error);
             }
@@ -99,10 +140,6 @@ const MovementForm = () => {
     const handleMovChange = (e) => {
         const { name, value, type, checked } = e.target;
         const val = type === 'checkbox' ? checked : value;
-
-        if (dropdownKeys.includes(name)) {
-            localStorage.setItem(`movementForm_${name}`, val);
-        }
 
         setFormData(prev => ({
             ...prev,
@@ -260,6 +297,11 @@ const MovementForm = () => {
 
             await MovementsService.create(submitData);
 
+            // Guardar valores en localStorage para persistencia en el próximo formulario
+            dropdownKeys.forEach(key => {
+                localStorage.setItem(`movementForm_${key}`, formData.movement[key]);
+            });
+
             // Redirect to status page on success
             navigate('/status', {
                 state: {
@@ -309,6 +351,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             options={types.map(t => ({ id: t.id, label: t.nombre }))}
                             disabled
+
                             required
                         />
                         <Select
@@ -319,6 +362,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
                             required
+                            includePlaceholder={false}
                         />
 
                     </div>
@@ -358,6 +402,7 @@ const MovementForm = () => {
                                 })
                                 .map(l => ({ id: l.id, label: l.nombre }))}
                             required
+                            includePlaceholder={false}
                         />
                         <Select
                             label="Lugar de destino"
@@ -369,6 +414,7 @@ const MovementForm = () => {
                                 .filter(l => String(l.id) !== String(formData.movement.idLugarOrigen)) // No puede ser igual al origen
                                 .map(l => ({ id: l.id, label: l.nombre }))}
                             required
+                            includePlaceholder={false}
                         />
                         <Input
                             label={`Detalle del destino ${lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
@@ -477,6 +523,7 @@ const MovementForm = () => {
                                     onChange={(e) => handleArticleChange(index, e)}
                                     options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
                                     required
+                                    includePlaceholder={false}
                                 />
                                 <Input
                                     label={`Destinatario ${lugares.find(l => String(l.id) === String(art.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
@@ -574,6 +621,7 @@ const MovementForm = () => {
                                     onChange={(e) => handleDocumentChange(index, e)}
                                     options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
                                     required
+                                    includePlaceholder={false}
                                 />
                                 <Input
                                     label={`Destinatario ${lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}

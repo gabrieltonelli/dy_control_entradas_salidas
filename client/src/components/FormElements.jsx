@@ -48,7 +48,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
 
     // Buscar label de la opción seleccionada
     const selectedOption = options.find(opt => String(opt.id || opt.value || opt) === String(value));
-    const displayLabel = selectedOption ? (selectedOption.label || selectedOption.nombre || selectedOption) : (includePlaceholder ? '-- Seleccione --' : 'Seleccione una opción...');
+    const displayLabel = selectedOption ? (selectedOption.label || selectedOption.nombre || selectedOption) : (includePlaceholder ? '-- Seleccione --' : '');
 
     // Cerrar al hacer click fuera
     React.useEffect(() => {
