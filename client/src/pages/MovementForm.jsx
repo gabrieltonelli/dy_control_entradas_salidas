@@ -319,11 +319,27 @@ const MovementForm = () => {
         } catch (error) {
             console.error('Error creating movement:', error);
             setIsSubmitting(false);
+
+            let errorMessage = error.message;
+
+            if (error.response?.data) {
+                const data = error.response.data;
+                // Si hay una lista de detalles de validación, tomamos el mensaje del primer error
+                if (data.details && Array.isArray(data.details) && data.details.length > 0) {
+                    errorMessage = data.details[0].message || data.details[0];
+                }
+                // Si no hay detalles pero hay un error genérico (que no sea "Validation failed"), lo usamos
+                else if (data.error && data.error !== 'Validation failed') {
+                    errorMessage = data.error;
+                }
+                // Si el error es "Validation failed" y no hay detalles (raro), se deja el errorMessage por defecto (error.message)
+            }
+
             // Redirect to status page on error
             navigate('/status', {
                 state: {
                     success: false,
-                    message: 'No se pudo procesar la solicitud: ' + (error.response?.data?.error || error.message)
+                    message: errorMessage
                 }
             });
         }

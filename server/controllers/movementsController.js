@@ -21,21 +21,45 @@ exports.createMovement = async (req, res) => {
             documents = []
         } = validatedData;
 
-        // Custom check for `esDependencia` logic (Exteriores check)
-        const [destRows] = await connection.query('SELECT esDependencia FROM lugares WHERE id = ?', [movement.idLugarDestino]);
-        if (destRows.length > 0 && destRows[0].esDependencia === 0) {
+        // 1. Obtener todos los lugares involucrados para verificar esDependencia
+        const lugarIds = new Set();
+        lugarIds.add(movement.idLugarDestino);
+        articles.forEach(a => lugarIds.add(a.idLugarDestino));
+        documents.forEach(d => lugarIds.add(d.idLugarDestino));
+
+        const [lugarRows] = await connection.query(
+            'SELECT id, esDependencia FROM lugares WHERE id IN (?)',
+            [[...lugarIds]]
+        );
+        const lugarMap = Object.fromEntries(lugarRows.map(r => [r.id, r.esDependencia]));
+
+        // 2. Validar destino principal del movimiento
+        if (lugarMap[movement.idLugarDestino] === 0) {
             if (!movement.destinoDetalle || movement.destinoDetalle.trim() === '') {
                 await connection.release();
                 return res.status(400).json({ error: 'Validation failed', details: [{ message: 'El destino requiere detallar la dirección/lugar' }] });
             }
+        }
 
-            // Check destinatario for articles and documents if destination is "Exteriores" (esDependencia == 0)
-            const invalidArticles = articles.some(art => !art.destinatario || art.destinatario.trim() === '');
-            const invalidDocs = documents.some(doc => !doc.destinatario || doc.destinatario.trim() === '');
-
-            if (invalidArticles || invalidDocs) {
+        // 3. Validar destinatarios de artículos (solo si el destino del artículo es exterior)
+        for (const art of articles) {
+            if (lugarMap[art.idLugarDestino] === 0 && (!art.destinatario || art.destinatario.trim() === '')) {
                 await connection.release();
-                return res.status(400).json({ error: 'Validation failed', details: [{ message: 'Destinatario requerido para los artículos y documentos cargados con destino exterior' }] });
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    details: [{ message: `Destinatario requerido para el artículo "${art.descripcion}" con destino exterior` }]
+                });
+            }
+        }
+
+        // 4. Validar destinatarios de documentos (solo si el destino del documento es exterior)
+        for (const doc of documents) {
+            if (lugarMap[doc.idLugarDestino] === 0 && (!doc.destinatario || doc.destinatario.trim() === '')) {
+                await connection.release();
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    details: [{ message: `Destinatario requerido para el documento "${doc.descripcion}" con destino exterior` }]
+                });
             }
         }
 

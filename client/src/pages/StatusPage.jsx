@@ -30,7 +30,11 @@ const StatusPage = () => {
                     <p className="status-message">{message}</p>
 
                     <div className="status-info-box">
-                        <p>Ya puede cerrar la aplicación de forma segura.</p>
+                        <p>
+                            {success
+                                ? 'Ya puede cerrar la aplicación de forma segura.'
+                                : 'Vuelva a intentarlo y si el error persiste, por favor, comuníquese con el personal de Sistemas'}
+                        </p>
                     </div>
 
                     <div className="status-actions">
