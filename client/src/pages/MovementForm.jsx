@@ -299,6 +299,49 @@ const MovementForm = () => {
             <form onSubmit={handleSubmit}>
                 <Card style={{ position: 'relative', zIndex: 10 }}>
                     <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Detalles del movimiento</h2>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                        <Select
+                            label="Tipo de movimiento"
+                            name="idTipo"
+                            containerId="field-tipo"
+                            value={formData.movement.idTipo}
+                            onChange={handleMovChange}
+                            options={types.map(t => ({ id: t.id, label: t.nombre }))}
+                            disabled
+                            required
+                        />
+                        <Select
+                            label="Motivo"
+                            name="motivo"
+                            containerId="field-motivo"
+                            value={formData.movement.motivo}
+                            onChange={handleMovChange}
+                            options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
+                            required
+                        />
+
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                        <Switch
+                            label="Retorno"
+                            name="conRegreso"
+                            checked={formData.movement.conRegreso}
+                            onChange={handleMovChange}
+                            activeLabel="Con retorno al origen - F2"
+                            inactiveLabel="Sin retorno al origen - F1"
+                        />
+                        <DatePicker
+                            label="Fecha autorizada"
+                            name="fechaHoraRegistro"
+                            containerId="field-fecha"
+                            value={formData.movement.fechaHoraRegistro}
+                            onChange={handleMovChange}
+                            min={today}
+                            max={maxDate}
+                            required
+                        />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
                         <Select
                             label="Lugar de origen"
@@ -337,47 +380,7 @@ const MovementForm = () => {
                             required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
                         />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                        <Select
-                            label="Tipo de movimiento"
-                            name="idTipo"
-                            containerId="field-tipo"
-                            value={formData.movement.idTipo}
-                            onChange={handleMovChange}
-                            options={types.map(t => ({ id: t.id, label: t.nombre }))}
-                            disabled
-                            required
-                        />
-                        <Select
-                            label="Motivo"
-                            name="motivo"
-                            containerId="field-motivo"
-                            value={formData.movement.motivo}
-                            onChange={handleMovChange}
-                            options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
-                            required
-                        />
-                        <DatePicker
-                            label="Fecha autorizada"
-                            name="fechaHoraRegistro"
-                            containerId="field-fecha"
-                            value={formData.movement.fechaHoraRegistro}
-                            onChange={handleMovChange}
-                            min={today}
-                            max={maxDate}
-                            required
-                        />
-                    </div>
-                    <div style={{ marginTop: '20px' }}>
-                        <Switch
-                            label="Retorno"
-                            name="conRegreso"
-                            checked={formData.movement.conRegreso}
-                            onChange={handleMovChange}
-                            activeLabel="Con retorno al origen - F2"
-                            inactiveLabel="Sin retorno al origen - F1"
-                        />
-                    </div>
+
                     <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }}>
                         <Autocomplete
                             label="Persona a autorizar"

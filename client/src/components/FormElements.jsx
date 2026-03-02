@@ -310,7 +310,7 @@ export const Switch = ({ label, name, checked, onChange, activeLabel = 'Activado
                     alignItems: 'center',
                     gap: '12px',
                     cursor: 'pointer',
-                    padding: '8px 12px',
+                    padding: '12px 16px',
                     backgroundColor: 'var(--surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius)',
