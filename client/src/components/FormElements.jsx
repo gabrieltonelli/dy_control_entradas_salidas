@@ -299,41 +299,44 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', ...pro
     );
 };
 
-export const Switch = ({ label, checked, onChange, activeLabel = 'Activado', inactiveLabel = 'Desactivado', ...props }) => {
+export const Switch = ({ label, name, checked, onChange, activeLabel = 'Activado', inactiveLabel = 'Desactivado', style }) => {
     return (
-        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
+        <div style={{ marginBottom: '16px', ...style }}>
+            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block', marginBottom: '8px' }}>{label}</label>}
             <div
-                onClick={() => onChange({ target: { name: props.name, checked: !checked, type: 'checkbox' } })}
+                onClick={() => onChange({ target: { name, value: !checked, type: 'checkbox', checked: !checked } })}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
                     cursor: 'pointer',
-                    userSelect: 'none'
+                    padding: '8px 12px',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    transition: 'all 0.2s ease'
                 }}
             >
                 <div style={{
-                    width: '48px',
-                    height: '24px',
-                    backgroundColor: checked ? 'var(--switch-track-active)' : 'rgba(203, 213, 225, 0.5)',
-                    borderRadius: '12px',
+                    width: '40px',
+                    height: '20px',
+                    backgroundColor: checked ? 'var(--primary)' : 'var(--border)',
+                    borderRadius: '10px',
                     position: 'relative',
-                    transition: 'background-color 0.2s ease'
+                    transition: 'all 0.2s ease'
                 }}>
                     <div style={{
-                        width: '18px',
-                        height: '18px',
-                        backgroundColor: checked ? 'var(--switch-thumb)' : '#ffffff',
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#fff',
                         borderRadius: '50%',
                         position: 'absolute',
-                        top: '2px', // Centrado con el borde de 1px
-                        left: checked ? '27px' : '3px',
-                        transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        top: '2px',
+                        left: checked ? '22px' : '2px',
+                        transition: 'all 0.2s ease'
                     }} />
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--header-text)' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: checked ? 'var(--primary)' : 'var(--text-muted)' }}>
                     {checked ? activeLabel : inactiveLabel}
                 </span>
             </div>

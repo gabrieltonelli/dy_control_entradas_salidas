@@ -92,7 +92,15 @@ const MovementForm = () => {
     const addArticle = () => {
         setFormData(prev => ({
             ...prev,
-            articles: [...prev.articles, { descripcion: '', cantidad: 1, idEstado: 1, sinRetorno: false }]
+            articles: [...prev.articles, {
+                descripcion: '',
+                cantidad: 1,
+                idEstado: 1,
+                conRetorno: true,
+                presentacion: 'Bulto(s)',
+                idLugarDestino: prev.movement.idLugarDestino,
+                destinatario: ''
+            }]
         }));
     };
 
@@ -113,7 +121,14 @@ const MovementForm = () => {
     const addDocument = () => {
         setFormData(prev => ({
             ...prev,
-            documents: [...prev.documents, { tipo: 'Remito', descripcion: '', cantidad: 1, sinRetorno: false }]
+            documents: [...prev.documents, {
+                tipo: 'Remito',
+                descripcion: '',
+                cantidad: 1,
+                conRetorno: true,
+                idLugarDestino: prev.movement.idLugarDestino,
+                destinatario: ''
+            }]
         }));
     };
 
@@ -134,7 +149,20 @@ const MovementForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await MovementsService.create(formData);
+            // Transform conRetorno (UI) back to sinRetorno (API expected)
+            const submitData = {
+                ...formData,
+                articles: formData.articles.map(art => ({
+                    ...art,
+                    sinRetorno: !art.conRetorno
+                })),
+                documents: formData.documents.map(doc => ({
+                    ...doc,
+                    sinRetorno: !doc.conRetorno
+                }))
+            };
+
+            await MovementsService.create(submitData);
             alert('Movimiento registrado con éxito');
             // Reset form or navigate
         } catch (error) {
@@ -242,6 +270,7 @@ const MovementForm = () => {
                             name="destinoDetalle"
                             value={formData.movement.destinoDetalle}
                             onChange={handleMovChange}
+                            maxLength={50}
                             required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
                         />
                     </div>
@@ -252,6 +281,7 @@ const MovementForm = () => {
                             value={formData.movement.observacion}
                             onChange={handleMovChange}
                             placeholder="Ingrese notas o detalles adicionales aquí..."
+                            maxLength={500}
                         />
                     </div>
                 </Card>
@@ -266,21 +296,91 @@ const MovementForm = () => {
                         </Button>
                     </div>
                     {formData.articles.map((art, index) => (
-                        <div key={index} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 40px', gap: '12px', alignItems: 'end' }}>
-                                <Input label="Descripción" name="descripcion" value={art.descripcion} onChange={(e) => handleArticleChange(index, e)} required />
-                                <Input label="Cantidad" type="number" name="cantidad" value={art.cantidad} onChange={(e) => handleArticleChange(index, e)} required />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '12px' }}>
-                                    <input type="checkbox" name="sinRetorno" checked={art.sinRetorno} onChange={(e) => handleArticleChange(index, e)} />
-                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sin Retorno</label>
-                                </div>
-                                <Button variant="ghost" type="button" onClick={() => removeArticle(index)} style={{ padding: '8px', marginBottom: '12px' }}>
-                                    <Trash2 size={18} color="var(--error)" />
-                                </Button>
+                        <div key={index} style={{
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            padding: '20px',
+                            paddingTop: '16px',
+                            marginBottom: '20px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            position: 'relative'
+                        }}>
+                            {/* Botón eliminar (posición absoluta) */}
+                            <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => removeArticle(index)}
+                                style={{ position: 'absolute', top: '12px', right: '12px', padding: '6px', color: 'var(--error)' }}
+                            >
+                                <Trash2 size={18} />
+                            </Button>
+
+                            {/* Renglón 1: Datos principales */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', paddingRight: '36px' }}>
+                                <Input label="Descripción" name="descripcion" value={art.descripcion} onChange={(e) => handleArticleChange(index, e)} maxLength={100} required />
+                                <Select
+                                    label="Presentación"
+                                    name="presentacion"
+                                    value={art.presentacion || 'Bulto(s)'}
+                                    onChange={(e) => handleArticleChange(index, e)}
+                                    options={['Unidad(es)', 'Bulto(s)', 'Kilo(s)']}
+                                    required
+                                />
+                                <Input
+                                    label="Cant."
+                                    type="number"
+                                    name="cantidad"
+                                    value={art.cantidad}
+                                    min={1}
+                                    step={1}
+                                    onKeyDown={(e) => ['-', '+', '.', 'e', 'E'].includes(e.key) && e.preventDefault()}
+                                    onChange={(e) => {
+                                        const v = parseInt(e.target.value, 10);
+                                        handleArticleChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
+                                    }}
+                                    required
+                                />
+                            </div>
+
+                            {/* Renglón 2: Logística */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end', marginTop: '4px' }}>
+                                <Select
+                                    label="Destino"
+                                    name="idLugarDestino"
+                                    value={art.idLugarDestino}
+                                    onChange={(e) => handleArticleChange(index, e)}
+                                    options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
+                                    required
+                                />
+                                <Input
+                                    label={`Destinatario ${lugares.find(l => String(l.id) === String(art.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
+                                    name="destinatario"
+                                    value={art.destinatario}
+                                    onChange={(e) => handleArticleChange(index, e)}
+                                    maxLength={30}
+                                    required={lugares.find(l => String(l.id) === String(art.idLugarDestino))?.esDependencia === 0}
+                                />
+                                <Switch
+                                    name="conRetorno"
+                                    checked={art.conRetorno !== false}
+                                    onChange={(e) => handleArticleChange(index, e)}
+                                    activeLabel="Con Retorno"
+                                    inactiveLabel="Sin Retorno"
+                                    style={{ marginBottom: '16px' }}
+                                />
                             </div>
                         </div>
                     ))}
                     {formData.articles.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay artículos registrados.</p>}
+                    {formData.articles.length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                            <Button variant="secondary" size="sm" type="button" onClick={addArticle}>
+                                <Plus size={16} />
+                                <span className="desktop-only">Agregar Artículo</span>
+                                <span className="mobile-only">Agregar</span>
+                            </Button>
+                        </div>
+                    )}
                 </Card>
 
                 <Card>
@@ -293,17 +393,91 @@ const MovementForm = () => {
                         </Button>
                     </div>
                     {formData.documents.map((doc, index) => (
-                        <div key={index} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 40px', gap: '12px', alignItems: 'end' }}>
-                                <Select label="Tipo" name="tipo" value={doc.tipo} onChange={(e) => handleDocumentChange(index, e)} options={['Remito', 'Factura', 'Presupuesto', 'Orden de compra', 'Otros']} required />
-                                <Input label="Observación" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} />
-                                <Button variant="ghost" type="button" onClick={() => removeDocument(index)} style={{ padding: '8px', marginBottom: '12px' }}>
-                                    <Trash2 size={18} color="var(--error)" />
-                                </Button>
+                        <div key={index} style={{
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            padding: '20px',
+                            paddingTop: '16px',
+                            marginBottom: '20px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            position: 'relative'
+                        }}>
+                            {/* Botón eliminar (posición absoluta) */}
+                            <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => removeDocument(index)}
+                                style={{ position: 'absolute', top: '12px', right: '12px', padding: '6px', color: 'var(--error)' }}
+                            >
+                                <Trash2 size={18} />
+                            </Button>
+
+                            {/* Renglón 1: Datos principales */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', paddingRight: '36px' }}>
+                                <Select
+                                    label="Tipo"
+                                    name="tipo"
+                                    value={doc.tipo}
+                                    onChange={(e) => handleDocumentChange(index, e)}
+                                    options={['Remito', 'Factura', 'Presupuesto', 'Orden de compra', 'Otros']}
+                                    required
+                                />
+                                <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required />
+                                <Input
+                                    label="Cant."
+                                    type="number"
+                                    name="cantidad"
+                                    value={doc.cantidad}
+                                    min={1}
+                                    step={1}
+                                    onKeyDown={(e) => ['-', '+', '.', 'e', 'E'].includes(e.key) && e.preventDefault()}
+                                    onChange={(e) => {
+                                        const v = parseInt(e.target.value, 10);
+                                        handleDocumentChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
+                                    }}
+                                    required
+                                />
+                            </div>
+
+                            {/* Renglón 2: Logística */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end', marginTop: '4px' }}>
+                                <Select
+                                    label="Destino"
+                                    name="idLugarDestino"
+                                    value={doc.idLugarDestino}
+                                    onChange={(e) => handleDocumentChange(index, e)}
+                                    options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
+                                    required
+                                />
+                                <Input
+                                    label={`Destinatario ${lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
+                                    name="destinatario"
+                                    value={doc.destinatario}
+                                    onChange={(e) => handleDocumentChange(index, e)}
+                                    maxLength={30}
+                                    required={lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0}
+                                />
+                                <Switch
+                                    name="conRetorno"
+                                    checked={doc.conRetorno !== false}
+                                    onChange={(e) => handleDocumentChange(index, e)}
+                                    activeLabel="Con Retorno"
+                                    inactiveLabel="Sin Retorno"
+                                    style={{ marginBottom: '16px' }}
+                                />
                             </div>
                         </div>
                     ))}
                     {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
+                    {formData.documents.length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                            <Button variant="secondary" size="sm" type="button" onClick={addDocument}>
+                                <Plus size={16} />
+                                <span className="desktop-only">Agregar Documento</span>
+                                <span className="mobile-only">Agregar</span>
+                            </Button>
+                        </div>
+                    )}
                 </Card>
 
                 <div style={{ marginTop: '32px' }}>

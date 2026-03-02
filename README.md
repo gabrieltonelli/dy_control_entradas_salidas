@@ -1,88 +1,208 @@
-# Control de Ingresos y Egresos - Don Yeyo S.A.
+# Control de Ingresos y Egresos — Don Yeyo S.A.
 
-Sistema premium para la automatización y registro de movimientos de personal, artículos y documentación en los puestos de Vigilancia (Portería) y Recepción.
+Sistema para la automatización y registro de movimientos de personal, artículos y documentación en los puestos de Vigilancia (Portería) y Recepción.
+
+---
 
 ## 🚀 Arquitectura y Tecnologías
 
-El proyecto utiliza una arquitectura moderna de **SPA (Single Page Application)** con un backend unificado mediante **Netlify Functions**:
+El proyecto sigue una arquitectura **cliente/servidor desacoplada** para desarrollo local, preparado para **despliegue unificado en Netlify** mediante Serverless Functions.
 
-- **Frontend:** React + Vite + MSAL (Microsoft Authentication Library).
-- **Backend:** Node.js + Express (adaptado a Serverless con `serverless-http`).
-- **Base de Datos:** MySQL 8 (AWS RDS).
-- **Estética:** Glassmorphism, animaciones fluidas y diseño responsivo "Mobile-First".
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 18 + Vite + MSAL (Microsoft Authentication Library) |
+| Backend | Node.js + Express (adaptado a Serverless con `serverless-http`) |
+| Base de Datos | MySQL 8 (local o AWS RDS) |
+| Autenticación | Azure Active Directory (cuentas `@donyeyo.com.ar`) |
+| Deploy | Netlify (Front + Back unificados) |
+| Estilos | CSS Variables + Glassmorphism + diseño Mobile-First |
 
 ---
 
-## 🔐 Configuración de Azure AD (Autenticación @donyeyo.com.ar)
+## 📁 Estructura del Proyecto
 
-Para que el login funcione, debe registrar la aplicación en el portal de Azure:
+```
+dy_control_entradas_salidas/
+├── client/                     # Frontend React + Vite
+│   ├── src/
+│   │   ├── components/         # Componentes UI reutilizables
+│   │   │   ├── Button.jsx
+│   │   │   ├── Drawer.jsx      # Menú lateral deslizable
+│   │   │   ├── FormElements.jsx
+│   │   │   ├── Header.jsx      # Header con avatar, nombre y logout
+│   │   │   ├── Layout.jsx
+│   │   │   └── ProtectedRoute.jsx
+│   │   ├── config/             # Configuración MSAL y constantes
+│   │   ├── pages/
+│   │   │   ├── Dashboard.jsx   # Vista de movimientos activos
+│   │   │   ├── MovementForm.jsx# Formulario de nueva solicitud
+│   │   │   └── Settings.jsx    # Configuración de usuario
+│   │   ├── services/           # Capa de comunicación con la API
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── .env                    # Variables de entorno (NO subir a Git)
+│   ├── .env.template           # Plantilla de variables de entorno
+│   └── vite.config.js
+├── server/                     # Backend Node.js + Express
+│   ├── config/                 # Configuración de base de datos
+│   ├── controllers/            # Lógica de negocio y queries MySQL
+│   ├── routes/
+│   │   ├── masters.js          # Endpoints de datos maestros
+│   │   └── movements.js        # Endpoints de movimientos
+│   ├── index.js                # Entrada del servidor Express
+│   ├── netlify-handler.js      # Adaptador para Netlify Functions
+│   ├── .env                    # Variables de entorno (NO subir a Git)
+│   └── .env.template           # Plantilla de variables de entorno
+├── docs/                       # Documentación técnica y dump de DB
+├── netlify.toml                # Configuración de despliegue Netlify
+├── package.json                # Scripts raíz (inicia ambos servicios)
+├── start-mobile.bat            # Script para acceso desde red LAN
+└── README.md
+```
 
-1. Inicie sesión en [Azure Portal](https://portal.azure.com/).
-2. Vaya a **Microsoft Entra ID** (antiguo Azure AD) -> **App registrations** -> **New registration**.
+---
+
+## ⚙️ Configuración de Variables de Entorno
+
+### Backend — `/server/.env`
+
+Basarse en `/server/.env.template`:
+
+```env
+# Base de datos MySQL
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=tu_password
+DB_NAME=Acceso_A_Planta
+DB_PORT=3306
+
+# Servidor
+PORT=5000
+NODE_ENV=development
+
+# Azure AD (autenticación)
+AZURE_AD_CLIENT_ID=tu_client_id
+AZURE_AD_TENANT_ID=tu_tenant_id
+AZURE_AD_CLIENT_SECRET=tu_client_secret
+```
+
+### Frontend — `/client/.env`
+
+Basarse en `/client/.env.template`:
+
+```env
+# URL del backend (desarrollo local)
+VITE_API_URL=http://localhost:5000/api
+
+# Puerto del cliente Vite (opcional, default: 5173)
+# Si lo cambiás, start-mobile.bat lo detectará automáticamente
+# VITE_PORT=5173
+
+# Azure AD (autenticación)
+VITE_AZURE_AD_CLIENT_ID=tu_client_id
+VITE_AZURE_AD_TENANT_ID=tu_tenant_id
+```
+
+---
+
+## 🔐 Configuración de Azure AD
+
+Para que el login con cuentas `@donyeyo.com.ar` funcione:
+
+1. Ingresá al [Portal de Azure](https://portal.azure.com/).
+2. Ir a **Microsoft Entra ID** → **App registrations** → **New registration**.
 3. **Nombre:** `Control Accesos Don Yeyo`.
 4. **Supported account types:** `Accounts in this organizational directory only (Single tenant)`.
-5. **Redirect URI:** Seleccione `Single-page application (SPA)` y ponga:
-   - Para desarrollo: `http://localhost:5173`
-   - Para producción: `https://su-app.netlify.app`
-6. En **Authentication**, asegúrese de marcar `Access tokens` e `ID tokens`.
-7. Copie el **Application (client) ID** y el **Directory (tenant) ID**.
-8. En el menú de la izquierda, vaya a **Certificates & secrets** -> **Client secrets** -> **New client secret**.
-9. Escriba una descripción (ej: `Secret Control Acceso`) y elija un tiempo de expiración.
-10. Al hacer clic en **Add**, copie el **Value** del secreto generado.
-   > [!IMPORTANT]
-   > Guarde el valor del secreto inmediatamente, ya que Azure no lo volverá a mostrar después de salir de la pantalla.
+5. **Redirect URI:** Seleccionar `Single-page application (SPA)` y agregar:
+   - Desarrollo: `http://localhost:5173`
+   - Producción: `https://tu-app.netlify.app`
+6. En **Authentication**, marcar `Access tokens` e `ID tokens`.
+7. Copiar el **Application (client) ID** y el **Directory (tenant) ID**.
+8. En **Certificates & secrets** → **Client secrets** → **New client secret**.
+9. Copiar el `Value` generado.
+
+> [!IMPORTANT]
+> Guardá el valor del secret inmediatamente. Azure no lo vuelve a mostrar.
 
 ---
 
-## 📦 Configuración y Ejecución Local
+## 📦 Instalación y Ejecución Local
 
-### 1. Variables de Entorno
-Cree un archivo `.env` tanto en `/client` como en `/server` basándose en los archivos `.env.template`.
+### Primera vez
 
-**Server (`/server/.env`):**
-```env
-DB_HOST=...
-DB_USER=...
-DB_PASS=...
-DB_NAME=Acceso_A_Planta
-AZURE_AD_CLIENT_ID=TU_CLIENT_ID
-AZURE_AD_TENANT_ID=TU_TENANT_ID
-AZURE_AD_CLIENT_SECRET=TU_CLIENT_SECRET
-```
-
-**Client (`/client/.env`):**
-```env
-VITE_AZURE_AD_CLIENT_ID=TU_CLIENT_ID
-VITE_AZURE_AD_TENANT_ID=TU_TENANT_ID
-```
-
-### 2. Instalación e Inicio
-Desde la raíz del proyecto, puede instalar todo e iniciar ambos entornos con un solo comando:
-
-**Primera vez:**
 ```bash
+# Desde la raíz del proyecto
 npm install && npm run install-all
 ```
 
-**Para desarrollar:**
+### Desarrollo (servidor + cliente simultáneos)
+
 ```bash
 npm run dev
 ```
 
-Esto iniciará el Servidor (Puerto 5000) y el Cliente (Puerto 5173) de forma simultánea.
+Esto levanta:
+- **Backend** en `http://localhost:5000`
+- **Frontend** en `http://localhost:5173`
 
+### Iniciar por separado
+
+```bash
+# Solo el backend
+npm run server
+
+# Solo el frontend
+npm run client
+```
+
+### Exponer el cliente en la red local (para celular/tablet)
+
+Al iniciar el frontend para acceso desde la red, hay que arrancar Vite con el flag `--host`:
+
+```bash
+cd client
+npx vite --host
+```
+
+Luego correr `start-mobile.bat` para obtener la URL y configurar el firewall (ver sección siguiente).
+
+---
+
+## 📱 Acceso desde Dispositivos Móviles (Red LAN)
+
+El archivo `start-mobile.bat` permite acceder al sistema desde cualquier celular o tablet conectado a la misma red Wi-Fi, **sin iniciar ningún servidor** (asume que ya están corriendo).
+
+### ¿Qué hace el script?
+
+1. **Lee el puerto del cliente** desde `client/.env` (variable `VITE_PORT`, default: `5173`).
+2. **Detecta la IP** de la máquina en la red local automáticamente.
+3. **Abre el firewall de Windows** para ese puerto (requiere aceptar permisos de administrador).
+4. **Muestra la URL** completa para ingresar desde el celular.
+
+### Pasos para usarlo
+
+1. Iniciá el backend: `npm run server`
+2. Iniciá el frontend con host habilitado: `cd client && npx vite --host`
+3. Ejecutá **`start-mobile.bat`** (puede pedir permisos de administrador para el firewall).
+4. En tu celular (misma red Wi-Fi), abrí la URL que muestra el script, ej: `http://192.168.1.15:5173`
+
+> [!NOTE]
+> Si querés que `npm run dev` siempre exponga el cliente en la red, descomentá `host: true` en `client/vite.config.js`.
 
 ---
 
 ## ☁️ Despliegue en Netlify
 
-El proyecto está configurado para un **despliegue unificado** (Front + Back en el mismo sitio):
+El proyecto está configurado para un **despliegue unificado** (Front + Back en el mismo sitio de Netlify):
 
-1. Sube el código a un repositorio de GitHub/GitLab.
-2. En Netlify, crea un "New site from Git".
-3. Netlify leerá el archivo `netlify.toml` automáticamente.
-4. **Configura las Variables de Entorno** en Netlify (Site Settings -> Env Vars):
-   - Agregue todas las de la sección anterior (`DB_HOST`, `DB_USER`, `VITE_...`).
+1. Subir el código a un repositorio de GitHub.
+2. En Netlify, crear un **New site from Git** apuntando al repositorio.
+3. Netlify leerá `netlify.toml` automáticamente (build + redirects de la API).
+4. En **Site Settings → Environment variables**, configurar:
+   - `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`
+   - `AZURE_AD_CLIENT_ID`, `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_SECRET`
+   - `VITE_AZURE_AD_CLIENT_ID`, `VITE_AZURE_AD_TENANT_ID`
+   - `VITE_API_URL` → `/api` (relativo, en producción Netlify resuelve internamente)
 5. Netlify compilará el React y convertirá el Express en una **Netlify Function** accesible bajo `/api`.
 
 ---
@@ -90,26 +210,45 @@ El proyecto está configurado para un **despliegue unificado** (Front + Back en 
 ## 📖 Guía de Uso
 
 ### 1. Inicio de Sesión
-Al ingresar, el sistema redirigirá al portal de Microsoft. Debe usar su cuenta corporativa `@donyeyo.com.ar`.
+
+Al ingresar, el sistema redirige al portal de Microsoft. Usar cuenta corporativa `@donyeyo.com.ar`. El nombre y avatar del usuario logueado se muestran en el header.
 
 ### 2. Dashboard
-Visualice los movimientos activos. Las tarjetas cambian de color según el estado (Pendiente, Completado) y muestran quién autorizó el movimiento.
 
-### 3. Nueva Solicitud
-- Seleccione la persona a autorizar (desde la base de datos de legajos).
-- Elija el origen y destino.
-- **Artículos/Documentos:** Pulse "Agregar" para vincular herramientas o remitos. Puede marcar artículos como "Sin Retorno" (consumibles).
-- **Autorización:** Elija el motivo y quién firma la autorización.
+Visualiza los movimientos activos registrados en el día. Las tarjetas cambian de color según el estado (Pendiente / Completado) y muestran quién autorizó el movimiento.
 
-### 4. Auditoría
-Todas las acciones (creación, edición, eliminación) se guardan automáticamente en la tabla `auditoria` de la base de datos MySQL mediante triggers configurados en el sistema.
+### 3. Nueva Solicitud (Formulario de Movimiento)
+
+- Seleccioná la persona a autorizar (desde la base de datos de legajos).
+- Elegí el origen y destino del movimiento.
+- **Artículos/Documentos:** Pulsá "Agregar" para vincular herramientas o remitos. Podés marcar artículos como "Sin Retorno" (consumibles).
+- **Autorización:** Elegí el motivo y quién firma la autorización.
+
+### 4. Configuración
+
+Accesible desde el menú lateral (Drawer). Permite ajustar preferencias del usuario.
+
+### 5. Auditoría
+
+Todas las acciones (creación, edición, eliminación) se guardan automáticamente en la tabla `auditoria` de la base de datos mediante triggers configurados en MySQL.
 
 ---
 
-## 🛠️ Estructura del Código
+## 🛠️ Scripts Disponibles
 
-- `/client/src/components`: UI Components premium reutilizables.
-- `/client/src/pages`: Pantallas principales (Formulario y Dashboard).
-- `/server/controllers`: Lógica de transacciones MySQL.
-- `/server/routes`: Definición de endpoints API.
-- `/docs`: Documentación técnica original y dump de DB.
+Desde la **raíz del proyecto**:
+
+| Script | Descripción |
+|---|---|
+| `npm run dev` | Inicia backend + frontend simultáneamente |
+| `npm run server` | Inicia solo el backend (puerto 5000) |
+| `npm run client` | Inicia solo el frontend (puerto 5173) |
+| `npm run install-all` | Instala dependencias en `/server` y `/client` |
+
+---
+
+## 🔒 Seguridad
+
+- Los archivos `.env` **no deben subirse a Git** (ya están en `.gitignore`).
+- Usá siempre los archivos `.env.template` como referencia para onboarding.
+- El `start-mobile.bat` crea una regla de firewall con nombre `DonYeyo_Client`. Podés eliminarla manualmente desde el **Panel de control → Firewall de Windows → Reglas de entrada** cuando ya no la necesites.
