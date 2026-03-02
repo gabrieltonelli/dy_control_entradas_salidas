@@ -17,18 +17,13 @@ export const ProtectedRoute = ({ children }) => {
 
     if (!isAuthenticated) {
         return (
-            <div className="glass" style={{
+            <div className="glass login-container" style={{
                 height: '100vh',
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
                 gap: '8px',
-                textAlign: 'center',
-                padding: '24px'
             }}>
                 <img src={logo} alt="Don Yeyo" style={{ height: '140px', marginBottom: '16px', objectFit: 'contain' }} />
-                <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--header-text)', margin: 0 }}>
+                <h1 style={{ fontWeight: '800', color: 'var(--header-text)', margin: 0 }}>
                     Control de Ingresos y Egresos
                 </h1>
 
@@ -38,13 +33,8 @@ export const ProtectedRoute = ({ children }) => {
 
                 <Button
                     variant="primary"
+                    className="btn-microsoft"
                     onClick={handleLogin}
-                    style={{
-                        padding: '16px 40px',
-                        margin: '0px 16px',
-                        gap: '16px',
-                        fontSize: '1.25rem'
-                    }}
                 >
                     <img
                         src={microsoftLogo}
