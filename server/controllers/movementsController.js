@@ -12,7 +12,6 @@ exports.createMovement = async (req, res) => {
         try {
             validatedData = movementSchema.parse(req.body);
         } catch (validationError) {
-            console.log('Zod Validation Error:', JSON.stringify(validationError.errors, null, 2));
             return res.status(400).json({ error: 'Validation failed', details: validationError.errors });
         }
 
@@ -40,6 +39,14 @@ exports.createMovement = async (req, res) => {
             }
         }
 
+        // Lookup authorizing legajo by email
+        const [authRows] = await connection.query('SELECT legajo FROM legajos WHERE email = ?', [movement.usuario_app]);
+        if (authRows.length === 0) {
+            await connection.release();
+            return res.status(403).json({ error: 'Usuario no autorizado para firmar solicitudes (Email no encontrado en legajos)' });
+        }
+        const personaAutorizanteLegajo = authRows[0].legajo;
+
         // 1. Insert Movement
         const [movResult] = await connection.query(
             `INSERT INTO movimientos 
@@ -54,7 +61,7 @@ exports.createMovement = async (req, res) => {
                 `${movement.fechaHoraRegistro} 00:00:00`,
                 movement.conRegreso ? 1 : 0,
                 movement.motivo,
-                movement.personaAutorizante || '',
+                personaAutorizanteLegajo,
                 movement.observacion || '',
                 1, // idEstado forced to 1 (Pendiente)
                 movement.idLugarOrigen,
