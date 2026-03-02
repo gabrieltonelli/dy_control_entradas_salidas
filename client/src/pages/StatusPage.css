@@ -1,0 +1,104 @@
+.status-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 150px);
+    padding: 20px;
+}
+
+.status-card-wrapper {
+    width: 100%;
+    max-width: 600px;
+    perspective: 1000px;
+}
+
+.status-card {
+    text-align: center;
+    padding: 48px !important;
+    background: var(--surface) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 28px !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.status-icon-container {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.icon-success {
+    color: var(--success);
+    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.2));
+    animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-error {
+    color: var(--error);
+    filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.2));
+    animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.status-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    color: var(--primary);
+    /* Azul en light, Blanco en dark */
+}
+
+.dark-theme .status-title {
+    color: white;
+}
+
+.status-title .dot {
+    color: var(--dy-red);
+}
+
+.status-message {
+    font-size: 1.25rem;
+    color: var(--text);
+    opacity: 0.8;
+    margin-bottom: 32px;
+    line-height: 1.6;
+}
+
+.status-info-box {
+    background: var(--surface-hover);
+    border: 1px dashed var(--border);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+}
+
+.status-info-box p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.status-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-new-request {
+    padding: 14px 32px !important;
+    font-size: 1.1rem !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

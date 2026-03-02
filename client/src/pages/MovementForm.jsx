@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MastersService, MovementsService } from '../services/api';
 import { Card, Input, Select, Autocomplete, Switch, DatePicker, Textarea } from '../components/FormElements';
 import { Button } from '../components/Button';
-import { Plus, Trash2, Send } from 'lucide-react';
+import Modal from '../components/Modal';
+import { Plus, Trash2, Send, AlertTriangle } from 'lucide-react';
 
 import { useMsal } from "@azure/msal-react";
 
 const MovementForm = () => {
     const { accounts } = useMsal();
+    const navigate = useNavigate();
     const currentUser = accounts[0] || {};
 
     const today = new Date().toISOString().split('T')[0];
     const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const [legajos, setLegajos] = useState([]);
+    const [lugares, setLugares] = useState([]);
+    const [types, setTypes] = useState([]);
+    const [myLegajo, setMyLegajo] = useState(null);
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [showSelfAuthWarning, setShowSelfAuthWarning] = useState(false);
+    const [isVerifyingLegajo, setIsVerifyingLegajo] = useState(true);
 
     const capitalizeName = (str) => {
         if (!str) return '';
@@ -26,9 +37,6 @@ const MovementForm = () => {
 
     const dropdownKeys = ['idTipo', 'idLugarOrigen', 'idLugarDestino', 'motivo'];
 
-    const [legajos, setLegajos] = useState([]);
-    const [lugares, setLugares] = useState([]);
-    const [types, setTypes] = useState([]);
     const [formData, setFormData] = useState({
         movement: {
             idTipo: getSavedValue('idTipo', '1'),
@@ -50,6 +58,22 @@ const MovementForm = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Verify current user legajo
+                if (currentUser.username || currentUser.email) {
+                    try {
+                        const meRes = await MastersService.getMe(currentUser.username || currentUser.email);
+                        setMyLegajo(meRes.data);
+                    } catch (err) {
+                        console.error('User legajo not found:', err);
+                        setShowAuthModal(true);
+                    } finally {
+                        setIsVerifyingLegajo(false);
+                    }
+                } else {
+                    setShowAuthModal(true);
+                    setIsVerifyingLegajo(false);
+                }
+
                 const [l, lug, t] = await Promise.all([
                     MastersService.getLegajos(),
                     MastersService.getLugares(),
@@ -146,8 +170,80 @@ const MovementForm = () => {
         setFormData(prev => ({ ...prev, documents: newDocs }));
     };
 
+    const validateAndScroll = () => {
+        const errors = [];
+
+        // Validar en orden de arriba hacia abajo en el formulario
+        if (!formData.movement.idLugarOrigen) errors.push('field-lugar-origen');
+        if (!formData.movement.idLugarDestino) errors.push('field-lugar-destino');
+
+        // Detalle del destino opcional/requerido
+        const destinoLugar = lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino));
+        if (destinoLugar?.esDependencia === 0 && !formData.movement.destinoDetalle) {
+            errors.push('field-destino-detalle');
+        }
+
+        if (!formData.movement.idTipo) errors.push('field-tipo');
+        if (!formData.movement.motivo) errors.push('field-motivo');
+        if (!formData.movement.fechaHoraRegistro) errors.push('field-fecha');
+        if (!formData.movement.personaInterna) errors.push('field-persona-interna');
+
+        // Si hay errores, hacer scroll al primero
+        if (errors.length > 0) {
+            const firstErrorId = errors[0];
+            const element = document.getElementById(firstErrorId);
+            if (element) {
+                // ESTRATEGIA: Calculamos la posición absoluta y restamos un offset generoso (220px)
+                // para que el header (70px) no tape el label ni el campo.
+                const headerOffset = 220;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+
+                // Intentamos hacer foco en el primer input/select del contenedor
+                const input = element.querySelector('input, select, button');
+                if (input) {
+                    setTimeout(() => input.focus({ preventScroll: true }), 600);
+                }
+
+                // Resaltar brevemente para feedback visual
+                element.style.transition = 'background-color 0.3s';
+                element.style.backgroundColor = 'rgba(228, 5, 33, 0.1)';
+                setTimeout(() => {
+                    element.style.backgroundColor = 'transparent';
+                }, 2000);
+            }
+            return false;
+        }
+        return true;
+    };
+
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+
+        // Validar campos obligatorios y hacer scroll
+        if (!validateAndScroll()) return;
+
+        // Check if legajo was found
+        if (!myLegajo) {
+            setShowAuthModal(true);
+            return;
+        }
+
+        // Check for self-authorization
+        if (String(formData.movement.personaInterna) === String(myLegajo.legajo)) {
+            setShowSelfAuthWarning(true);
+            return;
+        }
+
+        executeSubmit();
+    };
+
+    const executeSubmit = async () => {
         try {
             // Transform conRetorno (UI) back to sinRetorno (API expected)
             const submitData = {
@@ -163,13 +259,33 @@ const MovementForm = () => {
             };
 
             await MovementsService.create(submitData);
-            alert('Movimiento registrado con éxito');
-            // Reset form or navigate
+
+            // Redirect to status page on success
+            navigate('/status', {
+                state: {
+                    success: true,
+                    message: 'Su solicitud ha sido registrada correctamente en el sistema.'
+                }
+            });
         } catch (error) {
             console.error('Error creating movement:', error);
-            alert('Error: ' + error.message);
+            // Redirect to status page on error
+            navigate('/status', {
+                state: {
+                    success: false,
+                    message: 'No se pudo procesar la solicitud: ' + error.message
+                }
+            });
         }
     };
+
+    if (isVerifyingLegajo) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
+                <p>Verificando credenciales...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="card-anim" style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -183,10 +299,49 @@ const MovementForm = () => {
             <form onSubmit={handleSubmit}>
                 <Card style={{ position: 'relative', zIndex: 10 }}>
                     <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>Detalles del movimiento</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
+                        <Select
+                            label="Lugar de origen"
+                            name="idLugarOrigen"
+                            containerId="field-lugar-origen"
+                            value={formData.movement.idLugarOrigen}
+                            onChange={handleMovChange}
+                            options={lugares
+                                .filter(l => {
+                                    const currentType = types.find(t => String(t.id) === String(formData.movement.idTipo));
+                                    // Si es saliente, no mostrar Exteriores
+                                    if (currentType?.direccion === 'saliente' && l.nombre.toLowerCase() === 'exteriores') return false;
+                                    return true;
+                                })
+                                .map(l => ({ id: l.id, label: l.nombre }))}
+                            required
+                        />
+                        <Select
+                            label="Lugar de destino"
+                            name="idLugarDestino"
+                            containerId="field-lugar-destino"
+                            value={formData.movement.idLugarDestino}
+                            onChange={handleMovChange}
+                            options={lugares
+                                .filter(l => String(l.id) !== String(formData.movement.idLugarOrigen)) // No puede ser igual al origen
+                                .map(l => ({ id: l.id, label: l.nombre }))}
+                            required
+                        />
+                        <Input
+                            label={`Detalle del destino ${lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
+                            name="destinoDetalle"
+                            containerId="field-destino-detalle"
+                            value={formData.movement.destinoDetalle}
+                            onChange={handleMovChange}
+                            maxLength={50}
+                            required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
+                        />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                         <Select
                             label="Tipo de movimiento"
                             name="idTipo"
+                            containerId="field-tipo"
                             value={formData.movement.idTipo}
                             onChange={handleMovChange}
                             options={types.map(t => ({ id: t.id, label: t.nombre }))}
@@ -196,6 +351,7 @@ const MovementForm = () => {
                         <Select
                             label="Motivo"
                             name="motivo"
+                            containerId="field-motivo"
                             value={formData.movement.motivo}
                             onChange={handleMovChange}
                             options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
@@ -204,6 +360,7 @@ const MovementForm = () => {
                         <DatePicker
                             label="Fecha autorizada"
                             name="fechaHoraRegistro"
+                            containerId="field-fecha"
                             value={formData.movement.fechaHoraRegistro}
                             onChange={handleMovChange}
                             min={today}
@@ -224,6 +381,7 @@ const MovementForm = () => {
                     <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }}>
                         <Autocomplete
                             label="Persona a autorizar"
+                            containerId="field-persona-interna"
                             placeholder="Empiece a escribir apellido..."
                             value={formData.movement.personaInterna}
                             options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
@@ -237,41 +395,6 @@ const MovementForm = () => {
                                 }));
                             }}
                             required
-                        />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                        <Select
-                            label="Origen"
-                            name="idLugarOrigen"
-                            value={formData.movement.idLugarOrigen}
-                            onChange={handleMovChange}
-                            options={lugares
-                                .filter(l => {
-                                    const currentType = types.find(t => String(t.id) === String(formData.movement.idTipo));
-                                    // Si es saliente, no mostrar Exteriores
-                                    if (currentType?.direccion === 'saliente' && l.nombre.toLowerCase() === 'exteriores') return false;
-                                    return true;
-                                })
-                                .map(l => ({ id: l.id, label: l.nombre }))}
-                            required
-                        />
-                        <Select
-                            label="Destino"
-                            name="idLugarDestino"
-                            value={formData.movement.idLugarDestino}
-                            onChange={handleMovChange}
-                            options={lugares
-                                .filter(l => String(l.id) !== String(formData.movement.idLugarOrigen)) // No puede ser igual al origen
-                                .map(l => ({ id: l.id, label: l.nombre }))}
-                            required
-                        />
-                        <Input
-                            label={`Detalle del destino ${lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
-                            name="destinoDetalle"
-                            value={formData.movement.destinoDetalle}
-                            onChange={handleMovChange}
-                            maxLength={50}
-                            required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
                         />
                     </div>
                     <div style={{ marginTop: '20px' }}>
@@ -496,6 +619,45 @@ const MovementForm = () => {
                     </Button>
                 </div>
             </form>
+
+            {/* Modal de error: Usuario sin legajo */}
+            <Modal
+                isOpen={showAuthModal}
+                onClose={() => { }} // No permitir cerrar
+                title="Acceso Restringido"
+                type="error"
+                message={
+                    <div>
+                        <p>No se ha podido encontrar un legajo asociado a su cuenta (<strong>{currentUser.username || currentUser.email}</strong>).</p>
+                        <p>Por favor, contacte con el Administrador del Sistema para regularizar su situación antes de generar solicitudes.</p>
+                    </div>
+                }
+                confirmLabel="Entendido"
+                showCancel={false}
+                onConfirm={() => window.location.href = '/'}
+            />
+
+            {/* Modal de advertencia: Auto-autorización */}
+            <Modal
+                isOpen={showSelfAuthWarning}
+                onClose={() => setShowSelfAuthWarning(false)}
+                title="Advertencia"
+                type="warning"
+                message={
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#ffcc00' }}>
+                            <AlertTriangle size={32} />
+                            <strong style={{ fontSize: '1.2rem' }}>Auto-autorización detectada</strong>
+                        </div>
+                        <p>Usted se está autorizando a sí mismo.</p>
+                        <p>Si confirma, la autorización será generada de todos modos. Esta acción será registrada en la auditoría del sistema para su posterior revisión.</p>
+                        <p>¿Desea continuar con la operación?</p>
+                    </div>
+                }
+                confirmLabel="Confirmar y Continuar"
+                cancelLabel="Cancelar"
+                onConfirm={executeSubmit}
+            />
         </div>
     );
 };

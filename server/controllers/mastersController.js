@@ -45,3 +45,22 @@ exports.getMovementStates = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+// @desc    Get current user legajo info by email
+// @route   GET /api/masters/me
+exports.getMe = async (req, res) => {
+    const { email } = req.query;
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    try {
+        const [rows] = await pool.query('SELECT legajo, apellido_nombre, email FROM legajos WHERE email = ?', [email]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Legajo not found for this email' });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error('Error in getMe:', error);
+        res.status(500).json({ error: error.message });
+    }
+};

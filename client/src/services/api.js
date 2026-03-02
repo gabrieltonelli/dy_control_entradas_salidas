@@ -9,6 +9,7 @@ export const MastersService = {
     getLugares: () => api.get('/masters/lugares'),
     getMovementTypes: () => api.get('/masters/movement-types'),
     getMovementStates: () => api.get('/masters/movement-states'),
+    getMe: (email) => api.get(`/masters/me?email=${email}`),
 };
 
 export const MovementsService = {

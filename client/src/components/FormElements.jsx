@@ -18,9 +18,9 @@ export const Card = ({ children, className = '', style = {}, ...props }) => {
     );
 };
 
-export const Input = ({ label, ...props }) => {
+export const Input = ({ label, containerId, ...props }) => {
     return (
-        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div id={containerId} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
             <input
                 style={{ width: '100%', outline: 'none' }}
@@ -42,7 +42,7 @@ export const Textarea = ({ label, ...props }) => {
     );
 };
 
-export const Select = ({ label, options = [], includePlaceholder = false, name, value, onChange, ...props }) => {
+export const Select = ({ label, options = [], includePlaceholder = false, name, value, onChange, containerId, ...props }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = React.useRef(null);
 
@@ -70,7 +70,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
     };
 
     return (
-        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1 }}>
+        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block' }}>{label}</label>}
 
             <div
@@ -179,7 +179,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
     );
 };
 
-export const Autocomplete = ({ label, options = [], onSelect, value = '', ...props }) => {
+export const Autocomplete = ({ label, options = [], onSelect, value = '', containerId, ...props }) => {
     const [inputValue, setInputValue] = React.useState('');
     const [showOptions, setShowOptions] = React.useState(false);
 
@@ -231,7 +231,7 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', ...pro
     };
 
     return (
-        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: showOptions ? 1001 : 1 }}>
+        <div id={containerId} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: showOptions ? 1001 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
             <input
                 style={{ width: '100%', outline: 'none' }}
@@ -343,7 +343,7 @@ export const Switch = ({ label, name, checked, onChange, activeLabel = 'Activado
         </div>
     );
 };
-export const DatePicker = ({ label, value, onChange, name, min, max, ...props }) => {
+export const DatePicker = ({ label, value, onChange, name, min, max, containerId, ...props }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [viewDate, setViewDate] = React.useState(new Date(value || Date.now()));
     const containerRef = React.useRef(null);
@@ -400,7 +400,7 @@ export const DatePicker = ({ label, value, onChange, name, min, max, ...props })
     for (let i = 1; i <= totalDays; i++) days.push(i);
 
     return (
-        <div ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
 
             <div

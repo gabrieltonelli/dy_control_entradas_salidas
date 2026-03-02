@@ -226,6 +226,7 @@ select:focus {
   border-color: var(--primary);
 }
 
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

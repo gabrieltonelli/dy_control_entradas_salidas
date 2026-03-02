@@ -14,6 +14,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import MovementForm from './pages/MovementForm';
 import Settings from './pages/Settings';
+import StatusPage from './pages/StatusPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<MovementForm />} />
                 <Route path="/nuevo" element={<MovementForm />} />
+                <Route path="/status" element={<StatusPage />} />
                 <Route path="/configuracion" element={<Settings />} />
               </Routes>
             </Layout>
