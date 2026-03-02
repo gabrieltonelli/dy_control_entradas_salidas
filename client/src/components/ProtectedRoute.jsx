@@ -41,6 +41,7 @@ export const ProtectedRoute = ({ children }) => {
                     onClick={handleLogin}
                     style={{
                         padding: '16px 40px',
+                        margin: '0px 16px',
                         gap: '16px',
                         fontSize: '1.25rem'
                     }}
