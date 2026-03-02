@@ -123,9 +123,26 @@ exports.createMovement = async (req, res) => {
             }
         }
 
+        // 4. Invocación de Movimientos Derivados (Capa de Negocio en DB)
+        // Solo si es un movimiento marcado "con retorno"
+        if (movement.conRegreso) {
+            console.log(`Invocando movimientos derivados para ID: ${movementId}`);
+            try {
+                // El SP sp_GenerarMovimientosDerivados se encarga de:
+                // - Crear movimientos de ingreso/regreso según dependencias.
+                // - Clonar artículos/documentos con sinRetorno=0.
+                await connection.query('CALL sp_GenerarMovimientosDerivados(?)', [movementId]);
+            } catch (spError) {
+                console.error('Error en Store Procedure sp_GenerarMovimientosDerivados:', spError);
+                throw new Error(`Error procesando movimientos derivados: ${spError.message}`);
+            }
+        }
+
         await connection.commit();
         res.status(201).json({
-            message: 'Movement created successfully',
+            message: movement.conRegreso
+                ? 'Solicitud y movimientos derivados generados correctamente'
+                : 'Movimiento creado exitosamente',
             id: movementId
         });
 

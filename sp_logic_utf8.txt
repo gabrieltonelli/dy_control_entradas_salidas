@@ -1,0 +1,802 @@
+﻿
+  docs\dump-Acceso_A_Planta-202603021320.sql:688:DELIMI
+TER ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:689:/*!500
+03 SET sql_mode              = @saved_sql_mode */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:690:/*!500
+03 SET character_set_client  = @saved_cs_client */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:691:/*!500
+03 SET character_set_results = @saved_cs_results */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:692:/*!500
+03 SET collation_connection  = @saved_col_connection 
+*/ ;
+> docs\dump-Acceso_A_Planta-202603021320.sql:693:/*!500
+03 DROP PROCEDURE IF EXISTS 
+`sp_GenerarMovimientosDerivados` */;
+  docs\dump-Acceso_A_Planta-202603021320.sql:694:/*!500
+03 SET @saved_cs_client      = @@character_set_client 
+*/ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:695:/*!500
+03 SET @saved_cs_results     = @@character_set_results 
+*/ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:696:/*!500
+03 SET @saved_col_connection = @@collation_connection 
+*/ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:697:/*!500
+03 SET character_set_client  = utf8mb4 */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:698:/*!500
+03 SET character_set_results = utf8mb4 */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:699:/*!500
+03 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:700:/*!500
+03 SET @saved_sql_mode       = @@sql_mode */ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:701:/*!500
+03 SET sql_mode              = 'STRICT_TRANS_TABLES' 
+*/ ;
+  docs\dump-Acceso_A_Planta-202603021320.sql:702:DELIMI
+TER ;;
+> 
+docs\dump-Acceso_A_Planta-202603021320.sql:703:CREATE  
+PROCEDURE `sp_GenerarMovimientosDerivados`(
+  docs\dump-Acceso_A_Planta-202603021320.sql:704:
+  docs\dump-Acceso_A_Planta-202603021320.sql:705:    
+IN p_idMovimientoOrigen INT
+  docs\dump-Acceso_A_Planta-202603021320.sql:706:
+  docs\dump-Acceso_A_Planta-202603021320.sql:707:)
+  docs\dump-Acceso_A_Planta-202603021320.sql:708:BEGIN
+  docs\dump-Acceso_A_Planta-202603021320.sql:709:
+  docs\dump-Acceso_A_Planta-202603021320.sql:710:    
+DECLARE v_idTipo INT;
+  docs\dump-Acceso_A_Planta-202603021320.sql:711:
+  docs\dump-Acceso_A_Planta-202603021320.sql:712:    
+DECLARE v_personaInterna VARCHAR(30);
+  docs\dump-Acceso_A_Planta-202603021320.sql:713:
+  docs\dump-Acceso_A_Planta-202603021320.sql:714:    
+DECLARE v_conRegreso TINYINT;
+  docs\dump-Acceso_A_Planta-202603021320.sql:715:
+  docs\dump-Acceso_A_Planta-202603021320.sql:716:
+  docs\dump-Acceso_A_Planta-202603021320.sql:717:
+  docs\dump-Acceso_A_Planta-202603021320.sql:718:    
+DECLARE v_idLugarOrigen INT;
+  docs\dump-Acceso_A_Planta-202603021320.sql:719:
+  docs\dump-Acceso_A_Planta-202603021320.sql:720:    
+DECLARE v_idLugarDestino INT;
+  docs\dump-Acceso_A_Planta-202603021320.sql:721:
+  docs\dump-Acceso_A_Planta-202603021320.sql:722:
+  docs\dump-Acceso_A_Planta-202603021320.sql:723:
+  docs\dump-Acceso_A_Planta-202603021320.sql:724:    
+DECLARE v_origen_dep TINYINT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:725:
+  docs\dump-Acceso_A_Planta-202603021320.sql:726:    
+DECLARE v_destino_dep TINYINT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:727:
+  docs\dump-Acceso_A_Planta-202603021320.sql:728:
+  docs\dump-Acceso_A_Planta-202603021320.sql:729:
+  docs\dump-Acceso_A_Planta-202603021320.sql:730:    
+DECLARE v_fecha DATETIME;
+  docs\dump-Acceso_A_Planta-202603021320.sql:731:
+  docs\dump-Acceso_A_Planta-202603021320.sql:732:    
+DECLARE v_motivo VARCHAR(60);
+  docs\dump-Acceso_A_Planta-202603021320.sql:733:
+  docs\dump-Acceso_A_Planta-202603021320.sql:734:    
+DECLARE v_autorizante VARCHAR(30);
+  docs\dump-Acceso_A_Planta-202603021320.sql:735:
+  docs\dump-Acceso_A_Planta-202603021320.sql:736:    
+DECLARE v_observacion VARCHAR(500);
+  docs\dump-Acceso_A_Planta-202603021320.sql:737:
+  docs\dump-Acceso_A_Planta-202603021320.sql:738:    
+DECLARE v_usuario_app VARCHAR(100);
+  docs\dump-Acceso_A_Planta-202603021320.sql:739:
+  docs\dump-Acceso_A_Planta-202603021320.sql:740:    
+DECLARE v_vigilador VARCHAR(30);
+  docs\dump-Acceso_A_Planta-202603021320.sql:741:
+  docs\dump-Acceso_A_Planta-202603021320.sql:742:
+  docs\dump-Acceso_A_Planta-202603021320.sql:743:
+  docs\dump-Acceso_A_Planta-202603021320.sql:744:    
+DECLARE v_id_ingreso_destino INT DEFAULT NULL;
+  docs\dump-Acceso_A_Planta-202603021320.sql:745:
+  docs\dump-Acceso_A_Planta-202603021320.sql:746:    
+DECLARE v_id_egreso_destino  INT DEFAULT NULL;
+  docs\dump-Acceso_A_Planta-202603021320.sql:747:
+  docs\dump-Acceso_A_Planta-202603021320.sql:748:    
+DECLARE v_id_ingreso_origen  INT DEFAULT NULL;
+  docs\dump-Acceso_A_Planta-202603021320.sql:749:
+  docs\dump-Acceso_A_Planta-202603021320.sql:750:
+  docs\dump-Acceso_A_Planta-202603021320.sql:751:
+  docs\dump-Acceso_A_Planta-202603021320.sql:752:    
+DECLARE v_exists INT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:753:
+  docs\dump-Acceso_A_Planta-202603021320.sql:754:    
+DECLARE v_has_to_clone INT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:755:
+  docs\dump-Acceso_A_Planta-202603021320.sql:756:    
+DECLARE v_cnt_target_art INT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:757:
+  docs\dump-Acceso_A_Planta-202603021320.sql:758:    
+DECLARE v_cnt_target_doc INT DEFAULT 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:759:
+  docs\dump-Acceso_A_Planta-202603021320.sql:760:
+  docs\dump-Acceso_A_Planta-202603021320.sql:761:
+  docs\dump-Acceso_A_Planta-202603021320.sql:762:    
+-- Rollback automático ante error
+  docs\dump-Acceso_A_Planta-202603021320.sql:763:
+  docs\dump-Acceso_A_Planta-202603021320.sql:764:    
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  docs\dump-Acceso_A_Planta-202603021320.sql:765:
+  docs\dump-Acceso_A_Planta-202603021320.sql:766:    
+BEGIN
+  docs\dump-Acceso_A_Planta-202603021320.sql:767:
+  docs\dump-Acceso_A_Planta-202603021320.sql:768:      
+  ROLLBACK;
+  docs\dump-Acceso_A_Planta-202603021320.sql:769:
+  docs\dump-Acceso_A_Planta-202603021320.sql:770:      
+  RESIGNAL;
+  docs\dump-Acceso_A_Planta-202603021320.sql:771:
+  docs\dump-Acceso_A_Planta-202603021320.sql:772:    
+END;
+  docs\dump-Acceso_A_Planta-202603021320.sql:773:
+  docs\dump-Acceso_A_Planta-202603021320.sql:774:
+  docs\dump-Acceso_A_Planta-202603021320.sql:775:
+  docs\dump-Acceso_A_Planta-202603021320.sql:776:    
+START TRANSACTION;
+  docs\dump-Acceso_A_Planta-202603021320.sql:777:
+  docs\dump-Acceso_A_Planta-202603021320.sql:778:
+  docs\dump-Acceso_A_Planta-202603021320.sql:779:
+  docs\dump-Acceso_A_Planta-202603021320.sql:780:    
+-- 1) Traer el movimiento originante y bloquearlo
+  docs\dump-Acceso_A_Planta-202603021320.sql:781:
+  docs\dump-Acceso_A_Planta-202603021320.sql:782:    
+SELECT
+  docs\dump-Acceso_A_Planta-202603021320.sql:783:
+  docs\dump-Acceso_A_Planta-202603021320.sql:784:      
+  idTipo, personaInterna, conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:785:
+  docs\dump-Acceso_A_Planta-202603021320.sql:786:      
+  idLugarOrigen, idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:787:
+  docs\dump-Acceso_A_Planta-202603021320.sql:788:      
+  fechaHoraRegistro, motivo, personaAutorizante, 
+observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:789:
+  docs\dump-Acceso_A_Planta-202603021320.sql:790:      
+  usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:791:
+  docs\dump-Acceso_A_Planta-202603021320.sql:792:    
+INTO
+  docs\dump-Acceso_A_Planta-202603021320.sql:793:
+  docs\dump-Acceso_A_Planta-202603021320.sql:794:      
+  v_idTipo, v_personaInterna, v_conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:795:
+  docs\dump-Acceso_A_Planta-202603021320.sql:796:      
+  v_idLugarOrigen, v_idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:797:
+  docs\dump-Acceso_A_Planta-202603021320.sql:798:      
+  v_fecha, v_motivo, v_autorizante, v_observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:799:
+  docs\dump-Acceso_A_Planta-202603021320.sql:800:      
+  v_usuario_app, v_vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:801:
+  docs\dump-Acceso_A_Planta-202603021320.sql:802:    
+FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:803:
+  docs\dump-Acceso_A_Planta-202603021320.sql:804:    
+WHERE id = p_idMovimientoOrigen
+  docs\dump-Acceso_A_Planta-202603021320.sql:805:
+  docs\dump-Acceso_A_Planta-202603021320.sql:806:    
+FOR UPDATE;
+  docs\dump-Acceso_A_Planta-202603021320.sql:807:
+  docs\dump-Acceso_A_Planta-202603021320.sql:808:
+  docs\dump-Acceso_A_Planta-202603021320.sql:809:
+  docs\dump-Acceso_A_Planta-202603021320.sql:810:    
+IF v_idTipo IS NULL THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:811:
+  docs\dump-Acceso_A_Planta-202603021320.sql:812:      
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 
+'Movimiento origen inexistente';
+  docs\dump-Acceso_A_Planta-202603021320.sql:813:
+  docs\dump-Acceso_A_Planta-202603021320.sql:814:    
+END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:815:
+  docs\dump-Acceso_A_Planta-202603021320.sql:816:
+  docs\dump-Acceso_A_Planta-202603021320.sql:817:
+  docs\dump-Acceso_A_Planta-202603021320.sql:818:    
+-- 2) Validaciones: solo internos y conRegreso
+  docs\dump-Acceso_A_Planta-202603021320.sql:819:
+  docs\dump-Acceso_A_Planta-202603021320.sql:820:    
+IF COALESCE(v_conRegreso,0) <> 1 OR v_personaInterna 
+IS NULL THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:821:
+  docs\dump-Acceso_A_Planta-202603021320.sql:822:      
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El 
+movimiento no califica (conRegreso=1 y personaInterna 
+no NULL)';
+  docs\dump-Acceso_A_Planta-202603021320.sql:823:
+  docs\dump-Acceso_A_Planta-202603021320.sql:824:    
+END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:825:
+  docs\dump-Acceso_A_Planta-202603021320.sql:826:
+  docs\dump-Acceso_A_Planta-202603021320.sql:827:
+  docs\dump-Acceso_A_Planta-202603021320.sql:828:    
+-- 3) Caso 2 asume egreso como originante (según tu 
+definición)
+  docs\dump-Acceso_A_Planta-202603021320.sql:829:
+  docs\dump-Acceso_A_Planta-202603021320.sql:830:    
+IF v_idTipo <> 1 THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:831:
+  docs\dump-Acceso_A_Planta-202603021320.sql:832:      
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se 
+esperaba idTipo=1 (Egreso) en movimiento originante';
+  docs\dump-Acceso_A_Planta-202603021320.sql:833:
+  docs\dump-Acceso_A_Planta-202603021320.sql:834:    
+END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:835:
+  docs\dump-Acceso_A_Planta-202603021320.sql:836:
+  docs\dump-Acceso_A_Planta-202603021320.sql:837:
+  docs\dump-Acceso_A_Planta-202603021320.sql:838:    
+-- 4) Determinar dependencias (lugares.esDependencia)
+  docs\dump-Acceso_A_Planta-202603021320.sql:839:
+  docs\dump-Acceso_A_Planta-202603021320.sql:840:    
+SELECT esDependencia INTO v_origen_dep
+  docs\dump-Acceso_A_Planta-202603021320.sql:841:
+  docs\dump-Acceso_A_Planta-202603021320.sql:842:      
+FROM lugares WHERE id = v_idLugarOrigen;
+  docs\dump-Acceso_A_Planta-202603021320.sql:843:
+  docs\dump-Acceso_A_Planta-202603021320.sql:844:
+  docs\dump-Acceso_A_Planta-202603021320.sql:845:
+  docs\dump-Acceso_A_Planta-202603021320.sql:846:    
+SELECT esDependencia INTO v_destino_dep
+  docs\dump-Acceso_A_Planta-202603021320.sql:847:
+  docs\dump-Acceso_A_Planta-202603021320.sql:848:      
+FROM lugares WHERE id = v_idLugarDestino;
+  docs\dump-Acceso_A_Planta-202603021320.sql:849:
+  docs\dump-Acceso_A_Planta-202603021320.sql:850:
+  docs\dump-Acceso_A_Planta-202603021320.sql:851:
+  docs\dump-Acceso_A_Planta-202603021320.sql:852:    
+-- 5) Marcar grupo y orden del originante
+  docs\dump-Acceso_A_Planta-202603021320.sql:853:
+  docs\dump-Acceso_A_Planta-202603021320.sql:854:    
+UPDATE movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:855:
+  docs\dump-Acceso_A_Planta-202603021320.sql:856:      
+ SET idGrupo = p_idMovimientoOrigen,
+  docs\dump-Acceso_A_Planta-202603021320.sql:857:
+  docs\dump-Acceso_A_Planta-202603021320.sql:858:      
+     ordenGrupo = 1
+  docs\dump-Acceso_A_Planta-202603021320.sql:859:
+  docs\dump-Acceso_A_Planta-202603021320.sql:860:     
+WHERE id = p_idMovimientoOrigen;
+  docs\dump-Acceso_A_Planta-202603021320.sql:861:
+  docs\dump-Acceso_A_Planta-202603021320.sql:862:
+  docs\dump-Acceso_A_Planta-202603021320.sql:863:
+  docs\dump-Acceso_A_Planta-202603021320.sql:864:    
+-- ====================================================
+=====
+  docs\dump-Acceso_A_Planta-202603021320.sql:865:
+  docs\dump-Acceso_A_Planta-202603021320.sql:866:    
+-- CASO 1: dependencia -> NO dependencia (incluye 
+Exteriores)
+  docs\dump-Acceso_A_Planta-202603021320.sql:867:
+  docs\dump-Acceso_A_Planta-202603021320.sql:868:    
+-- ====================================================
+=====
+  docs\dump-Acceso_A_Planta-202603021320.sql:869:
+  docs\dump-Acceso_A_Planta-202603021320.sql:870:    
+IF v_origen_dep = 1 AND v_destino_dep = 0 THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:871:
+  docs\dump-Acceso_A_Planta-202603021320.sql:872:
+  docs\dump-Acceso_A_Planta-202603021320.sql:873:
+  docs\dump-Acceso_A_Planta-202603021320.sql:874:      
+  -- Blindaje: si ya existe orden 2, no crear de nuevo
+  docs\dump-Acceso_A_Planta-202603021320.sql:875:
+  docs\dump-Acceso_A_Planta-202603021320.sql:876:      
+  SELECT COUNT(*) INTO v_exists
+  docs\dump-Acceso_A_Planta-202603021320.sql:877:
+  docs\dump-Acceso_A_Planta-202603021320.sql:878:      
+  FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:879:
+  docs\dump-Acceso_A_Planta-202603021320.sql:880:      
+  WHERE idGrupo = p_idMovimientoOrigen AND ordenGrupo 
+= 2;
+  docs\dump-Acceso_A_Planta-202603021320.sql:881:
+  docs\dump-Acceso_A_Planta-202603021320.sql:882:
+  docs\dump-Acceso_A_Planta-202603021320.sql:883:
+  docs\dump-Acceso_A_Planta-202603021320.sql:884:      
+  IF v_exists = 0 THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:885:
+  docs\dump-Acceso_A_Planta-202603021320.sql:886:      
+      INSERT INTO movimientos (
+  docs\dump-Acceso_A_Planta-202603021320.sql:887:
+  docs\dump-Acceso_A_Planta-202603021320.sql:888:      
+          idGrupo, ordenGrupo, idTipo,
+  docs\dump-Acceso_A_Planta-202603021320.sql:889:
+  docs\dump-Acceso_A_Planta-202603021320.sql:890:      
+          personaInterna, idPersonaExterna,
+  docs\dump-Acceso_A_Planta-202603021320.sql:891:
+  docs\dump-Acceso_A_Planta-202603021320.sql:892:      
+          fechaHoraRegistro, conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:893:
+  docs\dump-Acceso_A_Planta-202603021320.sql:894:      
+          motivo, personaAutorizante, observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:895:
+  docs\dump-Acceso_A_Planta-202603021320.sql:896:      
+          idEstado, idLugarOrigen, idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:897:
+  docs\dump-Acceso_A_Planta-202603021320.sql:898:      
+          destinoDetalle, personaReceptora,
+  docs\dump-Acceso_A_Planta-202603021320.sql:899:
+  docs\dump-Acceso_A_Planta-202603021320.sql:900:      
+          esRecurrente, vencimientoRecurrencias,
+  docs\dump-Acceso_A_Planta-202603021320.sql:901:
+  docs\dump-Acceso_A_Planta-202603021320.sql:902:      
+          usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:903:
+  docs\dump-Acceso_A_Planta-202603021320.sql:904:      
+      )
+  docs\dump-Acceso_A_Planta-202603021320.sql:905:
+  docs\dump-Acceso_A_Planta-202603021320.sql:906:      
+      VALUES (
+  docs\dump-Acceso_A_Planta-202603021320.sql:907:
+  docs\dump-Acceso_A_Planta-202603021320.sql:908:      
+          p_idMovimientoOrigen, 2, 2,           -- 
+Ingreso
+  docs\dump-Acceso_A_Planta-202603021320.sql:909:
+  docs\dump-Acceso_A_Planta-202603021320.sql:910:      
+          v_personaInterna, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:911:
+  docs\dump-Acceso_A_Planta-202603021320.sql:912:      
+          v_fecha,
+  docs\dump-Acceso_A_Planta-202603021320.sql:913:
+  docs\dump-Acceso_A_Planta-202603021320.sql:914:      
+          0,                                    -- 
+evitar cascadas
+  docs\dump-Acceso_A_Planta-202603021320.sql:915:
+  docs\dump-Acceso_A_Planta-202603021320.sql:916:      
+          v_motivo, v_autorizante, v_observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:917:
+  docs\dump-Acceso_A_Planta-202603021320.sql:918:      
+          1,                                    -- 
+Pendiente
+  docs\dump-Acceso_A_Planta-202603021320.sql:919:
+  docs\dump-Acceso_A_Planta-202603021320.sql:920:      
+          v_idLugarDestino, v_idLugarOrigen,     -- 
+invertidos
+  docs\dump-Acceso_A_Planta-202603021320.sql:921:
+  docs\dump-Acceso_A_Planta-202603021320.sql:922:      
+          NULL, NULL,                            -- 
+limpiar
+  docs\dump-Acceso_A_Planta-202603021320.sql:923:
+  docs\dump-Acceso_A_Planta-202603021320.sql:924:      
+          0, NULL,                               -- 
+limpiar recurrencia
+  docs\dump-Acceso_A_Planta-202603021320.sql:925:
+  docs\dump-Acceso_A_Planta-202603021320.sql:926:      
+          v_usuario_app, COALESCE(v_vigilador,'')
+  docs\dump-Acceso_A_Planta-202603021320.sql:927:
+  docs\dump-Acceso_A_Planta-202603021320.sql:928:      
+      );
+  docs\dump-Acceso_A_Planta-202603021320.sql:929:
+  docs\dump-Acceso_A_Planta-202603021320.sql:930:      
+      SET v_id_ingreso_origen = LAST_INSERT_ID();
+  docs\dump-Acceso_A_Planta-202603021320.sql:931:
+  docs\dump-Acceso_A_Planta-202603021320.sql:932:      
+  ELSE
+  docs\dump-Acceso_A_Planta-202603021320.sql:933:
+  docs\dump-Acceso_A_Planta-202603021320.sql:934:      
+      SELECT id INTO v_id_ingreso_origen
+  docs\dump-Acceso_A_Planta-202603021320.sql:935:
+  docs\dump-Acceso_A_Planta-202603021320.sql:936:      
+      FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:937:
+  docs\dump-Acceso_A_Planta-202603021320.sql:938:      
+      WHERE idGrupo = p_idMovimientoOrigen AND 
+ordenGrupo = 2
+  docs\dump-Acceso_A_Planta-202603021320.sql:939:
+  docs\dump-Acceso_A_Planta-202603021320.sql:940:      
+      LIMIT 1;
+  docs\dump-Acceso_A_Planta-202603021320.sql:941:
+  docs\dump-Acceso_A_Planta-202603021320.sql:942:      
+  END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:943:
+  docs\dump-Acceso_A_Planta-202603021320.sql:944:
+  docs\dump-Acceso_A_Planta-202603021320.sql:945:
+  docs\dump-Acceso_A_Planta-202603021320.sql:946:      
+  -- Regla: en caso 1 NO se clonan items (evita 
+duplicados para Exteriores/no dependencia)
+  docs\dump-Acceso_A_Planta-202603021320.sql:947:
+  docs\dump-Acceso_A_Planta-202603021320.sql:948:
+  docs\dump-Acceso_A_Planta-202603021320.sql:949:
+  docs\dump-Acceso_A_Planta-202603021320.sql:950:    
+-- ====================================================
+=====
+  docs\dump-Acceso_A_Planta-202603021320.sql:951:
+  docs\dump-Acceso_A_Planta-202603021320.sql:952:    
+-- CASO 2: dependencia -> dependencia (4 movimientos 
+total)
+  docs\dump-Acceso_A_Planta-202603021320.sql:953:
+  docs\dump-Acceso_A_Planta-202603021320.sql:954:    
+-- ====================================================
+=====
+  docs\dump-Acceso_A_Planta-202603021320.sql:955:
+  docs\dump-Acceso_A_Planta-202603021320.sql:956:    
+ELSEIF v_origen_dep = 1 AND v_destino_dep = 1 THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:957:
+  docs\dump-Acceso_A_Planta-202603021320.sql:958:
+  docs\dump-Acceso_A_Planta-202603021320.sql:959:
+  docs\dump-Acceso_A_Planta-202603021320.sql:960:      
+  -- (2) Ingreso a dependencia destino
+  docs\dump-Acceso_A_Planta-202603021320.sql:961:
+  docs\dump-Acceso_A_Planta-202603021320.sql:962:      
+  SELECT id INTO v_id_ingreso_destino
+  docs\dump-Acceso_A_Planta-202603021320.sql:963:
+  docs\dump-Acceso_A_Planta-202603021320.sql:964:      
+  FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:965:
+  docs\dump-Acceso_A_Planta-202603021320.sql:966:      
+  WHERE idGrupo = p_idMovimientoOrigen AND ordenGrupo 
+= 2
+  docs\dump-Acceso_A_Planta-202603021320.sql:967:
+  docs\dump-Acceso_A_Planta-202603021320.sql:968:      
+  LIMIT 1;
+  docs\dump-Acceso_A_Planta-202603021320.sql:969:
+  docs\dump-Acceso_A_Planta-202603021320.sql:970:
+  docs\dump-Acceso_A_Planta-202603021320.sql:971:
+  docs\dump-Acceso_A_Planta-202603021320.sql:972:      
+  IF v_id_ingreso_destino IS NULL THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:973:
+  docs\dump-Acceso_A_Planta-202603021320.sql:974:      
+      INSERT INTO movimientos (
+  docs\dump-Acceso_A_Planta-202603021320.sql:975:
+  docs\dump-Acceso_A_Planta-202603021320.sql:976:      
+          idGrupo, ordenGrupo, idTipo,
+  docs\dump-Acceso_A_Planta-202603021320.sql:977:
+  docs\dump-Acceso_A_Planta-202603021320.sql:978:      
+          personaInterna, idPersonaExterna,
+  docs\dump-Acceso_A_Planta-202603021320.sql:979:
+  docs\dump-Acceso_A_Planta-202603021320.sql:980:      
+          fechaHoraRegistro, conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:981:
+  docs\dump-Acceso_A_Planta-202603021320.sql:982:      
+          motivo, personaAutorizante, observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:983:
+  docs\dump-Acceso_A_Planta-202603021320.sql:984:      
+          idEstado, idLugarOrigen, idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:985:
+  docs\dump-Acceso_A_Planta-202603021320.sql:986:      
+          destinoDetalle, personaReceptora,
+  docs\dump-Acceso_A_Planta-202603021320.sql:987:
+  docs\dump-Acceso_A_Planta-202603021320.sql:988:      
+          esRecurrente, vencimientoRecurrencias,
+  docs\dump-Acceso_A_Planta-202603021320.sql:989:
+  docs\dump-Acceso_A_Planta-202603021320.sql:990:      
+          usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:991:
+  docs\dump-Acceso_A_Planta-202603021320.sql:992:      
+      )
+  docs\dump-Acceso_A_Planta-202603021320.sql:993:
+  docs\dump-Acceso_A_Planta-202603021320.sql:994:      
+      VALUES (
+  docs\dump-Acceso_A_Planta-202603021320.sql:995:
+  docs\dump-Acceso_A_Planta-202603021320.sql:996:      
+          p_idMovimientoOrigen, 2, 2,           -- 
+Ingreso
+  docs\dump-Acceso_A_Planta-202603021320.sql:997:
+  docs\dump-Acceso_A_Planta-202603021320.sql:998:      
+          v_personaInterna, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:999:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1000:     
+           v_fecha,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1001:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1002:     
+           0,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1003:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1004:     
+           v_motivo, v_autorizante, v_observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1005:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1006:     
+           1,                                    -- 
+Pendiente
+  docs\dump-Acceso_A_Planta-202603021320.sql:1007:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1008:     
+           v_idLugarOrigen, v_idLugarDestino,     -- 
+mismo trayecto
+  docs\dump-Acceso_A_Planta-202603021320.sql:1009:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1010:     
+           NULL, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1011:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1012:     
+           0, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1013:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1014:     
+           v_usuario_app, COALESCE(v_vigilador,'')
+  docs\dump-Acceso_A_Planta-202603021320.sql:1015:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1016:     
+       );
+  docs\dump-Acceso_A_Planta-202603021320.sql:1017:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1018:     
+       SET v_id_ingreso_destino = LAST_INSERT_ID();
+  docs\dump-Acceso_A_Planta-202603021320.sql:1019:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1020:     
+   END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1021:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1022:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1023:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1024:     
+   -- (3) Egreso desde dependencia destino hacia 
+origen  ✅ (aquí van los clones)
+  docs\dump-Acceso_A_Planta-202603021320.sql:1025:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1026:     
+   SELECT id INTO v_id_egreso_destino
+  docs\dump-Acceso_A_Planta-202603021320.sql:1027:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1028:     
+   FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1029:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1030:     
+   WHERE idGrupo = p_idMovimientoOrigen AND ordenGrupo 
+= 3
+  docs\dump-Acceso_A_Planta-202603021320.sql:1031:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1032:     
+   LIMIT 1;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1033:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1034:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1035:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1036:     
+   IF v_id_egreso_destino IS NULL THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:1037:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1038:     
+       INSERT INTO movimientos (
+  docs\dump-Acceso_A_Planta-202603021320.sql:1039:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1040:     
+           idGrupo, ordenGrupo, idTipo,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1041:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1042:     
+           personaInterna, idPersonaExterna,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1043:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1044:     
+           fechaHoraRegistro, conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1045:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1046:     
+           motivo, personaAutorizante, observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1047:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1048:     
+           idEstado, idLugarOrigen, idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1049:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1050:     
+           destinoDetalle, personaReceptora,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1051:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1052:     
+           esRecurrente, vencimientoRecurrencias,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1053:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1054:     
+           usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:1055:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1056:     
+       )
+  docs\dump-Acceso_A_Planta-202603021320.sql:1057:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1058:     
+       VALUES (
+  docs\dump-Acceso_A_Planta-202603021320.sql:1059:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1060:     
+           p_idMovimientoOrigen, 3, 1,           -- 
+Egreso
+  docs\dump-Acceso_A_Planta-202603021320.sql:1061:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1062:     
+           v_personaInterna, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1063:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1064:     
+           v_fecha,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1065:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1066:     
+           0,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1067:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1068:     
+           v_motivo, v_autorizante, v_observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1069:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1070:     
+           1,                                    -- 
+Pendiente
+  docs\dump-Acceso_A_Planta-202603021320.sql:1071:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1072:     
+           v_idLugarDestino, v_idLugarOrigen,     -- 
+invertidos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1073:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1074:     
+           NULL, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1075:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1076:     
+           0, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1077:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1078:     
+           v_usuario_app, COALESCE(v_vigilador,'')
+  docs\dump-Acceso_A_Planta-202603021320.sql:1079:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1080:     
+       );
+  docs\dump-Acceso_A_Planta-202603021320.sql:1081:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1082:     
+       SET v_id_egreso_destino = LAST_INSERT_ID();
+  docs\dump-Acceso_A_Planta-202603021320.sql:1083:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1084:     
+   END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1085:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1086:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1087:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1088:     
+   -- (4) Ingreso final a dependencia origen
+  docs\dump-Acceso_A_Planta-202603021320.sql:1089:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1090:     
+   SELECT id INTO v_id_ingreso_origen
+  docs\dump-Acceso_A_Planta-202603021320.sql:1091:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1092:     
+   FROM movimientos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1093:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1094:     
+   WHERE idGrupo = p_idMovimientoOrigen AND ordenGrupo 
+= 4
+  docs\dump-Acceso_A_Planta-202603021320.sql:1095:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1096:     
+   LIMIT 1;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1097:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1098:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1099:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1100:     
+   IF v_id_ingreso_origen IS NULL THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:1101:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1102:     
+       INSERT INTO movimientos (
+  docs\dump-Acceso_A_Planta-202603021320.sql:1103:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1104:     
+           idGrupo, ordenGrupo, idTipo,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1105:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1106:     
+           personaInterna, idPersonaExterna,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1107:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1108:     
+           fechaHoraRegistro, conRegreso,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1109:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1110:     
+           motivo, personaAutorizante, observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1111:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1112:     
+           idEstado, idLugarOrigen, idLugarDestino,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1113:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1114:     
+           destinoDetalle, personaReceptora,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1115:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1116:     
+           esRecurrente, vencimientoRecurrencias,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1117:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1118:     
+           usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:1119:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1120:     
+       )
+  docs\dump-Acceso_A_Planta-202603021320.sql:1121:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1122:     
+       VALUES (
+  docs\dump-Acceso_A_Planta-202603021320.sql:1123:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1124:     
+           p_idMovimientoOrigen, 4, 2,           -- 
+Ingreso
+  docs\dump-Acceso_A_Planta-202603021320.sql:1125:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1126:     
+           v_personaInterna, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1127:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1128:     
+           v_fecha,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1129:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1130:     
+           0,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1131:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1132:     
+           v_motivo, v_autorizante, v_observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1133:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1134:     
+           1,                                    -- 
+Pendiente
+  docs\dump-Acceso_A_Planta-202603021320.sql:1135:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1136:     
+           v_idLugarDestino, v_idLugarOrigen,     -- 
+invertidos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1137:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1138:     
+           NULL, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1139:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1140:     
+           0, NULL,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1141:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1142:     
+           v_usuario_app, COALESCE(v_vigilador,'')
+  docs\dump-Acceso_A_Planta-202603021320.sql:1143:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1144:     
+       );
+  docs\dump-Acceso_A_Planta-202603021320.sql:1145:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1146:     
+       SET v_id_ingreso_origen = LAST_INSERT_ID();
+  docs\dump-Acceso_A_Planta-202603021320.sql:1147:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1148:     
+   END IF;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1149:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1150:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1151:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1152:     
+   -- =================================================
+========
+  docs\dump-Acceso_A_Planta-202603021320.sql:1153:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1154:     
+   -- Blindaje de CLONADO:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1155:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1156:     
+   -- - Solo clonar si en el origen hay items con 
+sinRetorno=0
+  docs\dump-Acceso_A_Planta-202603021320.sql:1157:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1158:     
+   -- - Y si el movimiento target (orden 3) todavía NO 
+tiene items (evita duplicados por re-ejecución)
+  docs\dump-Acceso_A_Planta-202603021320.sql:1159:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1160:     
+   -- - Clonar SOLO a v_id_egreso_destino (orden 3) ✅
+  docs\dump-Acceso_A_Planta-202603021320.sql:1161:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1162:     
+   -- =================================================
+========
+  docs\dump-Acceso_A_Planta-202603021320.sql:1163:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1164:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1165:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1166:     
+   SELECT COUNT(*) INTO v_has_to_clone
+  docs\dump-Acceso_A_Planta-202603021320.sql:1167:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1168:     
+   FROM articulos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1169:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1170:     
+   WHERE idMovimiento = p_idMovimientoOrigen AND 
+sinRetorno = 0;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1171:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1172:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1173:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1174:     
+   SELECT COUNT(*) INTO v_cnt_target_art
+  docs\dump-Acceso_A_Planta-202603021320.sql:1175:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1176:     
+   FROM articulos
+  docs\dump-Acceso_A_Planta-202603021320.sql:1177:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1178:     
+   WHERE idMovimiento = v_id_egreso_destino;
+  docs\dump-Acceso_A_Planta-202603021320.sql:1179:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1180:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1181:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1182:     
+   IF v_has_to_clone > 0 AND v_cnt_target_art = 0 THEN
+  docs\dump-Acceso_A_Planta-202603021320.sql:1183:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1184:     
+       INSERT INTO articulos (
+  docs\dump-Acceso_A_Planta-202603021320.sql:1185:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1186:     
+           idMovimiento,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1187:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1188:     
+           codigoERP, codigoQR, codigoBarras, 
+codigoOtro,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1189:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1190:     
+           descripcion, cantidad,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1191:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1192:     
+           idEstado,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1193:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1194:     
+           idLugarOrigen, remitente,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1195:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1196:     
+           idLugarDestino, destinatario,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1197:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1198:     
+           sinRetorno,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1199:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1200:     
+           presentacion, observacion,
+  docs\dump-Acceso_A_Planta-202603021320.sql:1201:
+  docs\dump-Acceso_A_Planta-202603021320.sql:1202:     
+           usuario_app, vigilador
+  docs\dump-Acceso_A_Planta-202603021320.sql:1203:
+
+
