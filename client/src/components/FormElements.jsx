@@ -234,9 +234,10 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
         <div id={containerId} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: showOptions ? 1001 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
             <input
-                style={{ width: '100%', outline: 'none' }}
+                style={{ width: '100%', outline: 'none', opacity: props.disabled ? 0.6 : 1, cursor: props.disabled ? 'not-allowed' : 'text' }}
                 value={inputValue}
                 onChange={(e) => {
+                    if (props.disabled) return;
                     const val = e.target.value;
                     setInputValue(val);
                     setShowOptions(true);
@@ -245,10 +246,11 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                         onSelect({ id: '', label: '' });
                     }
                 }}
-                onFocus={() => setShowOptions(true)}
+                onFocus={() => !props.disabled && setShowOptions(true)}
                 onBlur={handleBlur}
                 {...props}
                 autoComplete="off"
+                disabled={props.disabled}
             />
             {showOptions && inputValue.length > 0 && (
                 <ul className="glass" style={{
@@ -299,17 +301,17 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
     );
 };
 
-export const Switch = ({ label, name, checked, onChange, activeLabel = 'Activado', inactiveLabel = 'Desactivado', style }) => {
+export const Switch = ({ label, name, checked, onChange, activeLabel = 'Activado', inactiveLabel = 'Desactivado', style, ...props }) => {
     return (
-        <div style={{ marginBottom: '16px', ...style }}>
+        <div style={{ marginBottom: '16px', ...style, opacity: props.disabled ? 0.6 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block', marginBottom: '8px' }}>{label}</label>}
             <div
-                onClick={() => onChange({ target: { name, value: !checked, type: 'checkbox', checked: !checked } })}
+                onClick={() => !props.disabled && onChange({ target: { name, value: !checked, type: 'checkbox', checked: !checked } })}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
-                    cursor: 'pointer',
+                    cursor: props.disabled ? 'not-allowed' : 'pointer',
                     padding: '12px 16px',
                     backgroundColor: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -400,11 +402,11 @@ export const DatePicker = ({ label, value, onChange, name, min, max, containerId
     for (let i = 1; i <= totalDays; i++) days.push(i);
 
     return (
-        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
 
             <div
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => !props.disabled && setIsOpen(!isOpen)}
                 className="input-trigger"
                 style={{
                     width: '100%',
@@ -412,7 +414,7 @@ export const DatePicker = ({ label, value, onChange, name, min, max, containerId
                     backgroundColor: 'var(--surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius)',
-                    cursor: 'pointer',
+                    cursor: props.disabled ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',

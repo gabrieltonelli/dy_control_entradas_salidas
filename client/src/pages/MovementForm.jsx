@@ -23,6 +23,8 @@ const MovementForm = () => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showSelfAuthWarning, setShowSelfAuthWarning] = useState(false);
     const [isVerifyingLegajo, setIsVerifyingLegajo] = useState(true);
+    const [isLoadingMasters, setIsLoadingMasters] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const capitalizeName = (str) => {
         if (!str) return '';
@@ -57,6 +59,7 @@ const MovementForm = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoadingMasters(true);
             try {
                 // Verify current user legajo
                 if (currentUser.username || currentUser.email) {
@@ -132,6 +135,8 @@ const MovementForm = () => {
                 });
             } catch (error) {
                 console.error('Error fetching masters:', error);
+            } finally {
+                setIsLoadingMasters(false);
             }
         };
         fetchData();
@@ -281,6 +286,7 @@ const MovementForm = () => {
     };
 
     const executeSubmit = async () => {
+        setIsSubmitting(true);
         try {
             // Transform conRetorno (UI) back to sinRetorno (API expected)
             const submitData = {
@@ -295,7 +301,7 @@ const MovementForm = () => {
                 }))
             };
 
-            await MovementsService.create(submitData);
+            const res = await MovementsService.create(submitData);
 
             // Guardar valores en localStorage para persistencia en el próximo formulario
             dropdownKeys.forEach(key => {
@@ -306,25 +312,30 @@ const MovementForm = () => {
             navigate('/status', {
                 state: {
                     success: true,
-                    message: 'Su solicitud ha sido registrada correctamente en el sistema.'
+                    message: res.data?.message || 'Su solicitud ha sido registrada correctamente en el sistema.',
+                    movementId: res.data?.id
                 }
             });
         } catch (error) {
             console.error('Error creating movement:', error);
+            setIsSubmitting(false);
             // Redirect to status page on error
             navigate('/status', {
                 state: {
                     success: false,
-                    message: 'No se pudo procesar la solicitud: ' + error.message
+                    message: 'No se pudo procesar la solicitud: ' + (error.response?.data?.error || error.message)
                 }
             });
         }
     };
 
-    if (isVerifyingLegajo) {
+    if (isVerifyingLegajo || isLoadingMasters) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
-                <p>Verificando credenciales...</p>
+            <div className="full-screen-loader">
+                <svg className="spinner" viewBox="0 0 50 50" style={{ width: '50px', height: '50px' }}>
+                    <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="5"></circle>
+                </svg>
+                <p>{isVerifyingLegajo ? 'Verificando credenciales...' : 'Cargando datos maestros...'}</p>
             </div>
         );
     }
@@ -350,8 +361,7 @@ const MovementForm = () => {
                             value={formData.movement.idTipo}
                             onChange={handleMovChange}
                             options={types.map(t => ({ id: t.id, label: t.nombre }))}
-                            disabled
-
+                            disabled={true} // Siempre deshabilitado
                             required
                         />
                         <Select
@@ -363,6 +373,7 @@ const MovementForm = () => {
                             options={['Motivos personales', 'Requerimiento laboral', 'Accidente o razones médicas', 'Otros']}
                             required
                             includePlaceholder={false}
+                            disabled={isSubmitting}
                         />
 
                     </div>
@@ -374,6 +385,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             activeLabel="Con retorno al origen - F2"
                             inactiveLabel="Sin retorno al origen - F1"
+                            disabled={isSubmitting}
                         />
                         <DatePicker
                             label="Fecha autorizada"
@@ -384,6 +396,7 @@ const MovementForm = () => {
                             min={today}
                             max={maxDate}
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
@@ -403,6 +416,7 @@ const MovementForm = () => {
                                 .map(l => ({ id: l.id, label: l.nombre }))}
                             required
                             includePlaceholder={false}
+                            disabled={isSubmitting}
                         />
                         <Select
                             label="Lugar de destino"
@@ -415,6 +429,7 @@ const MovementForm = () => {
                                 .map(l => ({ id: l.id, label: l.nombre }))}
                             required
                             includePlaceholder={false}
+                            disabled={isSubmitting}
                         />
                         <Input
                             label={`Detalle del destino ${lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
@@ -424,6 +439,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             maxLength={50}
                             required={lugares.find(l => String(l.id) === String(formData.movement.idLugarDestino))?.esDependencia === 0}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -444,6 +460,7 @@ const MovementForm = () => {
                                 }));
                             }}
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div style={{ marginTop: '20px' }}>
@@ -454,6 +471,7 @@ const MovementForm = () => {
                             onChange={handleMovChange}
                             placeholder="Ingrese notas o detalles adicionales aquí..."
                             maxLength={500}
+                            disabled={isSubmitting}
                         />
                     </div>
                 </Card>
@@ -461,7 +479,7 @@ const MovementForm = () => {
                 <Card>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h2 style={{ fontSize: '1.25rem' }}>Artículos</h2>
-                        <Button variant="secondary" size="sm" type="button" onClick={addArticle}>
+                        <Button variant="secondary" size="sm" type="button" onClick={addArticle} disabled={isSubmitting}>
                             <Plus size={16} />
                             <span className="desktop-only">Agregar Artículo</span>
                             <span className="mobile-only">Agregar</span>
@@ -482,14 +500,15 @@ const MovementForm = () => {
                                 variant="ghost"
                                 type="button"
                                 onClick={() => removeArticle(index)}
-                                style={{ position: 'absolute', top: '12px', right: '12px', padding: '6px', color: 'var(--error)' }}
+                                style={{ position: 'absolute', top: '12px', padding: '6px', color: 'var(--error)', float: 'right' }}
+                                disabled={isSubmitting}
                             >
                                 <Trash2 size={18} />
                             </Button>
 
                             {/* Renglón 1: Datos principales */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', paddingRight: '36px' }}>
-                                <Input label="Descripción" name="descripcion" value={art.descripcion} onChange={(e) => handleArticleChange(index, e)} maxLength={100} required />
+                                <Input label="Descripción" name="descripcion" value={art.descripcion} onChange={(e) => handleArticleChange(index, e)} maxLength={100} required disabled={isSubmitting} />
                                 <Select
                                     label="Presentación"
                                     name="presentacion"
@@ -497,6 +516,7 @@ const MovementForm = () => {
                                     onChange={(e) => handleArticleChange(index, e)}
                                     options={['Unidad(es)', 'Bulto(s)', 'Kilo(s)']}
                                     required
+                                    disabled={isSubmitting}
                                 />
                                 <Input
                                     label="Cant."
@@ -511,6 +531,7 @@ const MovementForm = () => {
                                         handleArticleChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
                                     }}
                                     required
+                                    disabled={isSubmitting}
                                 />
                             </div>
 
@@ -524,6 +545,7 @@ const MovementForm = () => {
                                     options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
                                     required
                                     includePlaceholder={false}
+                                    disabled={isSubmitting}
                                 />
                                 <Input
                                     label={`Destinatario ${lugares.find(l => String(l.id) === String(art.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
@@ -532,6 +554,7 @@ const MovementForm = () => {
                                     onChange={(e) => handleArticleChange(index, e)}
                                     maxLength={30}
                                     required={lugares.find(l => String(l.id) === String(art.idLugarDestino))?.esDependencia === 0}
+                                    disabled={isSubmitting}
                                 />
                                 <Switch
                                     name="conRetorno"
@@ -540,6 +563,7 @@ const MovementForm = () => {
                                     activeLabel="Con Retorno"
                                     inactiveLabel="Sin Retorno"
                                     style={{ marginBottom: '16px' }}
+                                    disabled={isSubmitting}
                                 />
                             </div>
                         </div>
@@ -547,7 +571,7 @@ const MovementForm = () => {
                     {formData.articles.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay artículos registrados.</p>}
                     {formData.articles.length > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-                            <Button variant="secondary" size="sm" type="button" onClick={addArticle}>
+                            <Button variant="secondary" size="sm" type="button" onClick={addArticle} disabled={isSubmitting}>
                                 <Plus size={16} />
                                 <span className="desktop-only">Agregar Artículo</span>
                                 <span className="mobile-only">Agregar</span>
@@ -559,7 +583,7 @@ const MovementForm = () => {
                 <Card>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h2 style={{ fontSize: '1.25rem' }}>Documentación</h2>
-                        <Button variant="secondary" size="sm" type="button" onClick={addDocument}>
+                        <Button variant="secondary" size="sm" type="button" onClick={addDocument} disabled={isSubmitting}>
                             <Plus size={16} />
                             <span className="desktop-only">Agregar Documento</span>
                             <span className="mobile-only">Agregar</span>
@@ -580,7 +604,8 @@ const MovementForm = () => {
                                 variant="ghost"
                                 type="button"
                                 onClick={() => removeDocument(index)}
-                                style={{ position: 'absolute', top: '12px', right: '12px', padding: '6px', color: 'var(--error)' }}
+                                style={{ position: 'absolute', top: '12px', padding: '6px', color: 'var(--error)', float: 'right' }}
+                                disabled={isSubmitting}
                             >
                                 <Trash2 size={18} />
                             </Button>
@@ -594,8 +619,9 @@ const MovementForm = () => {
                                     onChange={(e) => handleDocumentChange(index, e)}
                                     options={['Remito', 'Factura', 'Presupuesto', 'Orden de compra', 'Otros']}
                                     required
+                                    disabled={isSubmitting}
                                 />
-                                <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required />
+                                <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required disabled={isSubmitting} />
                                 <Input
                                     label="Cant."
                                     type="number"
@@ -609,6 +635,7 @@ const MovementForm = () => {
                                         handleDocumentChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
                                     }}
                                     required
+                                    disabled={isSubmitting}
                                 />
                             </div>
 
@@ -622,6 +649,7 @@ const MovementForm = () => {
                                     options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
                                     required
                                     includePlaceholder={false}
+                                    disabled={isSubmitting}
                                 />
                                 <Input
                                     label={`Destinatario ${lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
@@ -630,6 +658,7 @@ const MovementForm = () => {
                                     onChange={(e) => handleDocumentChange(index, e)}
                                     maxLength={30}
                                     required={lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0}
+                                    disabled={isSubmitting}
                                 />
                                 <Switch
                                     name="conRetorno"
@@ -638,6 +667,7 @@ const MovementForm = () => {
                                     activeLabel="Con Retorno"
                                     inactiveLabel="Sin Retorno"
                                     style={{ marginBottom: '16px' }}
+                                    disabled={isSubmitting}
                                 />
                             </div>
                         </div>
@@ -645,7 +675,7 @@ const MovementForm = () => {
                     {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
                     {formData.documents.length > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-                            <Button variant="secondary" size="sm" type="button" onClick={addDocument}>
+                            <Button variant="secondary" size="sm" type="button" onClick={addDocument} disabled={isSubmitting}>
                                 <Plus size={16} />
                                 <span className="desktop-only">Agregar Documento</span>
                                 <span className="mobile-only">Agregar</span>
@@ -658,6 +688,7 @@ const MovementForm = () => {
                     <Button
                         variant="primary"
                         type="submit"
+                        loading={isSubmitting}
                         style={{
                             width: '100%',
                             padding: '18px',
@@ -666,7 +697,7 @@ const MovementForm = () => {
                             gap: '12px'
                         }}
                     >
-                        <Send size={20} /> Generar Solicitud
+                        <Send size={20} /> {isSubmitting ? 'Procesando...' : 'Generar Solicitud'}
                     </Button>
                 </div>
             </form>
