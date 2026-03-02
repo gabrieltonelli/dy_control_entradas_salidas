@@ -91,6 +91,14 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
+@media (max-width: 480px) {
+    .btn-new-request {
+        width: 100%;
+        padding: 14px 20px !important;
+        font-size: 1rem !important;
+    }
+}
+
 @keyframes scaleIn {
     from {
         transform: scale(0.5);

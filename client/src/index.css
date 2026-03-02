@@ -494,3 +494,13 @@ select:focus {
     gap: 12px;
   }
 }
+
+/* Allow button text wrapping on small screens */
+@media (max-width: 500px) {
+  .btn {
+    white-space: normal !important;
+    text-align: center;
+    height: auto !important;
+    min-height: 44px;
+  }
+}
