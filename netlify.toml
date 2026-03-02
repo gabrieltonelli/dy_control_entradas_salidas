@@ -1,5 +1,5 @@
 [build]
-  command = "npm install --include=dev && npm run install-all && cd client && npm run build"
+  command = "npm run install-all && npm run build --prefix client"
   publish = "client/dist"
   functions = "server"
 
