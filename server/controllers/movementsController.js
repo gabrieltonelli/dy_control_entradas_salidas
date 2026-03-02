@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { movementSchema } = require('../validations/movementSchema');
 
 // @desc    Create a new movement
 // @route   POST /api/movements
@@ -7,26 +8,55 @@ exports.createMovement = async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        let validatedData;
+        try {
+            validatedData = movementSchema.parse(req.body);
+        } catch (validationError) {
+            console.log('Zod Validation Error:', JSON.stringify(validationError.errors, null, 2));
+            return res.status(400).json({ error: 'Validation failed', details: validationError.errors });
+        }
+
         const {
             movement,
             articles = [],
             documents = []
-        } = req.body;
+        } = validatedData;
+
+        // Custom check for `esDependencia` logic (Exteriores check)
+        const [destRows] = await connection.query('SELECT esDependencia FROM lugares WHERE id = ?', [movement.idLugarDestino]);
+        if (destRows.length > 0 && destRows[0].esDependencia === 0) {
+            if (!movement.destinoDetalle || movement.destinoDetalle.trim() === '') {
+                await connection.release();
+                return res.status(400).json({ error: 'Validation failed', details: [{ message: 'El destino requiere detallar la dirección/lugar' }] });
+            }
+
+            // Check destinatario for articles and documents if destination is "Exteriores" (esDependencia == 0)
+            const invalidArticles = articles.some(art => !art.destinatario || art.destinatario.trim() === '');
+            const invalidDocs = documents.some(doc => !doc.destinatario || doc.destinatario.trim() === '');
+
+            if (invalidArticles || invalidDocs) {
+                await connection.release();
+                return res.status(400).json({ error: 'Validation failed', details: [{ message: 'Destinatario requerido para los artículos y documentos cargados con destino exterior' }] });
+            }
+        }
 
         // 1. Insert Movement
         const [movResult] = await connection.query(
             `INSERT INTO movimientos 
-            (idGrupo, idTipo, personaInterna, idPersonaExterna, conRegreso, motivo, personaAutorizante, observacion, idLugarOrigen, idLugarDestino, destinoDetalle, usuario_app) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (idGrupo, ordenGrupo, idTipo, personaInterna, idPersonaExterna, fechaHoraRegistro, conRegreso, motivo, personaAutorizante, observacion, idEstado, idLugarOrigen, idLugarDestino, destinoDetalle, usuario_app) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                movement.idGrupo || 0,
+                0, // idGrupo forced to 0
+                1, // ordenGrupo forced to 1
                 movement.idTipo,
                 movement.personaInterna || null,
                 movement.idPersonaExterna || null,
+                `${movement.fechaHoraRegistro} 00:00:00`,
                 movement.conRegreso ? 1 : 0,
                 movement.motivo,
-                movement.personaAutorizante,
+                movement.personaAutorizante || '',
                 movement.observacion || '',
+                1, // idEstado forced to 1 (Pendiente)
                 movement.idLugarOrigen,
                 movement.idLugarDestino,
                 movement.destinoDetalle || '',
