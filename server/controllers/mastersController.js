@@ -4,7 +4,7 @@ const pool = require('../config/db');
 // @route   GET /api/masters/legajos
 exports.getLegajos = async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT legajo, apellido_nombre FROM legajos ORDER BY apellido_nombre');
+        const [rows] = await pool.query('SELECT legajo, apellido_nombre, esAutorizador FROM legajos ORDER BY apellido_nombre');
         res.json(rows);
     } catch (error) {
         console.error('Error in getLegajos:', error);
@@ -45,6 +45,7 @@ exports.getMovementStates = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 // @desc    Get current user legajo info by email
 // @route   GET /api/masters/me
 exports.getMe = async (req, res) => {
@@ -54,7 +55,10 @@ exports.getMe = async (req, res) => {
     }
 
     try {
-        const [rows] = await pool.query('SELECT legajo, apellido_nombre, email FROM legajos WHERE email = ?', [email]);
+        const [rows] = await pool.query(
+            'SELECT legajo, apellido_nombre, email, esAutorizador FROM legajos WHERE email = ?',
+            [email]
+        );
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Legajo not found for this email' });
         }

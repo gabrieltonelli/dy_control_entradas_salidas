@@ -182,6 +182,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
 export const Autocomplete = ({ label, options = [], onSelect, value = '', containerId, ...props }) => {
     const [inputValue, setInputValue] = React.useState('');
     const [showOptions, setShowOptions] = React.useState(false);
+    const [busquedaExtendida, setBusquedaExtendida] = React.useState(false);
 
     // Refs para evitar problemas de cierres (closures) obsoletos en el setTimeout del Blur
     const selectedRef = React.useRef(null);
@@ -205,9 +206,13 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
         }
     }, [value, options]);
 
-    const filteredOptions = options.filter(opt =>
-        (opt.label || '').toLowerCase().startsWith(inputValue.toLowerCase())
-    ).slice(0, 10);
+    const filteredOptions = options.filter(opt => {
+        const label = (opt.label || '').toLowerCase();
+        const query = inputValue.toLowerCase();
+        return busquedaExtendida
+            ? label.includes(query)
+            : label.startsWith(query);
+    }).slice(0, 10);
 
     const handleBlur = () => {
         // Delay para permitir que el onMouseDown de la lista ocurra antes
@@ -215,7 +220,6 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
             setShowOptions(false);
             const currentSelected = selectedRef.current;
             if (!currentSelected || currentSelected.label !== inputRef.current) {
-                // Si el texto final no coincide con la opción que teníamos como seleccionada
                 setInputValue('');
                 selectedRef.current = null;
                 onSelect({ id: '', label: '' });
@@ -230,9 +234,38 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
         setShowOptions(false);
     };
 
+    const placeholderText = busquedaExtendida
+        ? 'Empiece a escribir para buscar...'
+        : (props.placeholder || 'Empiece a escribir apellido...');
+
     return (
         <div id={containerId} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: showOptions ? 1001 : 1 }}>
-            {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
+                <label
+                    onMouseDown={(e) => e.preventDefault()}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        fontSize: '0.75rem', color: busquedaExtendida ? 'var(--primary)' : 'var(--text-muted)',
+                        cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                        fontWeight: busquedaExtendida ? 700 : 400,
+                        transition: 'color 0.2s'
+                    }}
+                >
+                    <input
+                        type="checkbox"
+                        checked={busquedaExtendida}
+                        onChange={(e) => {
+                            setBusquedaExtendida(e.target.checked);
+                            setInputValue('');
+                            selectedRef.current = null;
+                            onSelect({ id: '', label: '' });
+                        }}
+                        style={{ width: '13px', height: '13px', accentColor: 'var(--dy-red)', cursor: 'pointer' }}
+                    />
+                    Búsqueda extendida
+                </label>
+            </div>
             <input
                 style={{ width: '100%', outline: 'none', opacity: props.disabled ? 0.6 : 1, cursor: props.disabled ? 'not-allowed' : 'text' }}
                 value={inputValue}
@@ -249,6 +282,7 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                 onFocus={() => !props.disabled && setShowOptions(true)}
                 onBlur={handleBlur}
                 {...props}
+                placeholder={placeholderText}
                 autoComplete="off"
                 disabled={props.disabled}
             />
@@ -273,7 +307,6 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                             <li
                                 key={i}
                                 onMouseDown={(e) => {
-                                    // Previene que el blur del input ocurra antes de esta selección
                                     e.preventDefault();
                                     handleSelection(opt);
                                 }}

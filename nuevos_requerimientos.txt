@@ -1,0 +1,7 @@
+ Feature 1:
+ - Punto de menu para ver los movimientos generados por el usuario o los cuales requieran su autorización. Ello implica que si el usuario no tiene rol de autorizador, pueda seleccionar el autorizador para el movimiento. Si tiene rol de autorizador, pueda ver todos los movimientos que requieren su autorización. Se agrega un nuevo estado de movimientos "Solicitado". Luego pasaria a "Pendiente" cuando el autorizador lo apruebe y a "Completado" cuando el personal de seguridad lo complete al pasar la persona por la porteria. Además deberia poder tambien pasar a un estado "Rechazado" si el autorizador rechaza el movimiento solo autorizaciones en estado "Solicitado" y "Pendiente". La tabla de legajos deberia contemplar una flag para definir si es autorizador o no. 
+  Feature 2:
+ - Agregar un check al lado del campo "Persona a autorizar" que permita buscar en cualquier parte de la palabra y no solo al inicio, denminarlo "Búsqueda extendida", en ese caso, el placeholder del input deberia cambiar a "Empiece a escribir para buscar...".
+ 
+  Bug Fix 1:
+ - En la vista mobile, no aparece en los campos de cantidad los controlcitos para sumar y restar. No permite seleccionar el 1 por default que viene preseteado.

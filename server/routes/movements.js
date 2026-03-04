@@ -4,5 +4,8 @@ const movementsController = require('../controllers/movementsController');
 
 router.post('/', movementsController.createMovement);
 router.get('/', movementsController.getMovements);
+router.get('/mis-solicitudes', movementsController.getMisSolicitudes);
+router.put('/:id/approve', movementsController.approveMovement);
+router.put('/:id/reject', movementsController.rejectMovement);
 
 module.exports = router;

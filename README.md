@@ -80,6 +80,9 @@ DB_PORT=3306
 PORT=5000
 NODE_ENV=development
 
+# Paginación — registros por página en Mis Solicitudes (default: 20)
+PAGE_SIZE_SOLICITUDES=20
+
 # Azure AD (autenticación)
 AZURE_AD_CLIENT_ID=tu_client_id
 AZURE_AD_TENANT_ID=tu_tenant_id
@@ -222,15 +225,53 @@ Visualiza los movimientos activos registrados en el día. Las tarjetas cambian d
 - Seleccioná la persona a autorizar (desde la base de datos de legajos).
 - Elegí el origen y destino del movimiento.
 - **Artículos/Documentos:** Pulsá "Agregar" para vincular herramientas o remitos. Podés marcar artículos como "Sin Retorno" (consumibles).
-- **Autorización:** Elegí el motivo y quién firma la autorización.
+- **Autorización:** Si el usuario ***no*** tiene rol de autorizador, debe seleccionar un autorizante. El movimiento quedará en estado **Solicitado** hasta que el autorizante lo apruebe. Si el usuario ***sí*** es autorizador, el movimiento pasa directamente a **Pendiente**.
+- **Búsqueda extendida:** Junto al campo "Persona a autorizar" hay un checkbox "Búsqueda extendida" que cambia la búsqueda de inicio de palabra a coincidencia en cualquier parte.
+- **Cantidad de artículos/documentos:** Se controla con los botones `+` y `−` para mejor compatibilidad en dispositivos móviles.
 
-### 4. Configuración
+### 4. Mis Solicitudes
+
+Accesible desde el menú lateral. Permite:
+- **Usuarios sin rol autorizador:** ver todas sus solicitudes y el estado de cada una.
+- **Usuarios con rol autorizador:** ver sus propias solicitudes + las que requieren su aprobación, con notificación de las pendientes. Pueden **aprobar** o **rechazar** directamente desde la tarjeta.
+- **Paginación:** El listado está paginado del lado del servidor. La cantidad de registros por página se configura con la variable de entorno `PAGE_SIZE_SOLICITUDES` (default: 20).
+- **Filtros:** Se puede filtrar por estado directamente. El filtrado se resuelve en el servidor para mayor eficiencia.
+- **Indicador de vencida:** Los movimientos en estado **Pendiente** cuya fecha autorizada ya pasó se muestran con badge naranja *"Vencida"* y borde naranja en la tarjeta, sin alterar el estado real en la base de datos.
+
+#### Estados de movimiento
+
+| Estado | Color | Descripción |
+|---|---|---|
+| **Solicitado** | Amarillo | Creado por un no-autorizador, espera aprobación. |
+| **Pendiente** | Azul | Aprobado, listo para ejecución en portería. |
+| **Vencida** *(visual)* | Naranja | Pendiente cuya fecha ya pasó. Solo indicador visual. |
+| **Completado** | Verde | Registrado por el personal de seguridad. |
+| **Rechazado** | Rojo | El autorizante rechazó el movimiento. |
+| **Vencido** | Gris | El movimiento superó su fecha de validez (estado real en DB). |
+
+### 5. Configuración
 
 Accesible desde el menú lateral (Drawer). Permite ajustar preferencias del usuario.
 
-### 5. Auditoría
+### 6. Auditoría
 
 Todas las acciones (creación, edición, eliminación) se guardan automáticamente en la tabla `auditoria` de la base de datos mediante triggers configurados en MySQL.
+
+---
+
+## 🗄️ Actualización de Base de Datos (v1.1.0)
+
+Al actualizar desde una versión anterior, ejecutar el script `update_states.sql` en la base de datos:
+
+```sql
+-- Agrega columna esAutorizador a legajos y los nuevos estados
+source update_states.sql;
+```
+
+El script:
+1. Agrega la columna `esAutorizador` (tinyint, default 0) a la tabla `legajos`.
+2. Inserta los estados `Solicitado` (id=4) y `Rechazado` (id=5) en `movimientoEstados`.
+3. Los usuarios autorizadores deben marcarse con `esAutorizador = 1` directamente en la base de datos.
 
 ---
 

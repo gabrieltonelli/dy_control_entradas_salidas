@@ -15,6 +15,10 @@ export const MastersService = {
 export const MovementsService = {
     getAll: () => api.get('/movements'),
     create: (data) => api.post('/movements', data),
+    getMisSolicitudes: (email, page = 1, filtro = 'todos') =>
+        api.get(`/movements/mis-solicitudes?email=${encodeURIComponent(email)}&page=${page}&filtro=${filtro}`),
+    approve: (id, email) => api.put(`/movements/${id}/approve`, { email }),
+    reject: (id, email, observacion) => api.put(`/movements/${id}/reject`, { email, observacion }),
 };
 
 export default api;

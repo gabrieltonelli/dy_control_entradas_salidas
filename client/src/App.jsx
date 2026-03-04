@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import MovementForm from './pages/MovementForm';
 import Settings from './pages/Settings';
 import StatusPage from './pages/StatusPage';
+import MisSolicitudes from './pages/MisSolicitudes';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/nuevo" element={<MovementForm />} />
                 <Route path="/status" element={<StatusPage />} />
                 <Route path="/configuracion" element={<Settings />} />
+                <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
               </Routes>
             </Layout>
           </Router>

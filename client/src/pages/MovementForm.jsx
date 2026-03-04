@@ -17,6 +17,7 @@ const MovementForm = () => {
     const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const [legajos, setLegajos] = useState([]);
+    const [autorizadores, setAutorizadores] = useState([]); // solo los que tienen esAutorizador=1
     const [lugares, setLugares] = useState([]);
     const [types, setTypes] = useState([]);
     const [myLegajo, setMyLegajo] = useState(null);
@@ -57,6 +58,8 @@ const MovementForm = () => {
         documents: []
     });
 
+    const [authModalType, setAuthModalType] = useState('not_found'); // 'not_found' | 'server_error'
+
     useEffect(() => {
         const fetchData = async () => {
             setIsLoadingMasters(true);
@@ -67,12 +70,15 @@ const MovementForm = () => {
                         const meRes = await MastersService.getMe(currentUser.username || currentUser.email);
                         setMyLegajo(meRes.data);
                     } catch (err) {
-                        console.error('User legajo not found:', err);
+                        console.error('User legajo lookup error:', err);
+                        const status = err.response?.status;
+                        setAuthModalType(status === 404 ? 'not_found' : 'server_error');
                         setShowAuthModal(true);
                     } finally {
                         setIsVerifyingLegajo(false);
                     }
                 } else {
+                    setAuthModalType('not_found');
                     setShowAuthModal(true);
                     setIsVerifyingLegajo(false);
                 }
@@ -90,6 +96,8 @@ const MovementForm = () => {
                 }));
 
                 setLegajos(normalizedLegajos);
+                // Autorizadores: los que tienen esAutorizador = 1
+                setAutorizadores(normalizedLegajos.filter(l => l.esAutorizador === 1));
                 setLugares(lug.data);
                 const movementTypes = t.data;
                 setTypes(movementTypes);
@@ -212,6 +220,9 @@ const MovementForm = () => {
         setFormData(prev => ({ ...prev, documents: newDocs }));
     };
 
+    // Determinar si el usuario logueado NO es autorizador => debe seleccionar uno
+    const userIsAutorizador = myLegajo?.esAutorizador === 1;
+
     const validateAndScroll = () => {
         const errors = [];
 
@@ -230,13 +241,16 @@ const MovementForm = () => {
         if (!formData.movement.fechaHoraRegistro) errors.push('field-fecha');
         if (!formData.movement.personaInterna) errors.push('field-persona-interna');
 
+        // Validar autorizante si no es autorizador
+        if (!userIsAutorizador && !formData.movement.personaAutorizante) {
+            errors.push('field-persona-autorizante');
+        }
+
         // Si hay errores, hacer scroll al primero
         if (errors.length > 0) {
             const firstErrorId = errors[0];
             const element = document.getElementById(firstErrorId);
             if (element) {
-                // ESTRATEGIA: Calculamos la posición absoluta y restamos un offset generoso (220px)
-                // para que el header (70px) no tape el label ni el campo.
                 const headerOffset = 220;
                 const elementPosition = element.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -246,13 +260,11 @@ const MovementForm = () => {
                     behavior: 'smooth'
                 });
 
-                // Intentamos hacer foco en el primer input/select del contenedor
                 const input = element.querySelector('input, select, button');
                 if (input) {
                     setTimeout(() => input.focus({ preventScroll: true }), 600);
                 }
 
-                // Resaltar brevemente para feedback visual
                 element.style.transition = 'background-color 0.3s';
                 element.style.backgroundColor = 'rgba(228, 5, 33, 0.1)';
                 setTimeout(() => {
@@ -276,8 +288,8 @@ const MovementForm = () => {
             return;
         }
 
-        // Check for self-authorization
-        if (String(formData.movement.personaInterna) === String(myLegajo.legajo)) {
+        // Check for self-authorization (solo si es autorizador autorizándose a sí mismo)
+        if (userIsAutorizador && String(formData.movement.personaInterna) === String(myLegajo.legajo)) {
             setShowSelfAuthWarning(true);
             return;
         }
@@ -308,12 +320,15 @@ const MovementForm = () => {
                 localStorage.setItem(`movementForm_${key}`, formData.movement[key]);
             });
 
+            const isSolicitado = res.data?.estado === 4;
+
             // Redirect to status page on success
             navigate('/status', {
                 state: {
                     success: true,
                     message: res.data?.message || 'Su solicitud ha sido registrada correctamente en el sistema.',
-                    movementId: res.data?.id
+                    movementId: res.data?.id,
+                    isSolicitado
                 }
             });
         } catch (error) {
@@ -324,18 +339,13 @@ const MovementForm = () => {
 
             if (error.response?.data) {
                 const data = error.response.data;
-                // Si hay una lista de detalles de validación, tomamos el mensaje del primer error
                 if (data.details && Array.isArray(data.details) && data.details.length > 0) {
                     errorMessage = data.details[0].message || data.details[0];
-                }
-                // Si no hay detalles pero hay un error genérico (que no sea "Validation failed"), lo usamos
-                else if (data.error && data.error !== 'Validation failed') {
+                } else if (data.error && data.error !== 'Validation failed') {
                     errorMessage = data.error;
                 }
-                // Si el error es "Validation failed" y no hay detalles (raro), se deja el errorMessage por defecto (error.message)
             }
 
-            // Redirect to status page on error
             navigate('/status', {
                 state: {
                     success: false,
@@ -479,6 +489,34 @@ const MovementForm = () => {
                             disabled={isSubmitting}
                         />
                     </div>
+
+                    {/* Selector de autorizante (solo si el usuario NO es autorizador) */}
+                    {!userIsAutorizador && (
+                        <div style={{ position: 'relative', zIndex: '999', marginTop: '4px' }}>
+                            <Autocomplete
+                                label="Autorizante"
+                                containerId="field-persona-autorizante"
+                                placeholder="Empiece a escribir apellido..."
+                                value={formData.movement.personaAutorizante}
+                                options={autorizadores.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
+                                onSelect={(opt) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        movement: {
+                                            ...prev.movement,
+                                            personaAutorizante: opt.id
+                                        }
+                                    }));
+                                }}
+                                required
+                                disabled={isSubmitting}
+                            />
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '-10px', marginBottom: '16px' }}>
+                                Su solicitud quedará en estado <strong>Solicitado</strong> hasta que el autorizante la apruebe.
+                            </p>
+                        </div>
+                    )}
+
                     <div style={{ marginTop: '20px' }}>
                         <Textarea
                             label="Observación (opcional)"
@@ -534,21 +572,51 @@ const MovementForm = () => {
                                     required
                                     disabled={isSubmitting}
                                 />
-                                <Input
-                                    label="Cant."
-                                    type="number"
-                                    name="cantidad"
-                                    value={art.cantidad}
-                                    min={1}
-                                    step={1}
-                                    onKeyDown={(e) => ['-', '+', '.', 'e', 'E'].includes(e.key) && e.preventDefault()}
-                                    onChange={(e) => {
-                                        const v = parseInt(e.target.value, 10);
-                                        handleArticleChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
-                                    }}
-                                    required
-                                    disabled={isSubmitting}
-                                />
+                                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>Cant.</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting || art.cantidad <= 1}
+                                            onClick={() => handleArticleChange(index, { target: { name: 'cantidad', value: Math.max(1, (art.cantidad || 1) - 1) } })}
+                                            style={{
+                                                padding: '0 14px', height: '46px', minHeight: '46px',
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderRight: 'none', borderRadius: 'var(--radius) 0 0 var(--radius)',
+                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                opacity: isSubmitting || art.cantidad <= 1 ? 0.5 : 1
+                                            }}
+                                        >−</button>
+                                        <input
+                                            type="number"
+                                            name="cantidad"
+                                            value={art.cantidad}
+                                            min={1}
+                                            step={1}
+                                            readOnly
+                                            style={{
+                                                width: '60px', textAlign: 'center', outline: 'none',
+                                                height: '46px', border: '1px solid var(--border)',
+                                                borderLeft: 'none', borderRight: 'none',
+                                                background: 'var(--surface)', color: 'var(--text)',
+                                                fontSize: '1rem', fontWeight: '600'
+                                            }}
+                                            disabled={isSubmitting}
+                                        />
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting}
+                                            onClick={() => handleArticleChange(index, { target: { name: 'cantidad', value: (art.cantidad || 1) + 1 } })}
+                                            style={{
+                                                padding: '0 14px', height: '46px', minHeight: '46px',
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderLeft: 'none', borderRadius: '0 var(--radius) var(--radius) 0',
+                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                opacity: isSubmitting ? 0.5 : 1
+                                            }}
+                                        >+</button>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Renglón 2: Logística */}
@@ -638,21 +706,51 @@ const MovementForm = () => {
                                     disabled={isSubmitting}
                                 />
                                 <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required disabled={isSubmitting} />
-                                <Input
-                                    label="Cant."
-                                    type="number"
-                                    name="cantidad"
-                                    value={doc.cantidad}
-                                    min={1}
-                                    step={1}
-                                    onKeyDown={(e) => ['-', '+', '.', 'e', 'E'].includes(e.key) && e.preventDefault()}
-                                    onChange={(e) => {
-                                        const v = parseInt(e.target.value, 10);
-                                        handleDocumentChange(index, { target: { name: 'cantidad', value: isNaN(v) || v < 1 ? 1 : v } });
-                                    }}
-                                    required
-                                    disabled={isSubmitting}
-                                />
+                                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>Cant.</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting || doc.cantidad <= 1}
+                                            onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: Math.max(1, (doc.cantidad || 1) - 1) } })}
+                                            style={{
+                                                padding: '0 14px', height: '46px', minHeight: '46px',
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderRight: 'none', borderRadius: 'var(--radius) 0 0 var(--radius)',
+                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                opacity: isSubmitting || doc.cantidad <= 1 ? 0.5 : 1
+                                            }}
+                                        >−</button>
+                                        <input
+                                            type="number"
+                                            name="cantidad"
+                                            value={doc.cantidad}
+                                            min={1}
+                                            step={1}
+                                            readOnly
+                                            style={{
+                                                width: '60px', textAlign: 'center', outline: 'none',
+                                                height: '46px', border: '1px solid var(--border)',
+                                                borderLeft: 'none', borderRight: 'none',
+                                                background: 'var(--surface)', color: 'var(--text)',
+                                                fontSize: '1rem', fontWeight: '600'
+                                            }}
+                                            disabled={isSubmitting}
+                                        />
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting}
+                                            onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: (doc.cantidad || 1) + 1 } })}
+                                            style={{
+                                                padding: '0 14px', height: '46px', minHeight: '46px',
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderLeft: 'none', borderRadius: '0 var(--radius) var(--radius) 0',
+                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                opacity: isSubmitting ? 0.5 : 1
+                                            }}
+                                        >+</button>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Renglón 2: Logística */}
@@ -713,7 +811,7 @@ const MovementForm = () => {
                             gap: '12px'
                         }}
                     >
-                        <Send size={20} /> {isSubmitting ? 'Procesando...' : 'Generar Solicitud'}
+                        <Send size={20} /> {isSubmitting ? 'Procesando...' : (userIsAutorizador ? 'Generar Solicitud' : 'Enviar para Autorización')}
                     </Button>
                 </div>
             </form>
