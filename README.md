@@ -231,6 +231,39 @@ Visualiza los movimientos activos registrados en el día. Las tarjetas cambian d
 - **Búsqueda extendida:** el checkbox "Búsqueda extendida" (solo disponible para autorizadores) cambia la búsqueda de inicio de palabra a coincidencia en cualquier parte del nombre. La preferencia también se persiste en `localStorage`.
 - **Cantidad de artículos/documentos:** Se controla con los botones `+` y `−` para mejor compatibilidad en dispositivos móviles.
 
+### 7. Grupos de Movimientos Encadenados (Series)
+
+Cuando un movimiento tiene **retorno** (`conRegreso=1`) y es aprobado, el sistema invoca `sp_GenerarMovimientosDerivados` que genera automáticamente la serie completa de movimientos enlazados por `idGrupo` y `ordenGrupo`.
+
+#### Reglas de visibilidad en "Mis Solicitudes"
+
+| Estado del grupo | Qué ve el usuario |
+|---|---|
+| **Solicitado** | Solo el primer movimiento (`ordenGrupo=1`) |
+| **Aprobado → Pendiente** | El **próximo paso a ejecutar** (menor `ordenGrupo` no completado) |
+| **Completados** | Se ven **todos** individualmente |
+| **Anulado** | El representante del grupo (primer `ordenGrupo` no completado, ya anulado) |
+| **Rechazado** | Solo el `ordenGrupo=1` (los derivados no existen aún al momento de rechazar) |
+| **Vencido parcial** | El primero vencido y los consecutivos (los ya completados no se tocan) |
+
+Un badge **🔗 Paso N/M · X ✓** en cada card indica el número de paso dentro de la serie y cuántos están completados.
+
+#### Consistencia de artículos y documentos
+
+Los artículos y documentos tienen su propio sistema de estados (`objetoEstados`: Recibido, Entregado, Devuelto...) con semántica diferente a los estados de movimientos. **No se propagan automáticamente**: su estado lo gestiona el flujo de recepción/entrega en el tablero de vigilancia.
+
+#### Objetos de base de datos requeridos
+
+Ejecutar **una sola vez** el script `server/group_management.sql` contra la BD:
+
+```bash
+mysql -u root -p Acceso_A_Planta < server/group_management.sql
+```
+
+Esto crea:
+- **SP** `sp_AnularGrupo(idMovimiento, observacion)` — anula toda la serie activa del grupo (sin tocar artículos/documentos)
+- **SP** `sp_VencerConsecutivos(idMovimiento)` — vence los pasos siguientes al que venció (llamar desde el proceso que marca movimientos como Vencidos)
+
 ### 4. Mis Solicitudes
 
 Accesible desde el menú lateral. Permite:

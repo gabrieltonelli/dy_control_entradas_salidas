@@ -3,6 +3,8 @@ const { movementSchema } = require('../validations/movementSchema');
 
 // Estado IDs
 const ESTADO_PENDIENTE = 1;
+const ESTADO_COMPLETADO = 2;
+const ESTADO_VENCIDO = 3;
 const ESTADO_SOLICITADO = 4;
 const ESTADO_RECHAZADO = 5;
 const ESTADO_ANULADO = 6;
@@ -47,7 +49,7 @@ exports.createMovement = async (req, res) => {
             }
         }
 
-        // 3. Validar destinatarios de artículos (solo si el destino del artículo es exterior)
+        // 3. Validar destinatarios de artículos
         for (const art of articles) {
             if (lugarMap[art.idLugarDestino] === 0 && (!art.destinatario || art.destinatario.trim() === '')) {
                 await connection.release();
@@ -58,7 +60,7 @@ exports.createMovement = async (req, res) => {
             }
         }
 
-        // 4. Validar destinatarios de documentos (solo si el destino del documento es exterior)
+        // 4. Validar destinatarios de documentos
         for (const doc of documents) {
             if (lugarMap[doc.idLugarDestino] === 0 && (!doc.destinatario || doc.destinatario.trim() === '')) {
                 await connection.release();
@@ -86,17 +88,13 @@ exports.createMovement = async (req, res) => {
         let idEstadoInicial;
 
         if (currentUserEsAutorizador) {
-            // El creador es autorizador: se auto-autoriza, estado Pendiente
             personaAutorizanteLegajo = currentUserLegajo;
             idEstadoInicial = ESTADO_PENDIENTE;
         } else {
-            // El creador no es autorizador: requiere un autorizante externo, estado Solicitado
-            // personaAutorizante viene del body (seleccionado por el usuario en el form)
             if (!movement.personaAutorizante) {
                 await connection.release();
                 return res.status(400).json({ error: 'Validation failed', details: [{ message: 'Debe seleccionar un autorizante para el movimiento' }] });
             }
-            // Verificar que el autorizante efectivamente lo sea
             const [authRows] = await connection.query(
                 'SELECT legajo, esAutorizador FROM legajos WHERE legajo = ?',
                 [movement.personaAutorizante]
@@ -115,8 +113,7 @@ exports.createMovement = async (req, res) => {
             (idGrupo, ordenGrupo, idTipo, personaInterna, idPersonaExterna, fechaHoraRegistro, conRegreso, motivo, personaAutorizante, observacion, idEstado, idLugarOrigen, idLugarDestino, destinoDetalle, usuario_app) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                0, // idGrupo forced to 0
-                1, // ordenGrupo forced to 1
+                0, 1,
                 movement.idTipo,
                 movement.personaInterna || null,
                 movement.idPersonaExterna || null,
@@ -146,7 +143,7 @@ exports.createMovement = async (req, res) => {
                         movementId,
                         art.descripcion,
                         art.cantidad || 1,
-                        art.idEstado || 1,
+                        idEstadoInicial === ESTADO_SOLICITADO ? ESTADO_SOLICITADO : (art.idEstado || 1),
                         art.idLugarOrigen || movement.idLugarOrigen,
                         art.idLugarDestino || movement.idLugarDestino,
                         art.remitente || '',
@@ -171,7 +168,7 @@ exports.createMovement = async (req, res) => {
                         movementId,
                         doc.descripcion || '',
                         doc.cantidad || 1,
-                        doc.idEstado || 1,
+                        idEstadoInicial === ESTADO_SOLICITADO ? ESTADO_SOLICITADO : (doc.idEstado || 1),
                         doc.tipo,
                         doc.idLugarOrigen || movement.idLugarOrigen,
                         doc.idLugarDestino || movement.idLugarDestino,
@@ -185,7 +182,7 @@ exports.createMovement = async (req, res) => {
             }
         }
 
-        // 8. Invocación de Movimientos Derivados (solo si es con retorno Y ya está en estado Pendiente)
+        // 8. Generar movimientos derivados (solo si autorizador directo Y conRegreso)
         if (movement.conRegreso && idEstadoInicial === ESTADO_PENDIENTE) {
             console.log(`Invocando movimientos derivados para ID: ${movementId}`);
             try {
@@ -242,21 +239,17 @@ exports.getMovements = async (req, res) => {
     }
 };
 
-// @desc    Get movements for the current user (paginated)
-//          - Movements created by the user (all states)
-//          - Movements pending authorization by the user (if authorizer)
+// @desc    Get movements for the current user (paginated, group-aware)
 // @route   GET /api/movements/mis-solicitudes?email=...&page=1&filtro=todos
 exports.getMisSolicitudes = async (req, res) => {
     const { email, filtro = 'todos' } = req.query;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
-    // Paginación
     const pageSize = parseInt(process.env.PAGE_SIZE_SOLICITUDES) || 20;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const offset = (page - 1) * pageSize;
 
     try {
-        // Get user legajo
         const [userRows] = await pool.query(
             'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
             [email]
@@ -265,10 +258,9 @@ exports.getMisSolicitudes = async (req, res) => {
 
         const { legajo, esAutorizador } = userRows[0];
 
-        // Construir condición WHERE y parámetros según rol y filtro
+        // Condición de acceso por usuario/rol
         let whereClause;
         let whereParams;
-
         if (esAutorizador) {
             whereClause = '(m.usuario_app = ? OR m.personaAutorizante = ?)';
             whereParams = [email, legajo];
@@ -279,18 +271,40 @@ exports.getMisSolicitudes = async (req, res) => {
 
         // Filtro adicional por estado
         const filtroMap = {
-            'solicitado': 4,
-            'pendiente': 1,
-            'completado': 2,
-            'rechazado': 5,
-            'vencido': 3,
-            'anulado': 6,
-            'accion': 4, // = solicitado, para autorizadores
+            'solicitado': ESTADO_SOLICITADO,
+            'pendiente': ESTADO_PENDIENTE,
+            'completado': ESTADO_COMPLETADO,
+            'rechazado': ESTADO_RECHAZADO,
+            'vencido': ESTADO_VENCIDO,
+            'anulado': ESTADO_ANULADO,
+            'accion': ESTADO_SOLICITADO,
         };
         if (filtroMap[filtro] !== undefined) {
             whereClause += ' AND m.idEstado = ?';
             whereParams.push(filtroMap[filtro]);
         }
+
+        // ---------------------------------------------------------------
+        // Filtro de visibilidad de grupo:
+        // - Sin grupo (idGrupo=0): siempre visible
+        // - Completados: siempre visibles (se ven todos los del grupo)
+        // - No-completado en un grupo: solo el de menor ordenGrupo activo
+        // ---------------------------------------------------------------
+        const groupFilter = `
+            AND (
+                m.idGrupo = 0
+                OR m.idEstado = ${ESTADO_COMPLETADO}
+                OR (
+                    m.idEstado != ${ESTADO_COMPLETADO}
+                    AND m.idGrupo > 0
+                    AND m.ordenGrupo = (
+                        SELECT MIN(m2.ordenGrupo)
+                        FROM movimientos m2
+                        WHERE m2.idGrupo = m.idGrupo
+                          AND m2.idEstado != ${ESTADO_COMPLETADO}
+                    )
+                )
+            )`;
 
         const baseQuery = `
             FROM movimientos m
@@ -300,7 +314,8 @@ exports.getMisSolicitudes = async (req, res) => {
             JOIN lugares ld ON m.idLugarDestino = ld.id
             LEFT JOIN legajos l ON m.personaAutorizante = l.legajo
             LEFT JOIN legajos lp ON m.personaInterna = lp.legajo
-            WHERE ${whereClause}`;
+            WHERE ${whereClause}
+            ${groupFilter}`;
 
         // Total para paginación
         const [[{ total }]] = await pool.query(
@@ -308,25 +323,31 @@ exports.getMisSolicitudes = async (req, res) => {
             whereParams
         );
 
-        // Datos paginados
+        // Datos paginados + información del grupo
         const [rows] = await pool.query(
             `SELECT m.*, mt.nombre as tipo_nombre, me.nombre as estado_nombre,
                     lo.nombre as origen_nombre, ld.nombre as destino_nombre,
                     l.apellido_nombre as autorizante_nombre,
-                    lp.apellido_nombre as persona_interna_nombre
+                    lp.apellido_nombre as persona_interna_nombre,
+                    CASE WHEN m.idGrupo > 0
+                         THEN (SELECT COUNT(*) FROM movimientos mg WHERE mg.idGrupo = m.idGrupo)
+                         ELSE 0 END AS grupo_total,
+                    CASE WHEN m.idGrupo > 0
+                         THEN (SELECT COUNT(*) FROM movimientos mc WHERE mc.idGrupo = m.idGrupo AND mc.idEstado = ${ESTADO_COMPLETADO})
+                         ELSE 0 END AS grupo_completados
              ${baseQuery}
              ORDER BY m.fechaHoraRegistro DESC
              LIMIT ? OFFSET ?`,
             [...whereParams, pageSize, offset]
         );
 
-        // Contar solicitados pendientes de acción (siempre sin filtrar, para el badge)
+        // Badge de solicitados pendientes de acción (solo autorizadores)
         let pendingActionCount = 0;
         if (esAutorizador) {
             const [[{ cnt }]] = await pool.query(
                 `SELECT COUNT(*) as cnt FROM movimientos m
-                 WHERE m.personaAutorizante = ? AND m.idEstado = 4`,
-                [legajo]
+                 WHERE m.personaAutorizante = ? AND m.idEstado = ?`,
+                [legajo, ESTADO_SOLICITADO]
             );
             pendingActionCount = cnt;
         }
@@ -359,7 +380,6 @@ exports.approveMovement = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Verify authorizer
         const [userRows] = await connection.query(
             'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
             [email]
@@ -369,7 +389,6 @@ exports.approveMovement = async (req, res) => {
         }
         const authLegajo = userRows[0].legajo;
 
-        // Get movement
         const [movRows] = await connection.query(
             'SELECT * FROM movimientos WHERE id = ?',
             [id]
@@ -378,23 +397,20 @@ exports.approveMovement = async (req, res) => {
 
         const mov = movRows[0];
 
-        // Only movements in "Solicitado" state can be approved
         if (mov.idEstado !== ESTADO_SOLICITADO) {
             return res.status(400).json({ error: 'Solo se pueden aprobar movimientos en estado "Solicitado"' });
         }
-
-        // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
-        // Update to Pendiente
+        // Pasar a Pendiente (articulos/documentos no se tocan, mantienen su estado propio)
         await connection.query(
             'UPDATE movimientos SET idEstado = ? WHERE id = ?',
             [ESTADO_PENDIENTE, id]
         );
 
-        // If conRegreso, generate derived movements now
+        // Si conRegreso, generar movimientos derivados (todos nacen en Pendiente)
         if (mov.conRegreso) {
             try {
                 await connection.query('CALL sp_GenerarMovimientosDerivados(?)', [parseInt(id)]);
@@ -405,7 +421,12 @@ exports.approveMovement = async (req, res) => {
         }
 
         await connection.commit();
-        res.json({ message: 'Movimiento aprobado correctamente. Estado: Pendiente.' });
+
+        const msg = mov.conRegreso
+            ? 'Movimiento aprobado. La serie completa de movimientos encadenados está en estado Pendiente.'
+            : 'Movimiento aprobado correctamente. Estado: Pendiente.';
+
+        res.json({ message: msg });
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
@@ -426,7 +447,6 @@ exports.rejectMovement = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Verify authorizer
         const [userRows] = await connection.query(
             'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
             [email]
@@ -436,7 +456,6 @@ exports.rejectMovement = async (req, res) => {
         }
         const authLegajo = userRows[0].legajo;
 
-        // Get movement
         const [movRows] = await connection.query(
             'SELECT * FROM movimientos WHERE id = ?',
             [id]
@@ -445,28 +464,26 @@ exports.rejectMovement = async (req, res) => {
 
         const mov = movRows[0];
 
-        // Only Solicitado or Pendiente can be rejected
-        if (mov.idEstado !== ESTADO_SOLICITADO && mov.idEstado !== ESTADO_PENDIENTE) {
-            return res.status(400).json({ error: 'Solo se pueden rechazar movimientos en estado "Solicitado" o "Pendiente"' });
+        // Solo se puede rechazar un Solicitado (antes de que existan derivados)
+        if (mov.idEstado !== ESTADO_SOLICITADO) {
+            return res.status(400).json({ error: 'Solo se pueden rechazar movimientos en estado "Solicitado"' });
         }
-
-        // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
-        // Update to Rechazado, optionally update observacion
         const newObs = observacion
             ? `[RECHAZADO] ${observacion}`
             : (mov.observacion ? `[RECHAZADO] ${mov.observacion}` : '[RECHAZADO]');
 
+        // Solo actualiza el movimiento; articulos y documentos mantienen su estado propio (objetoEstados)
         await connection.query(
             'UPDATE movimientos SET idEstado = ?, observacion = ? WHERE id = ?',
             [ESTADO_RECHAZADO, newObs, id]
         );
 
         await connection.commit();
-        res.json({ message: 'Movimiento rechazado.' });
+        res.json({ message: 'Movimiento rechazado. Los artículos y documentos asociados también fueron actualizados.' });
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
@@ -475,7 +492,8 @@ exports.rejectMovement = async (req, res) => {
     }
 };
 
-// @desc    Cancel a Pendiente movement (only for authorizers)
+// @desc    Cancel/anull a movement (only for authorizers)
+//          Anula toda la serie activa del grupo (sp_AnularGrupo)
 // @route   PUT /api/movements/:id/cancel
 exports.cancelMovement = async (req, res) => {
     const { id } = req.params;
@@ -487,7 +505,6 @@ exports.cancelMovement = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Verify authorizer
         const [userRows] = await connection.query(
             'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
             [email]
@@ -497,7 +514,6 @@ exports.cancelMovement = async (req, res) => {
         }
         const authLegajo = userRows[0].legajo;
 
-        // Get movement
         const [movRows] = await connection.query(
             'SELECT * FROM movimientos WHERE id = ?',
             [id]
@@ -506,27 +522,30 @@ exports.cancelMovement = async (req, res) => {
 
         const mov = movRows[0];
 
-        // Only Pendiente can be anulled
         if (mov.idEstado !== ESTADO_PENDIENTE) {
             return res.status(400).json({ error: 'Solo se pueden anular movimientos en estado "Pendiente"' });
         }
-
-        // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
-        const newObs = observacion
-            ? `[ANULADO] ${observacion}`
-            : (mov.observacion ? `[ANULADO] ${mov.observacion}` : '[ANULADO]');
-
+        // sp_AnularGrupo anula toda la serie activa; articulos y documentos mantienen su estado propio
         await connection.query(
-            'UPDATE movimientos SET idEstado = ?, observacion = ? WHERE id = ?',
-            [ESTADO_ANULADO, newObs, id]
+            'CALL sp_AnularGrupo(?, ?)',
+            [parseInt(id), observacion || '']
         );
 
         await connection.commit();
-        res.json({ message: 'Movimiento anulado correctamente.' });
+
+        // Verificar si había derivados para dar mensaje adecuado
+        const idGrupo = mov.idGrupo;
+        const tieneGrupo = idGrupo > 0;
+
+        res.json({
+            message: tieneGrupo
+                ? 'Serie de movimientos anulada correctamente. Todos los movimientos activos del grupo fueron anulados.'
+                : 'Movimiento anulado correctamente.'
+        });
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });

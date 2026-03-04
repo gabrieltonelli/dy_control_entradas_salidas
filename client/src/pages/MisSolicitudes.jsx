@@ -55,6 +55,24 @@ const EstadoBadge = ({ mov }) => {
     );
 };
 
+const GrupoBadge = ({ mov }) => {
+    const total = mov.grupo_total || 0;
+    if (total <= 1) return null; // singleton, sin grupo
+    const completados = mov.grupo_completados || 0;
+    const orden = mov.ordenGrupo || 1;
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '5px',
+            fontSize: '0.72rem', fontWeight: '600', padding: '2px 8px',
+            borderRadius: '20px', backgroundColor: 'rgba(99,102,241,0.1)',
+            color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)',
+            whiteSpace: 'nowrap'
+        }}>
+            🔗 Paso {orden}/{total}{completados > 0 ? ` · ${completados} ✓` : ''}
+        </span>
+    );
+};
+
 const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) => {
     const [expanded, setExpanded] = useState(false);
     const isPendingMyAuth = esAutorizador && mov.idEstado === ESTADO_SOLICITADO;
@@ -73,6 +91,7 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) =
                 <div className="solicitud-card__header-left">
                     <span className="solicitud-card__id">#{mov.id}</span>
                     <EstadoBadge mov={mov} />
+                    <GrupoBadge mov={mov} />
                     {isPendingMyAuth && (
                         <span className="solicitud-card__action-needed">Requiere tu acción</span>
                     )}
@@ -415,6 +434,11 @@ const MisSolicitudes = () => {
                         <p style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                             El movimiento pasará al estado <strong>Pendiente</strong> y podrá ser ejecutado por el personal de seguridad.
                         </p>
+                        {approveModal.mov?.conRegreso === 1 && (
+                            <p style={{ marginTop: '8px', color: '#818cf8', fontSize: '0.85rem', fontWeight: '500' }}>
+                                🔗 Al tratarse de un movimiento con retorno, se generará automáticamente la serie completa de movimientos encadenados, todos en estado Pendiente.
+                            </p>
+                        )}
                     </div>
                 }
                 confirmLabel={actionLoading ? 'Aprobando...' : 'Confirmar'}
@@ -469,6 +493,11 @@ const MisSolicitudes = () => {
                         <p style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                             Esta acción dejará el movimiento en estado <strong>Anulado</strong>. No podrá revertirse.
                         </p>
+                        {(cancelModal.mov?.grupo_total || 0) > 1 && (
+                            <p style={{ marginTop: '8px', color: '#818cf8', fontSize: '0.85rem', fontWeight: '500' }}>
+                                🔗 Este movimiento forma parte de una serie de {cancelModal.mov.grupo_total} pasos. Todos los pasos activos de la serie serán anulados.
+                            </p>
+                        )}
                         <div style={{ marginTop: '16px' }}>
                             <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block', marginBottom: '8px' }}>
                                 Motivo de anulación (opcional)
