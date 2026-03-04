@@ -15,15 +15,23 @@ const ESTADO_COMPLETADO = 2;
 const ESTADO_VENCIDO = 3;
 const ESTADO_SOLICITADO = 4;
 const ESTADO_RECHAZADO = 5;
+const ESTADO_ANULADO = 6;
+
+// Extrae la fecha YYYY-MM-DD del campo datetime sin conversión de timezone
+const extraerFechaStr = (fechaHoraRegistro) => {
+    if (!fechaHoraRegistro) return null;
+    // Si viene como Date object de mysql2, toISOString puede restar horas → usamos el string directamente
+    return String(fechaHoraRegistro).substring(0, 10); // "YYYY-MM-DD"
+};
 
 // Detecta si un movimiento Pendiente cuya fecha ya pasó (vencida visualmente)
 const esVencidaVisual = (mov) => {
     if (mov.idEstado !== ESTADO_PENDIENTE) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const movFecha = new Date(mov.fechaHoraRegistro);
-    movFecha.setHours(0, 0, 0, 0);
-    return movFecha < today;
+    const movDateStr = extraerFechaStr(mov.fechaHoraRegistro);
+    if (!movDateStr) return false;
+    // Comparar strings YYYY-MM-DD directamente, sin pasar por Date() para evitar timezone
+    const todayStr = new Date().toLocaleDateString('en-CA'); // siempre "YYYY-MM-DD"
+    return movDateStr < todayStr;
 };
 
 const estadoConfig = {
@@ -32,6 +40,7 @@ const estadoConfig = {
     [ESTADO_COMPLETADO]: { label: 'Completado', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', icon: <CheckCircle size={14} /> },
     [ESTADO_VENCIDO]: { label: 'Vencido', color: '#6b7280', bg: 'rgba(107,114,128,0.12)', icon: <XCircle size={14} /> },
     [ESTADO_RECHAZADO]: { label: 'Rechazado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: <XCircle size={14} /> },
+    [ESTADO_ANULADO]: { label: 'Anulado', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', icon: <XCircle size={14} /> },
 };
 
 const VENCIDA_VISUAL_CONFIG = { label: 'Vencida', color: '#f97316', bg: 'rgba(249,115,22,0.12)', icon: <AlertTriangle size={14} /> };
@@ -46,13 +55,16 @@ const EstadoBadge = ({ mov }) => {
     );
 };
 
-const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject }) => {
+const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) => {
     const [expanded, setExpanded] = useState(false);
     const isPendingMyAuth = esAutorizador && mov.idEstado === ESTADO_SOLICITADO;
+    const isPendingCancel = esAutorizador && mov.idEstado === ESTADO_PENDIENTE;
     const vencida = esVencidaVisual(mov);
 
-    const fecha = mov.fechaHoraRegistro
-        ? new Date(mov.fechaHoraRegistro).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    // Extraer la fecha como string para evitar conversión UTC → local que resta un día
+    const fechaStr = extraerFechaStr(mov.fechaHoraRegistro);
+    const fecha = fechaStr
+        ? fechaStr.split('-').reverse().join('/') // "YYYY-MM-DD" → "DD/MM/YYYY"
         : '-';
 
     return (
@@ -125,6 +137,15 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject }) => {
                                 style={{ color: 'var(--error)', border: '1px solid var(--error)' }}
                                 onClick={() => onReject(mov)}>
                                 <X size={16} /> Rechazar
+                            </Button>
+                        </div>
+                    )}
+                    {isPendingCancel && (
+                        <div className="solicitud-card__actions">
+                            <Button variant="ghost" size="sm" type="button"
+                                style={{ color: '#a855f7', border: '1px solid #a855f7' }}
+                                onClick={() => onCancel(mov)}>
+                                <X size={16} /> Anular
                             </Button>
                         </div>
                     )}
@@ -202,6 +223,7 @@ const MisSolicitudes = () => {
     const [page, setPage] = useState(1);
 
     const [rejectModal, setRejectModal] = useState({ open: false, mov: null, observacion: '' });
+    const [cancelModal, setCancelModal] = useState({ open: false, mov: null, observacion: '' });
     const [approveModal, setApproveModal] = useState({ open: false, mov: null });
     const [actionLoading, setActionLoading] = useState(false);
     const [actionResult, setActionResult] = useState(null);
@@ -261,6 +283,20 @@ const MisSolicitudes = () => {
         }
     };
 
+    const handleCancel = async () => {
+        setActionLoading(true);
+        try {
+            await MovementsService.cancel(cancelModal.mov.id, email, cancelModal.observacion);
+            setCancelModal({ open: false, mov: null, observacion: '' });
+            setActionResult({ type: 'success', message: 'Movimiento anulado correctamente.' });
+            fetchData(page, filtro);
+        } catch (err) {
+            setActionResult({ type: 'error', message: err.response?.data?.error || 'Error al anular el movimiento.' });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const pendingActionCount = data.pendingActionCount || 0;
 
     const filtros = [
@@ -270,6 +306,7 @@ const MisSolicitudes = () => {
         { key: 'pendiente', label: 'Pendientes' },
         { key: 'completado', label: 'Completados' },
         { key: 'rechazado', label: 'Rechazados' },
+        { key: 'anulado', label: 'Anulados' },
     ];
 
     return (
@@ -354,6 +391,7 @@ const MisSolicitudes = () => {
                                 esAutorizador={data.esAutorizador}
                                 onApprove={(m) => setApproveModal({ open: true, mov: m })}
                                 onReject={(m) => setRejectModal({ open: true, mov: m, observacion: '' })}
+                                onCancel={(m) => setCancelModal({ open: true, mov: m, observacion: '' })}
                             />
                         ))}
                     </div>
@@ -417,6 +455,43 @@ const MisSolicitudes = () => {
                 cancelLabel="Cancelar"
                 onConfirm={handleReject}
                 onCancel={() => setRejectModal({ open: false, mov: null, observacion: '' })}
+            />
+
+            {/* Modal Anular */}
+            <Modal
+                isOpen={cancelModal.open}
+                onClose={() => !actionLoading && setCancelModal({ open: false, mov: null, observacion: '' })}
+                title="Anular movimiento"
+                type="error"
+                message={
+                    <div>
+                        <p>¿Confirmás la anulación del movimiento <strong>#{cancelModal.mov?.id}</strong>?</p>
+                        <p style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                            Esta acción dejará el movimiento en estado <strong>Anulado</strong>. No podrá revertirse.
+                        </p>
+                        <div style={{ marginTop: '16px' }}>
+                            <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block', marginBottom: '8px' }}>
+                                Motivo de anulación (opcional)
+                            </label>
+                            <textarea
+                                value={cancelModal.observacion}
+                                onChange={(e) => setCancelModal(prev => ({ ...prev, observacion: e.target.value }))}
+                                placeholder="Ingrese el motivo de la anulación..."
+                                maxLength={300}
+                                style={{
+                                    width: '100%', minHeight: '80px', padding: '10px',
+                                    backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+                                    borderRadius: 'var(--radius)', color: 'var(--text)',
+                                    fontSize: '0.9rem', resize: 'vertical', outline: 'none'
+                                }}
+                            />
+                        </div>
+                    </div>
+                }
+                confirmLabel={actionLoading ? 'Anulando...' : 'Anular'}
+                cancelLabel="Cancelar"
+                onConfirm={handleCancel}
+                onCancel={() => setCancelModal({ open: false, mov: null, observacion: '' })}
             />
         </div>
     );

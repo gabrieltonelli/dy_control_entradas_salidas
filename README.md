@@ -233,10 +233,17 @@ Visualiza los movimientos activos registrados en el día. Las tarjetas cambian d
 
 Accesible desde el menú lateral. Permite:
 - **Usuarios sin rol autorizador:** ver todas sus solicitudes y el estado de cada una.
-- **Usuarios con rol autorizador:** ver sus propias solicitudes + las que requieren su aprobación, con notificación de las pendientes. Pueden **aprobar** o **rechazar** directamente desde la tarjeta.
+- **Usuarios con rol autorizador:** ver sus propias solicitudes + las que requieren su aprobación, con notificación de las pendientes. Pueden **aprobar**, **rechazar** o **anular** directamente desde la tarjeta.
 - **Paginación:** El listado está paginado del lado del servidor. La cantidad de registros por página se configura con la variable de entorno `PAGE_SIZE_SOLICITUDES` (default: 20).
-- **Filtros:** Se puede filtrar por estado directamente. El filtrado se resuelve en el servidor para mayor eficiencia.
-- **Indicador de vencida:** Los movimientos en estado **Pendiente** cuya fecha autorizada ya pasó se muestran con badge naranja *"Vencida"* y borde naranja en la tarjeta, sin alterar el estado real en la base de datos.
+- **Filtros server-side:** Se puede filtrar por estado. El filtrado se resuelve en el servidor para mayor eficiencia. Incluye filtro "Anulados".
+- **Indicador de vencida:** Los movimientos en estado **Pendiente** cuya fecha autorizada ya pasó se muestran con badge naranja *"Vencida"* y borde naranja, sin alterar el estado real en DB.
+
+#### Acciones del autorizante por estado
+
+| Estado del movimiento | Acciones disponibles |
+|---|---|
+| **Solicitado** | Aprobar → pasa a Pendiente · Rechazar → pasa a Rechazado |
+| **Pendiente** | Anular → pasa a Anulado |
 
 #### Estados de movimiento
 
@@ -244,9 +251,10 @@ Accesible desde el menú lateral. Permite:
 |---|---|---|
 | **Solicitado** | Amarillo | Creado por un no-autorizador, espera aprobación. |
 | **Pendiente** | Azul | Aprobado, listo para ejecución en portería. |
-| **Vencida** *(visual)* | Naranja | Pendiente cuya fecha ya pasó. Solo indicador visual. |
+| **Vencida** *(visual)* | Naranja | Pendiente cuya fecha ya pasó. Solo indicador visual, no cambia DB. |
 | **Completado** | Verde | Registrado por el personal de seguridad. |
-| **Rechazado** | Rojo | El autorizante rechazó el movimiento. |
+| **Rechazado** | Rojo | El autorizante rechazó la solicitud antes de aprobarla. |
+| **Anulado** | Violeta | El autorizante anuló el movimiento después de haberlo aprobado. |
 | **Vencido** | Gris | El movimiento superó su fecha de validez (estado real en DB). |
 
 ### 5. Configuración
@@ -270,8 +278,15 @@ source update_states.sql;
 
 El script:
 1. Agrega la columna `esAutorizador` (tinyint, default 0) a la tabla `legajos`.
-2. Inserta los estados `Solicitado` (id=4) y `Rechazado` (id=5) en `movimientoEstados`.
+2. Inserta los estados `Solicitado` (id=4), `Rechazado` (id=5) y `Anulado` (id=6) en `movimientoEstados`.
 3. Los usuarios autorizadores deben marcarse con `esAutorizador = 1` directamente en la base de datos.
+
+> [!NOTE]
+> Si ya ejecutaste el script en una versión anterior, podés agregar el nuevo estado manualmente:
+> ```sql
+> INSERT INTO movimientoEstados (id, nombre) VALUES (6, 'Anulado')
+> ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+> ```
 
 ---
 

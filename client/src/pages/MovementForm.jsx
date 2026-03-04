@@ -69,6 +69,14 @@ const MovementForm = () => {
                     try {
                         const meRes = await MastersService.getMe(currentUser.username || currentUser.email);
                         setMyLegajo(meRes.data);
+                        // Pre-setear personaInterna con el legajo del usuario logueado
+                        setFormData(prev => ({
+                            ...prev,
+                            movement: {
+                                ...prev.movement,
+                                personaInterna: meRes.data.legajo
+                            }
+                        }));
                     } catch (err) {
                         console.error('User legajo lookup error:', err);
                         const status = err.response?.status;

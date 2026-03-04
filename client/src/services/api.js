@@ -19,6 +19,7 @@ export const MovementsService = {
         api.get(`/movements/mis-solicitudes?email=${encodeURIComponent(email)}&page=${page}&filtro=${filtro}`),
     approve: (id, email) => api.put(`/movements/${id}/approve`, { email }),
     reject: (id, email, observacion) => api.put(`/movements/${id}/reject`, { email, observacion }),
+    cancel: (id, email, observacion) => api.put(`/movements/${id}/cancel`, { email, observacion }),
 };
 
 export default api;

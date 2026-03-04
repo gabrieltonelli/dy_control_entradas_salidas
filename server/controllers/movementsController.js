@@ -5,6 +5,7 @@ const { movementSchema } = require('../validations/movementSchema');
 const ESTADO_PENDIENTE = 1;
 const ESTADO_SOLICITADO = 4;
 const ESTADO_RECHAZADO = 5;
+const ESTADO_ANULADO = 6;
 
 // @desc    Create a new movement
 // @route   POST /api/movements
@@ -283,6 +284,7 @@ exports.getMisSolicitudes = async (req, res) => {
             'completado': 2,
             'rechazado': 5,
             'vencido': 3,
+            'anulado': 6,
             'accion': 4, // = solicitado, para autorizadores
         };
         if (filtroMap[filtro] !== undefined) {
@@ -465,6 +467,66 @@ exports.rejectMovement = async (req, res) => {
 
         await connection.commit();
         res.json({ message: 'Movimiento rechazado.' });
+    } catch (error) {
+        await connection.rollback();
+        res.status(500).json({ error: error.message });
+    } finally {
+        connection.release();
+    }
+};
+
+// @desc    Cancel a Pendiente movement (only for authorizers)
+// @route   PUT /api/movements/:id/cancel
+exports.cancelMovement = async (req, res) => {
+    const { id } = req.params;
+    const { email, observacion } = req.body;
+
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Verify authorizer
+        const [userRows] = await connection.query(
+            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            [email]
+        );
+        if (userRows.length === 0 || !userRows[0].esAutorizador) {
+            return res.status(403).json({ error: 'No tiene permisos de autorización' });
+        }
+        const authLegajo = userRows[0].legajo;
+
+        // Get movement
+        const [movRows] = await connection.query(
+            'SELECT * FROM movimientos WHERE id = ?',
+            [id]
+        );
+        if (movRows.length === 0) return res.status(404).json({ error: 'Movimiento no encontrado' });
+
+        const mov = movRows[0];
+
+        // Only Pendiente can be anulled
+        if (mov.idEstado !== ESTADO_PENDIENTE) {
+            return res.status(400).json({ error: 'Solo se pueden anular movimientos en estado "Pendiente"' });
+        }
+
+        // Verify this authorizer is the assigned one
+        if (mov.personaAutorizante !== authLegajo) {
+            return res.status(403).json({ error: 'Usted no es el autorizante asignado a este movimiento' });
+        }
+
+        const newObs = observacion
+            ? `[ANULADO] ${observacion}`
+            : (mov.observacion ? `[ANULADO] ${mov.observacion}` : '[ANULADO]');
+
+        await connection.query(
+            'UPDATE movimientos SET idEstado = ?, observacion = ? WHERE id = ?',
+            [ESTADO_ANULADO, newObs, id]
+        );
+
+        await connection.commit();
+        res.json({ message: 'Movimiento anulado correctamente.' });
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });

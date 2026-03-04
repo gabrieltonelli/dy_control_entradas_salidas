@@ -182,7 +182,10 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
 export const Autocomplete = ({ label, options = [], onSelect, value = '', containerId, ...props }) => {
     const [inputValue, setInputValue] = React.useState('');
     const [showOptions, setShowOptions] = React.useState(false);
-    const [busquedaExtendida, setBusquedaExtendida] = React.useState(false);
+    // Persistir preferencia en localStorage
+    const [busquedaExtendida, setBusquedaExtendida] = React.useState(
+        () => localStorage.getItem('autocomplete_busquedaExtendida') === 'true'
+    );
 
     // Refs para evitar problemas de cierres (closures) obsoletos en el setTimeout del Blur
     const selectedRef = React.useRef(null);
@@ -256,7 +259,9 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                         type="checkbox"
                         checked={busquedaExtendida}
                         onChange={(e) => {
-                            setBusquedaExtendida(e.target.checked);
+                            const checked = e.target.checked;
+                            setBusquedaExtendida(checked);
+                            localStorage.setItem('autocomplete_busquedaExtendida', checked);
                             setInputValue('');
                             selectedRef.current = null;
                             onSelect({ id: '', label: '' });
