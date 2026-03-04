@@ -439,7 +439,7 @@ const MisSolicitudes = () => {
                             <textarea
                                 value={rejectModal.observacion}
                                 onChange={(e) => setRejectModal(prev => ({ ...prev, observacion: e.target.value }))}
-                                placeholder="Ingrese el motivo del rechazo..."
+                                placeholder="Ingresá el motivo del rechazo..."
                                 maxLength={300}
                                 style={{
                                     width: '100%', minHeight: '80px', padding: '10px',
@@ -476,7 +476,7 @@ const MisSolicitudes = () => {
                             <textarea
                                 value={cancelModal.observacion}
                                 onChange={(e) => setCancelModal(prev => ({ ...prev, observacion: e.target.value }))}
-                                placeholder="Ingrese el motivo de la anulación..."
+                                placeholder="Ingresá el motivo de la anulación..."
                                 maxLength={300}
                                 style={{
                                     width: '100%', minHeight: '80px', padding: '10px',

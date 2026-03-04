@@ -531,7 +531,7 @@ const MovementForm = () => {
                             name="observacion"
                             value={formData.movement.observacion}
                             onChange={handleMovChange}
-                            placeholder="Ingrese notas o detalles adicionales aquí..."
+                            placeholder="Ingresá notas o detalles adicionales aquí..."
                             maxLength={500}
                             disabled={isSubmitting}
                         />
@@ -832,8 +832,8 @@ const MovementForm = () => {
                 type="error"
                 message={
                     <div>
-                        <p>No se ha podido encontrar un legajo asociado a su cuenta (<strong>{currentUser.username || currentUser.email}</strong>).</p>
-                        <p>Por favor, contacte con el Administrador del Sistema para regularizar su situación antes de generar solicitudes.</p>
+                        <p>No se pudo encontrar un legajo asociado a tu cuenta (<strong>{currentUser.username || currentUser.email}</strong>).</p>
+                        <p>Por favor, contactá con el Administrador del Sistema para regularizar tu situación antes de generar solicitudes.</p>
                     </div>
                 }
                 confirmLabel="Entendido"
@@ -853,9 +853,9 @@ const MovementForm = () => {
                             <AlertTriangle size={32} />
                             <strong style={{ fontSize: '1.2rem' }}>Auto-autorización detectada</strong>
                         </div>
-                        <p>Usted se está autorizando a sí mismo.</p>
-                        <p>Si confirma, la autorización será generada de todos modos. Esta acción será registrada en la auditoría del sistema para su posterior revisión.</p>
-                        <p>¿Desea continuar con la operación?</p>
+                        <p>Te estás autorizando a vos mismo/a.</p>
+                        <p>Si confirmás, la autorización será generada de todos modos, sin embargo, se mantendrá registro de ello para su posterior auditoría.</p>
+                        <p>¿Deseás continuar con la operación?</p>
                     </div>
                 }
                 confirmLabel="Confirmar y Continuar"

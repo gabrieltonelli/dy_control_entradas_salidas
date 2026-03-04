@@ -365,7 +365,7 @@ exports.approveMovement = async (req, res) => {
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
-            return res.status(403).json({ error: 'No tiene permisos de autorización' });
+            return res.status(403).json({ error: 'No tenés permisos de autorización' });
         }
         const authLegajo = userRows[0].legajo;
 
@@ -385,7 +385,7 @@ exports.approveMovement = async (req, res) => {
 
         // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
-            return res.status(403).json({ error: 'Usted no es el autorizante asignado a este movimiento' });
+            return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
         // Update to Pendiente
@@ -432,7 +432,7 @@ exports.rejectMovement = async (req, res) => {
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
-            return res.status(403).json({ error: 'No tiene permisos de autorización' });
+            return res.status(403).json({ error: 'No tenés permisos de autorización' });
         }
         const authLegajo = userRows[0].legajo;
 
@@ -452,7 +452,7 @@ exports.rejectMovement = async (req, res) => {
 
         // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
-            return res.status(403).json({ error: 'Usted no es el autorizante asignado a este movimiento' });
+            return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
         // Update to Rechazado, optionally update observacion
@@ -493,7 +493,7 @@ exports.cancelMovement = async (req, res) => {
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
-            return res.status(403).json({ error: 'No tiene permisos de autorización' });
+            return res.status(403).json({ error: 'No tenés permisos de autorización' });
         }
         const authLegajo = userRows[0].legajo;
 
@@ -513,7 +513,7 @@ exports.cancelMovement = async (req, res) => {
 
         // Verify this authorizer is the assigned one
         if (mov.personaAutorizante !== authLegajo) {
-            return res.status(403).json({ error: 'Usted no es el autorizante asignado a este movimiento' });
+            return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
         const newObs = observacion
