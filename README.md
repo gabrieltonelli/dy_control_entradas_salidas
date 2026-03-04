@@ -222,11 +222,13 @@ Visualiza los movimientos activos registrados en el día. Las tarjetas cambian d
 
 ### 3. Nueva Solicitud (Formulario de Movimiento)
 
-- Seleccioná la persona a autorizar (desde la base de datos de legajos).
 - Elegí el origen y destino del movimiento.
 - **Artículos/Documentos:** Pulsá "Agregar" para vincular herramientas o remitos. Podés marcar artículos como "Sin Retorno" (consumibles).
-- **Autorización:** Si el usuario ***no*** tiene rol de autorizador, debe seleccionar un autorizante. El movimiento quedará en estado **Solicitado** hasta que el autorizante lo apruebe. Si el usuario ***sí*** es autorizador, el movimiento pasa directamente a **Pendiente**.
-- **Búsqueda extendida:** Junto al campo "Persona a autorizar" hay un checkbox "Búsqueda extendida" que cambia la búsqueda de inicio de palabra a coincidencia en cualquier parte.
+- **Comportamiento según el rol del usuario:**
+  - **Usuario autorizador:** el campo "Persona a autorizar" es un buscador editable (con opción de búsqueda extendida). El movimiento pasa directamente a estado **Pendiente**.
+  - **Usuario NO autorizador:** el campo "Persona a autorizar" muestra su propio nombre en **modo de solo lectura** (no puede modificarlo). El subtítulo del formulario cambia a *"Complete los datos para solicitar autorización para un ingreso o egreso."* Debe seleccionar un autorizante; el movimiento queda en estado **Solicitado** hasta que el autorizante lo apruebe.
+- **Persistencia de preferencias:** los valores del formulario (tipo, origen, destino, motivo y autorizante seleccionado) se recuerdan en `localStorage` para la próxima vez que el usuario abra el formulario.
+- **Búsqueda extendida:** el checkbox "Búsqueda extendida" (solo disponible para autorizadores) cambia la búsqueda de inicio de palabra a coincidencia en cualquier parte del nombre. La preferencia también se persiste en `localStorage`.
 - **Cantidad de artículos/documentos:** Se controla con los botones `+` y `−` para mejor compatibilidad en dispositivos móviles.
 
 ### 4. Mis Solicitudes

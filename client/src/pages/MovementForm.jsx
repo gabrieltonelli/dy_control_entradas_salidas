@@ -38,7 +38,7 @@ const MovementForm = () => {
         return localStorage.getItem(`movementForm_${key}`) || defaultValue;
     };
 
-    const dropdownKeys = ['idTipo', 'idLugarOrigen', 'idLugarDestino', 'motivo'];
+    const dropdownKeys = ['idTipo', 'idLugarOrigen', 'idLugarDestino', 'motivo', 'personaAutorizante'];
 
     const [formData, setFormData] = useState({
         movement: {
@@ -48,7 +48,7 @@ const MovementForm = () => {
             idLugarOrigen: getSavedValue('idLugarOrigen', ''),
             idLugarDestino: getSavedValue('idLugarDestino', ''),
             motivo: getSavedValue('motivo', ''),
-            personaAutorizante: '',
+            personaAutorizante: getSavedValue('personaAutorizante', ''),
             observacion: '',
             destinoDetalle: '',
             conRegreso: false,
@@ -380,7 +380,11 @@ const MovementForm = () => {
                 <h1 style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--primary)' }}>
                     Nueva Solicitud<span style={{ color: 'var(--dy-red)' }}>.</span>
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Complete los datos para autorizar un ingreso o egreso.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+                    {userIsAutorizador
+                        ? 'Complete los datos para autorizar un ingreso o egreso.'
+                        : 'Complete los datos para solicitar autorización para un ingreso o egreso.'}
+                </p>
             </header>
 
             <form onSubmit={handleSubmit}>
@@ -477,25 +481,44 @@ const MovementForm = () => {
                         />
                     </div>
 
-                    <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }}>
-                        <Autocomplete
-                            label="Persona a autorizar"
-                            containerId="field-persona-interna"
-                            placeholder="Empiece a escribir apellido..."
-                            value={formData.movement.personaInterna}
-                            options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
-                            onSelect={(opt) => {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    movement: {
-                                        ...prev.movement,
-                                        personaInterna: opt.id
-                                    }
-                                }));
-                            }}
-                            required
-                            disabled={isSubmitting}
-                        />
+                    <div style={{ position: 'relative', zIndex: '1000', marginTop: '20px' }} id="field-persona-interna">
+                        {!userIsAutorizador ? (
+                            // Usuario no autorizante: campo de solo lectura con su propio nombre
+                            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>Persona a autorizar</label>
+                                <input
+                                    style={{
+                                        width: '100%',
+                                        outline: 'none',
+                                        opacity: 0.75,
+                                        cursor: 'not-allowed',
+                                        backgroundColor: 'var(--surface)'
+                                    }}
+                                    value={legajos.find(l => String(l.legajo) === String(formData.movement.personaInterna))?.apellido_nombre || ''}
+                                    readOnly
+                                    disabled
+                                    tabIndex={-1}
+                                />
+                            </div>
+                        ) : (
+                            <Autocomplete
+                                label="Persona a autorizar"
+                                placeholder="Empiece a escribir apellido..."
+                                value={formData.movement.personaInterna}
+                                options={legajos.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
+                                onSelect={(opt) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        movement: {
+                                            ...prev.movement,
+                                            personaInterna: opt.id
+                                        }
+                                    }));
+                                }}
+                                required
+                                disabled={isSubmitting}
+                            />
+                        )}
                     </div>
 
                     {/* Selector de autorizante (solo si el usuario NO es autorizador) */}
