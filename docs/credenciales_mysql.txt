@@ -1,4 +1,0 @@
-server:dydb2-instance-1.cz8kik28igwg.us-east-1.rds.amazonaws.com
-database:Acceso_A_Planta
-User:GestionPanificados
-Password:paniFican2la

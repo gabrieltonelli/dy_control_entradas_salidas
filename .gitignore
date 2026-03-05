@@ -7,3 +7,6 @@ build/
 client/package-lock.json
 package-lock.json
 server/package-lock.json
+
+# Documentación interna, dumps de BD y credenciales (solo local)
+docs/
