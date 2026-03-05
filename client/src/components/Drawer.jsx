@@ -1,16 +1,39 @@
-import React from 'react';
-import { X, Settings, FilePlus, ClipboardList } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useMsal } from '@azure/msal-react';
+import { checkPorteria } from '../services/porteriaService';
 
 const Drawer = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { accounts } = useMsal();
+    const email = accounts[0]?.username;
+
+    const [porteria, setPorteria] = useState(null);
+
+    useEffect(() => {
+        if (!email) return;
+        checkPorteria(email)
+            .then(res => { if (res.data.esPortero) setPorteria(res.data.porteria); })
+            .catch(() => { });
+    }, [email]);
 
     const menuItems = [
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
         { icon: <ClipboardList size={20} />, label: 'Mis Solicitudes', path: '/mis-solicitudes' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
+
+    // Ítems exclusivos de portería (solo si es portero)
+    const porteriaItems = porteria
+        ? [
+            { icon: <ShieldCheck size={20} />, label: 'Pendientes del día', path: '/porteria' },
+            { icon: <History size={20} />, label: 'Historial portería', path: '/porteria/historial' },
+        ]
+        : [];
+
+    const allItems = [...menuItems, ...porteriaItems];
 
     const handleClick = (path) => {
         if (path !== '#') navigate(path);
@@ -32,7 +55,7 @@ const Drawer = ({ isOpen, onClose }) => {
                 </div>
 
                 <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {menuItems.map((item, index) => {
+                    {allItems.map((item, index) => {
                         const isActive = location.pathname === item.path ||
                             (item.path === '/nuevo' && location.pathname === '/');
                         return (
@@ -58,6 +81,15 @@ const Drawer = ({ isOpen, onClose }) => {
                         );
                     })}
                 </nav>
+
+                {porteria && (
+                    <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--card-border)' }}>
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0 6px' }}>
+                            <ShieldCheck size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            {porteria.nombre}
+                        </p>
+                    </div>
+                )}
 
                 <div style={{ position: 'absolute', bottom: '40px', left: '24px' }}>
                     <p style={{ fontSize: '0.8rem', color: 'var(--drawer-footer)', fontWeight: 700 }}>DON YEYO S.A.</p>

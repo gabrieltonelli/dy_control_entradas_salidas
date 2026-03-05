@@ -379,6 +379,46 @@ Desde la **raíz del proyecto**:
 
 ---
 
+## 🛡️ Backoffice de Portería
+
+Módulo diseñado para el personal de vigilancia/recepción de cada punto de control. Accesible desde el Drawer únicamente si el email del usuario logueado corresponde a una cuenta de portería.
+
+### Cuentas de portería configuradas
+
+| Email | Dependencia |
+|---|---|
+| `vigilancia-pe@donyeyo.com.ar` | Planta Pellegrini |
+| `vigilancia-hy@donyeyo.com.ar` | Planta Hipólito Yrigoyen |
+| `vigilancia-er@donyeyo.com.ar` | Planta Elguea Román |
+
+### Setup inicial (una sola vez)
+
+Ejecutar el script contra la base de datos:
+
+```bash
+mysql -u root -p Acceso_A_Planta < server/porteria_setup.sql
+```
+
+Esto:
+1. Agrega las columnas `fechaHoraCompletado` y `observacionPorteria` a la tabla `movimientos`
+2. Crea las tablas `porterias` y `porteriaDependencias`
+3. Inserta los datos de las 3 porterías y sus dependencias
+
+### Funcionalidades
+
+**Pendientes del día** (`/porteria`)
+- Cards con los movimientos en estado **Pendiente** del día, filtrados por los lugares de esa portería
+- Visualización de artículos y documentos adjuntos
+- Al expandir: presetea la hora actual (editable), campo de observación y botón **Completar**
+- Respeta la lógica de grupos: muestra el primer paso pendiente de cada serie
+
+**Historial** (`/porteria/historial`)
+- Filtros por rango de fechas y estado
+- Tabla paginada (50 registros por página)
+- **Exportación a Excel** (.xlsx) de todos los registros filtrados
+
+---
+
 ## 🔒 Seguridad
 
 - Los archivos `.env` **no deben subirse a Git** (ya están en `.gitignore`).

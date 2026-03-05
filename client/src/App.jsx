@@ -16,6 +16,9 @@ import MovementForm from './pages/MovementForm';
 import Settings from './pages/Settings';
 import StatusPage from './pages/StatusPage';
 import MisSolicitudes from './pages/MisSolicitudes';
+import PorteriaGuard from './pages/porteria/PorteriaGuard';
+import PendientesDia from './pages/porteria/PendientesDia';
+import Historial from './pages/porteria/Historial';
 
 function App() {
   return (
@@ -30,6 +33,12 @@ function App() {
                 <Route path="/status" element={<StatusPage />} />
                 <Route path="/configuracion" element={<Settings />} />
                 <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
+                <Route path="/porteria" element={
+                  <PorteriaGuard>{porteria => <PendientesDia porteria={porteria} />}</PorteriaGuard>
+                } />
+                <Route path="/porteria/historial" element={
+                  <PorteriaGuard>{porteria => <Historial porteria={porteria} />}</PorteriaGuard>
+                } />
               </Routes>
             </Layout>
           </Router>

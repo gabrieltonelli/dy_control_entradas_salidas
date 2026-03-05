@@ -1,0 +1,228 @@
+/* PendientesDia.css */
+
+.porteria-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 24px;
+}
+
+.porteria-header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+}
+
+.porteria-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.refresh-btn {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: rgba(228, 5, 33, 0.1);
+    color: var(--dy-red);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid rgba(228, 5, 33, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+    background: rgba(228, 5, 33, 0.18);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.empty-state svg {
+    opacity: 0.3;
+}
+
+/* Card de movimiento pendiente */
+.mov-card {
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.mov-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.mov-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    cursor: pointer;
+    gap: 12px;
+}
+
+.mov-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.mov-persona {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mov-ruta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.mov-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.badge-tipo {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+}
+
+.badge-grupo {
+    background: rgba(245,158,11,0.15);
+    color: #f59e0b;
+}
+
+.badge-items {
+    background: rgba(16,185,129,0.12);
+    color: #10b981;
+}
+
+/* Formulario expandido */
+.mov-card-body {
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--card-border);
+}
+
+.items-section {
+    margin-top: 14px;
+}
+
+.items-section h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.item-qty {
+    font-weight: 700;
+    color: var(--dy-red);
+    min-width: 28px;
+}
+
+.complete-form {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.complete-form label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.complete-form input[type="time"],
+.complete-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.complete-form textarea {
+    resize: vertical;
+    min-height: 70px;
+}
+
+.btn-completar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--dy-red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-completar:hover:not(:disabled) {
+    opacity: 0.87;
+}
+
+.btn-completar:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.btn-completar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
