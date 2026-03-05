@@ -61,7 +61,7 @@ const Drawer = ({ isOpen, onClose }) => {
 
                 <div style={{ position: 'absolute', bottom: '40px', left: '24px' }}>
                     <p style={{ fontSize: '0.8rem', color: 'var(--drawer-footer)', fontWeight: 700 }}>DON YEYO S.A.</p>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v1.1.0</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>v{__APP_VERSION__}</p>
                 </div>
             </div>
         </>

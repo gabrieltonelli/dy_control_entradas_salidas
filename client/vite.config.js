@@ -1,6 +1,9 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'fs'
+
+const { version } = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -14,11 +17,11 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icons/*.png'],
         manifest: {
-          name: 'Don Yeyo - Control de Accesos',
-          short_name: 'DY Accesos',
-          description: 'Control de ingresos y egresos de la planta Don Yeyo',
-          theme_color: '#1a1a2e',
-          background_color: '#1a1a2e',
+          name: 'Don Yeyo Manager',
+          short_name: 'DY Manager',
+          description: 'Sistema interno de gestión corporativa de Don Yeyo',
+          theme_color: '#ffffffff',
+          background_color: '#ffffffff',
           display: 'standalone',
           scope: '/',
           start_url: '/',
@@ -65,6 +68,9 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    define: {
+      __APP_VERSION__: JSON.stringify(version),
+    },
     server: {
       port,
       // host: true  <-- Habilitar esto expone el servidor en toda la red.
