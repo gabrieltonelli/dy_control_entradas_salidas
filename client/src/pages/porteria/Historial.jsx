@@ -5,11 +5,26 @@ import * as XLSX from 'xlsx';
 import { getHistorial } from '../../services/porteriaService';
 import './Historial.css';
 
+function nDaysAgo(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+}
+
+// Un movimiento es "vencido visual" si está Pendiente y su fecha de registro ya pasó
+function isVencidoVisual(m) {
+    if (m.estado_nombre !== 'Pendiente') return false;
+    const fecha = new Date(m.fechaHoraRegistro);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    return fecha < hoy;
+}
+
 const ESTADOS = [
     { value: 'todos', label: 'Todos' },
     { value: '1', label: 'Pendiente' },
+    { value: 'vencido_visual', label: 'Vencido (sin completar)' },
     { value: '2', label: 'Completado' },
-    { value: '3', label: 'Vencido' },
+    { value: '3', label: 'Vencido (expirado)' },
     { value: '4', label: 'Solicitado' },
     { value: '5', label: 'Rechazado' },
     { value: '6', label: 'Anulado' },
@@ -17,6 +32,7 @@ const ESTADOS = [
 
 const ESTADO_COLORS = {
     'Pendiente': { bg: 'rgba(99,102,241,0.15)', color: '#818cf8' },
+    'Pendiente (vencido)': { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
     'Completado': { bg: 'rgba(16,185,129,0.15)', color: '#10b981' },
     'Vencido': { bg: 'rgba(107,114,128,0.15)', color: '#9ca3af' },
     'Solicitado': { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
@@ -35,9 +51,9 @@ function Historial({ porteria }) {
     const email = accounts[0]?.username;
 
     const today = new Date().toISOString().slice(0, 10);
-    const [desde, setDesde] = useState(today);
+    const [desde, setDesde] = useState(nDaysAgo(3));
     const [hasta, setHasta] = useState(today);
-    const [estado, setEstado] = useState('2'); // Completados por defecto
+    const [estado, setEstado] = useState('todos'); // Últimos 3 días, todos los estados
     const [page, setPage] = useState(1);
 
     const [data, setData] = useState(null);
@@ -48,8 +64,14 @@ function Historial({ porteria }) {
     const fetchData = useCallback(async (p = 1) => {
         setLoading(true);
         setError('');
+        // Para el filtro 'vencido_visual' pedimos estado pendiente al backend
+        const estadoApi = estado === 'vencido_visual' ? '1' : estado;
         try {
-            const res = await getHistorial(email, { desde, hasta, estado, page: p });
+            const res = await getHistorial(email, { desde, hasta, estado: estadoApi, page: p });
+            // Filtrado local de vencidos visuales
+            if (estado === 'vencido_visual') {
+                res.data.movements = res.data.movements.filter(isVencidoVisual);
+            }
             setData(res.data);
             setPage(p);
         } catch (e) {
@@ -159,16 +181,18 @@ function Historial({ porteria }) {
                                     <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>Sin resultados</td></tr>
                                 )}
                                 {movements.map(m => {
-                                    const colors = ESTADO_COLORS[m.estado_nombre] || {};
+                                    const vencidoVisual = isVencidoVisual(m);
+                                    const estadoLabel = vencidoVisual ? 'Pendiente (vencido)' : m.estado_nombre;
+                                    const colors = ESTADO_COLORS[estadoLabel] || ESTADO_COLORS[m.estado_nombre] || {};
                                     return (
                                         <tr key={m.id}>
                                             <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraRegistro)}</td>
                                             <td>{m.persona_interna_nombre || m.idPersonaExterna || '—'}</td>
                                             <td>{m.tipo_nombre}</td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{m.origen_nombre} → {m.destino_nombre}</td>
+                                            <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{m.origen_nombre} → {m.destino_nombre}</td>
                                             <td>
                                                 <span className="estado-badge" style={{ background: colors.bg, color: colors.color }}>
-                                                    {m.estado_nombre}
+                                                    {estadoLabel}
                                                 </span>
                                             </td>
                                             <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraCompletado)}</td>

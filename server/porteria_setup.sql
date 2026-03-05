@@ -3,11 +3,33 @@
 -- Ejecutar UNA SOLA VEZ contra la base de datos Acceso_A_Planta
 -- ============================================================
 
--- 1. Nuevas columnas en movimientos
+-- 1. Nuevas columnas en movimientos (compatible MySQL 8)
 -- ============================================================
-ALTER TABLE movimientos
-  ADD COLUMN IF NOT EXISTS fechaHoraCompletado DATETIME NULL,
-  ADD COLUMN IF NOT EXISTS observacionPorteria TEXT NULL;
+DROP PROCEDURE IF EXISTS sp_AddColumnIfNotExists;
+DELIMITER $$
+CREATE PROCEDURE sp_AddColumnIfNotExists()
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'movimientos'
+      AND COLUMN_NAME  = 'fechaHoraCompletado'
+  ) THEN
+    ALTER TABLE movimientos ADD COLUMN fechaHoraCompletado DATETIME NULL;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'movimientos'
+      AND COLUMN_NAME  = 'observacionPorteria'
+  ) THEN
+    ALTER TABLE movimientos ADD COLUMN observacionPorteria TEXT NULL;
+  END IF;
+END$$
+DELIMITER ;
+CALL sp_AddColumnIfNotExists();
+DROP PROCEDURE IF EXISTS sp_AddColumnIfNotExists;
 
 -- 2. Tabla porterias
 -- ============================================================

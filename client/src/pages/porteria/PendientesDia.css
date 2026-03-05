@@ -1,5 +1,6 @@
-/* PendientesDia.css */
+/* PendientesDia.css — v2 */
 
+/* ─── Header ─── */
 .porteria-header {
     display: flex;
     flex-direction: column;
@@ -8,28 +9,35 @@
 }
 
 .porteria-header h1 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--text);
     margin: 0;
 }
 
 .porteria-header .subtitle {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
 }
 
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    align-items: center;
+}
+
 .refresh-btn {
-    align-self: flex-start;
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 9px 18px;
     border-radius: 10px;
     background: rgba(228, 5, 33, 0.1);
     color: var(--dy-red);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     border: 1px solid rgba(228, 5, 33, 0.2);
     cursor: pointer;
     transition: all 0.2s;
@@ -39,6 +47,33 @@
     background: rgba(228, 5, 33, 0.18);
 }
 
+/* Vista simplificada toggle */
+.vista-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.vista-toggle.active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #818cf8;
+}
+
+.vista-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Empty state ─── */
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -54,25 +89,33 @@
     opacity: 0.3;
 }
 
-/* Card de movimiento pendiente */
+/* ═══════════════════════════════════════
+   VISTA NORMAL — Cards
+════════════════════════════════════════ */
 .mov-card {
     border-radius: 16px;
-    border: 1px solid var(--card-border);
+    border: 2px solid var(--card-border);
     background: var(--card-bg);
-    margin-bottom: 14px;
+    margin-bottom: 16px;
     overflow: hidden;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
 .mov-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    border-color: rgba(228, 5, 33, 0.35);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+.mov-card.expanded {
+    border-color: rgba(228, 5, 33, 0.4);
 }
 
 .mov-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 18px;
+    padding: 18px 20px;
     cursor: pointer;
     gap: 12px;
 }
@@ -80,23 +123,35 @@
 .mov-card-left {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     flex: 1;
     min-width: 0;
 }
 
 .mov-persona {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
+/* Origen → Destino más resaltado */
 .mov-ruta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    background: rgba(228, 5, 33, 0.07);
+    border: 1px solid rgba(228, 5, 33, 0.18);
+    border-radius: 8px;
+    padding: 4px 10px;
+    width: fit-content;
+}
+
+.mov-ruta .arrow {
+    color: var(--dy-red);
+    font-weight: 800;
 }
 
 .mov-badges {
@@ -107,31 +162,32 @@
 }
 
 .badge {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
     padding: 2px 8px;
     border-radius: 20px;
 }
 
 .badge-tipo {
-    background: rgba(99,102,241,0.15);
+    background: rgba(99, 102, 241, 0.15);
     color: #818cf8;
 }
 
 .badge-grupo {
-    background: rgba(245,158,11,0.15);
+    background: rgba(245, 158, 11, 0.15);
     color: #f59e0b;
 }
 
 .badge-items {
-    background: rgba(16,185,129,0.12);
+    background: rgba(16, 185, 129, 0.12);
     color: #10b981;
 }
 
 /* Formulario expandido */
 .mov-card-body {
-    padding: 0 18px 18px;
-    border-top: 1px solid var(--card-border);
+    padding: 0 20px 20px;
+    border-top: 2px solid var(--card-border);
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .items-section {
@@ -139,7 +195,7 @@
 }
 
 .items-section h4 {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -153,14 +209,15 @@
     gap: 8px;
     padding: 8px 10px;
     border-radius: 8px;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
     margin-bottom: 6px;
-    font-size: 0.85rem;
+    font-size: 0.87rem;
     color: var(--text);
 }
 
 .item-qty {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--dy-red);
     min-width: 28px;
 }
@@ -180,7 +237,39 @@
     margin-bottom: 4px;
 }
 
-.complete-form input[type="time"],
+/* Hora: ícono pegado + input inline */
+.hora-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.hora-row input[type="time"] {
+    padding: 10px 12px;
+    border-radius: 10px 0 0 10px;
+    border: 1px solid var(--card-border);
+    border-right: none;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    flex: 1;
+}
+
+.hora-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    height: 42px;
+    border-radius: 0 10px 10px 0;
+    border: 1px solid var(--card-border);
+    border-left: none;
+    background: var(--input-bg);
+    color: var(--text-muted);
+    cursor: default;
+}
+
 .complete-form textarea {
     width: 100%;
     padding: 10px 12px;
@@ -190,12 +279,9 @@
     color: var(--text);
     font-size: 0.95rem;
     font-family: inherit;
-    box-sizing: border-box;
-}
-
-.complete-form textarea {
     resize: vertical;
     min-height: 70px;
+    box-sizing: border-box;
 }
 
 .btn-completar {
@@ -203,12 +289,12 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px;
+    padding: 13px;
     border-radius: 12px;
     background: var(--dy-red);
     color: #fff;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 1rem;
     cursor: pointer;
     border: none;
     transition: opacity 0.2s, transform 0.1s;
@@ -223,6 +309,195 @@
 }
 
 .btn-completar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════
+   VISTA SIMPLIFICADA
+════════════════════════════════════════ */
+.simple-card {
+    border-radius: 18px;
+    border: 3px solid var(--card-border);
+    background: var(--card-bg);
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+    transition: border-color 0.2s;
+}
+
+.simple-card.expanded {
+    border-color: var(--dy-red);
+}
+
+.simple-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 22px 22px 18px;
+    cursor: pointer;
+}
+
+.simple-persona {
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.simple-ruta {
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: rgba(228, 5, 33, 0.09);
+    border: 2px solid rgba(228, 5, 33, 0.25);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text);
+}
+
+.simple-ruta .arrow {
+    color: var(--dy-red);
+    margin: 0 6px;
+    font-size: 1.2rem;
+}
+
+.simple-tipo {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.simple-expand-hint {
+    font-size: 0.9rem;
+    color: var(--dy-red);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+/* Body simplificado */
+.simple-card-body {
+    padding: 0 22px 22px;
+    border-top: 3px solid var(--card-border);
+}
+
+.simple-items-section {
+    margin-top: 14px;
+}
+
+.simple-items-section h4 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+
+.simple-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid var(--card-border);
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.simple-item-qty {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--dy-red);
+    min-width: 32px;
+}
+
+.simple-complete-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.simple-complete-form label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.simple-hora-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.simple-hora-row input[type="time"] {
+    padding: 14px 16px;
+    border-radius: 12px 0 0 12px;
+    border: 2px solid var(--card-border);
+    border-right: none;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1.3rem;
+    font-family: inherit;
+    flex: 1;
+}
+
+.simple-hora-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border-radius: 0 12px 12px 0;
+    border: 2px solid var(--card-border);
+    border-left: none;
+    background: var(--input-bg);
+    color: var(--text-muted);
+}
+
+.simple-complete-form textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1.05rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+
+.btn-completar-simple {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--dy-red);
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+}
+
+.btn-completar-simple:hover:not(:disabled) {
+    opacity: 0.87;
+}
+
+.btn-completar-simple:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
