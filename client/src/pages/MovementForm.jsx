@@ -421,8 +421,8 @@ const MovementForm = () => {
                             name="conRegreso"
                             checked={formData.movement.conRegreso}
                             onChange={handleMovChange}
-                            activeLabel="Con retorno al origen - F2"
-                            inactiveLabel="Sin retorno al origen - F1"
+                            activeLabel="Con retorno al origen - F1"
+                            inactiveLabel="Sin retorno al origen - F2"
                             disabled={isSubmitting}
                         />
                         <DatePicker

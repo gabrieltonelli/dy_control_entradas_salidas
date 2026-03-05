@@ -13,8 +13,8 @@ dirigirse a otra dependencia, a una reunión en exteriores, a una
 atención médicos o de urgencia, por temas personales o generalizando: a
 un destino en exteriores pudiendo retornar o no.\
 Hasta el momento esas salidas se están registrando en dos formularios en
-papel denominados F1 y F2 uno para, uno para salidas sin retorno y el
-otro para salidas con retorno respectivamente.
+papel denominados F1 y F2, uno para salidas con retorno y el
+otro para salidas sin retorno respectivamente.
 
 Por otro lado, la empresa plantea la necesidad de registrar y realizar
 el seguimiento de objetos, entendiendo como objetos cualquier tipo de
