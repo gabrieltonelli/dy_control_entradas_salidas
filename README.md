@@ -210,6 +210,47 @@ El proyecto está configurado para un **despliegue unificado** (Front + Back en 
 
 ---
 
+## 📲 Progressive Web App (PWA)
+
+El sistema está configurado como una **Progressive Web App**, lo que permite instalarlo en dispositivos móviles y de escritorio sin pasar por ninguna tienda de aplicaciones.
+
+### ¿Cómo instalar la app?
+
+**En Android (Chrome):**
+1. Abrí el sitio en Chrome.
+2. Aparecerá el banner *"Agregar a la pantalla de inicio"* o bien tocá el menú ⋮ → **Instalar app**.
+
+**En iOS (Safari):**
+1. Abrí el sitio en Safari.
+2. Tocá el ícono de **Compartir** → **Agregar a pantalla de inicio**.
+
+**En escritorio (Chrome/Edge):**
+1. Entrá al sitio.
+2. En la barra de direcciones aparecerá el ícono de instalación (⊕). Hacé clic en él.
+
+### Estrategia de caché (Workbox)
+
+| Tipo de recurso | Estrategia | Cache |
+|---|---|---|
+| Assets estáticos (JS, CSS, íconos) | **Cache First** (pre-caché al instalar) | Permanente hasta nueva versión |
+| Llamadas a `/api/*` | **Network First** | 24 hs · máx. 100 entradas |
+
+El Service Worker se **actualiza automáticamente** (`registerType: 'autoUpdate'`): cuando se despliega una nueva versión, el SW se reemplaza en segundo plano y recarga la app.
+
+### Build con soporte PWA
+
+```bash
+cd client
+npm run build
+npm run preview   # verifica en http://localhost:4173
+```
+
+### Verificación con Lighthouse
+
+En Chrome DevTools → pestaña **Lighthouse** → categoría **Progressive Web App** → el score debería ser ≥ 90.
+
+---
+
 ## 📖 Guía de Uso
 
 ### 1. Inicio de Sesión
