@@ -57,6 +57,7 @@ dy_control_entradas_salidas/
 ├── netlify.toml                # Configuración de despliegue Netlify
 ├── package.json                # Scripts raíz (inicia ambos servicios)
 ├── start-mobile.bat            # Script para acceso desde red LAN
+├── PRESENTACION_DIRECTORIO.md  # Presentación para el directorio (Logros y Visión)
 └── README.md
 ```
 
