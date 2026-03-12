@@ -8,10 +8,13 @@ import './index.css';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AuthProvider } from './config/AuthContext';
+
 const msalInstance = new PublicClientApplication(msalConfig);
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
 import MovementForm from './pages/MovementForm';
 import Settings from './pages/Settings';
 import StatusPage from './pages/StatusPage';
@@ -23,27 +26,31 @@ import Historial from './pages/porteria/Historial';
 function App() {
   return (
     <MsalProvider instance={msalInstance}>
-      <ThemeProvider>
-        <ProtectedRoute>
-          <Router>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<MovementForm />} />
-                <Route path="/nuevo" element={<MovementForm />} />
-                <Route path="/status" element={<StatusPage />} />
-                <Route path="/configuracion" element={<Settings />} />
-                <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
-                <Route path="/porteria" element={
-                  <PorteriaGuard>{porteria => <PendientesDia porteria={porteria} />}</PorteriaGuard>
-                } />
-                <Route path="/porteria/historial" element={
-                  <PorteriaGuard>{porteria => <Historial porteria={porteria} />}</PorteriaGuard>
-                } />
-              </Routes>
-            </Layout>
-          </Router>
-        </ProtectedRoute>
-      </ThemeProvider>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <AuthProvider>
+          <ThemeProvider>
+            <ProtectedRoute>
+              <Router>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<MovementForm />} />
+                    <Route path="/nuevo" element={<MovementForm />} />
+                    <Route path="/status" element={<StatusPage />} />
+                    <Route path="/configuracion" element={<Settings />} />
+                    <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
+                    <Route path="/porteria" element={
+                      <PorteriaGuard>{porteria => <PendientesDia porteria={porteria} />}</PorteriaGuard>
+                    } />
+                    <Route path="/porteria/historial" element={
+                      <PorteriaGuard>{porteria => <Historial porteria={porteria} />}</PorteriaGuard>
+                    } />
+                  </Routes>
+                </Layout>
+              </Router>
+            </ProtectedRoute>
+          </ThemeProvider>
+        </AuthProvider>
+      </GoogleOAuthProvider>
     </MsalProvider>
   );
 }

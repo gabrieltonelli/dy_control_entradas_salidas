@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useMsal } from '@azure/msal-react';
+import { useAuth } from '../config/AuthContext';
 import { MovementsService } from '../services/api';
 import { Button } from '../components/Button';
 import Modal from '../components/Modal';
@@ -324,9 +324,9 @@ const Pagination = ({ pagination, onPageChange }) => {
 };
 
 const MisSolicitudes = () => {
-    const { accounts } = useMsal();
-    const currentUser = accounts[0] || {};
-    const email = currentUser.username || currentUser.email || '';
+    const { user } = useAuth();
+    const currentUser = user || {};
+    const email = currentUser.email || '';
 
     const [data, setData] = useState({ movements: [], esAutorizador: false, pendingActionCount: 0, pagination: null });
     const [loading, setLoading] = useState(true);

@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { useMsal } from "@azure/msal-react";
+import { useAuth } from "../config/AuthContext";
 import { Menu, Sun, Moon, LogOut, User } from 'lucide-react';
 import logo from '../assets/logo-don-yeyo-png-sin-fondo.png';
 
 const Header = ({ onMenuClick, theme, toggleTheme }) => {
-    const { instance, accounts } = useMsal();
+    const { user, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    const user = accounts[0] || {};
-    const name = user.name || user.username || "Usuario";
+    const name = user?.name || "Usuario";
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
     const handleLogout = () => {
-        instance.logoutRedirect().catch(e => console.error(e));
+        logout();
     };
 
     return (
@@ -44,7 +43,11 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                 >
                     <span className="user-name desktop-only">{name}</span>
                     <div className="avatar">
-                        {initials || <User size={20} />}
+                        {user?.avatar ? (
+                            <img src={user.avatar} alt={name} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                        ) : (
+                            initials || <User size={20} />
+                        )}
                     </div>
 
                     {showUserMenu && (

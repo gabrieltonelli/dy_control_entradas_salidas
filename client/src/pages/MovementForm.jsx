@@ -6,12 +6,12 @@ import { Button } from '../components/Button';
 import Modal from '../components/Modal';
 import { Plus, Trash2, Send, AlertTriangle } from 'lucide-react';
 
-import { useMsal } from "@azure/msal-react";
+import { useAuth } from "../config/AuthContext";
 
 const MovementForm = () => {
-    const { accounts } = useMsal();
+    const { user } = useAuth();
     const navigate = useNavigate();
-    const currentUser = accounts[0] || {};
+    const currentUser = user || {};
 
     const today = new Date().toISOString().split('T')[0];
     const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];

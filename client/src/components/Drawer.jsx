@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useMsal } from '@azure/msal-react';
+import { useAuth } from '../config/AuthContext';
 import { checkPorteria } from '../services/porteriaService';
 
 const Drawer = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { accounts } = useMsal();
-    const email = accounts[0]?.username;
+    const { user } = useAuth();
+    const email = user?.email;
 
     const [porteria, setPorteria] = useState(null);
 

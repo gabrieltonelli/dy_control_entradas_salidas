@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMsal } from '@azure/msal-react';
+import { useAuth } from '../../config/AuthContext';
 import { checkPorteria } from '../../services/porteriaService';
 
 /**
@@ -10,12 +10,12 @@ import { checkPorteria } from '../../services/porteriaService';
  * Si no lo es, redirige al home.
  */
 const PorteriaGuard = ({ children }) => {
-    const { accounts } = useMsal();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [porteria, setPorteria] = useState(null);
 
-    const email = accounts[0]?.username;
+    const email = user?.email;
 
     useEffect(() => {
         if (!email) { navigate('/'); return; }

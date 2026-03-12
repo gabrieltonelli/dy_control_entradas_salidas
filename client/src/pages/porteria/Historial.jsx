@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useMsal } from '@azure/msal-react';
+import { useAuth } from '../../config/AuthContext';
 import { Download, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { getHistorial } from '../../services/porteriaService';
@@ -63,8 +63,8 @@ function formatFecha(str, conHora = false) {
 }
 
 function Historial({ porteria }) {
-    const { accounts } = useMsal();
-    const email = accounts[0]?.username;
+    const { user } = useAuth();
+    const email = user?.email;
 
     const today = new Date().toISOString().slice(0, 10);
     const [desde, setDesde] = useState(nDaysAgo(3));
