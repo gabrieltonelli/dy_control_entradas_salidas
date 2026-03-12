@@ -532,6 +532,35 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     cursor: not-allowed;
 }
 
+.vigilante-input,
+.simple-vigilante-input {
+    width: 100%;
+    border: 1px solid var(--card-border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.vigilante-input:focus,
+.simple-vigilante-input:focus {
+    outline: none;
+    border-color: var(--dy-red);
+}
+
+.vigilante-input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+}
+
+.simple-vigilante-input {
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
 /* Alerta luminosa: Requiere fichaje */
 .alert-fichaje {
     display: flex;

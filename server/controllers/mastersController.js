@@ -46,6 +46,17 @@ exports.getMovementStates = async (req, res) => {
     }
 };
 
+// @desc    Get all porteros (vigiladores)
+// @route   GET /api/masters/porteros
+exports.getPorteros = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM porteros ORDER BY descripcion');
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // @desc    Get current user legajo info by email
 // @route   GET /api/masters/me
 exports.getMe = async (req, res) => {

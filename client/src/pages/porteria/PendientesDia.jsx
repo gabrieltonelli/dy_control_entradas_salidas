@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility } from 'lucide-react';
-import { getPendientes, completeMovimiento } from '../../services/porteriaService';
+import { getPendientes, completeMovimiento, getPorteros } from '../../services/porteriaService';
 import './PendientesDia.css';
 
 const LS_VISTA = 'porteria_vista_simplificada';
+const LS_VIGILADOR = 'porteria_vigilador_seleccionado';
 
 function horaActual() {
     const now = new Date();
@@ -12,7 +13,7 @@ function horaActual() {
 }
 
 // ─── Card vista normal ────────────────────────────────────────
-function MovCard({ mov, onCompleted }) {
+function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const [open, setOpen] = useState(false);
     const [hora, setHora] = useState(horaActual());
     const [obs, setObs] = useState('');
@@ -22,9 +23,18 @@ function MovCard({ mov, onCompleted }) {
     const email = accounts[0]?.username;
 
     const handleComplete = async () => {
+        if (!vigilador) {
+            setError('Debe seleccionar un vigilador');
+            return;
+        }
         setLoading(true); setError('');
         try {
-            await completeMovimiento(mov.id, { email, horaCompletado: hora, observacionPorteria: obs.trim() || null });
+            await completeMovimiento(mov.id, {
+                email,
+                horaCompletado: hora,
+                observacionPorteria: obs.trim() || null,
+                vigilador
+            });
             onCompleted(mov.id);
         } catch (e) {
             setError(e.response?.data?.error || 'Error al completar');
@@ -87,8 +97,15 @@ function MovCard({ mov, onCompleted }) {
                             </div>
                         </div>
                         <div>
-                            <label>Observación (opcional)</label>
-                            <textarea placeholder="Ingresá una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
+                            <label>Vigilador / Portero</label>
+                            <input
+                                list="porteros-list"
+                                className="vigilante-input"
+                                value={vigilador}
+                                onChange={e => setVigilador(e.target.value)}
+                                placeholder="Seleccione o escriba nombre..."
+                                maxLength={30}
+                            />
                         </div>
                         {error && <p style={{ color: 'var(--dy-red)', fontSize: '0.85rem', margin: 0 }}>{error}</p>}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
@@ -110,7 +127,7 @@ function MovCard({ mov, onCompleted }) {
 }
 
 // ─── Card vista simplificada ──────────────────────────────────
-function SimpleCard({ mov, onCompleted }) {
+function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const [open, setOpen] = useState(false);
     const [hora, setHora] = useState(horaActual());
     const [obs, setObs] = useState('');
@@ -120,9 +137,18 @@ function SimpleCard({ mov, onCompleted }) {
     const email = accounts[0]?.username;
 
     const handleComplete = async () => {
+        if (!vigilador) {
+            setError('Seleccione un vigilador');
+            return;
+        }
         setLoading(true); setError('');
         try {
-            await completeMovimiento(mov.id, { email, horaCompletado: hora, observacionPorteria: obs.trim() || null });
+            await completeMovimiento(mov.id, {
+                email,
+                horaCompletado: hora,
+                observacionPorteria: obs.trim() || null,
+                vigilador
+            });
             onCompleted(mov.id);
         } catch (e) {
             setError(e.response?.data?.error || 'Error al completar');
@@ -187,6 +213,17 @@ function SimpleCard({ mov, onCompleted }) {
                             </div>
                         </div>
                         <div>
+                            <label>Vigilador / Portero</label>
+                            <input
+                                list="porteros-list"
+                                className="simple-vigilante-input"
+                                value={vigilador}
+                                onChange={e => setVigilador(e.target.value)}
+                                placeholder="Escriba o seleccione..."
+                                maxLength={30}
+                            />
+                        </div>
+                        <div>
                             <label>Observación (opcional)</label>
                             <textarea placeholder="Escribí una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
                         </div>
@@ -217,6 +254,14 @@ function PendientesDia({ porteria }) {
     const [movimientos, setMovimientos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [porteros, setPorteros] = useState([]);
+    const [vigilador, _setVigilador] = useState(localStorage.getItem(LS_VIGILADOR) || '');
+
+    const setVigilador = (val) => {
+        _setVigilador(val);
+        localStorage.setItem(LS_VIGILADOR, val);
+    };
+
     const [lastSync, setLastSync] = useState(new Date());
     const [countdown, setCountdown] = useState(parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60);
 
@@ -253,6 +298,19 @@ function PendientesDia({ porteria }) {
         fetchData();
         // Sincronización automática se maneja en el efecto del countdown para mayor precisión
     }, [fetchData]);
+
+    useEffect(() => {
+        // Cargar porteros una sola vez al inicio
+        getPorteros().then(res => {
+            const data = Array.isArray(res.data) ? res.data : [];
+            setPorteros(data);
+            if (!localStorage.getItem(LS_VIGILADOR) && data.length > 0) {
+                setVigilador(data[0].descripcion);
+            }
+        }).catch(err => {
+            console.error('Error al cargar porteros:', err);
+        });
+    }, []);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -319,10 +377,32 @@ function PendientesDia({ porteria }) {
             )}
 
             {!loading && !error && movimientos.map(mov =>
-                vistaSimple
-                    ? <SimpleCard key={mov.id} mov={mov} onCompleted={handleCompleted} />
-                    : <MovCard key={mov.id} mov={mov} onCompleted={handleCompleted} />
+                vistaSimple ? (
+                    <SimpleCard
+                        key={mov.id}
+                        mov={mov}
+                        onCompleted={handleCompleted}
+                        vigilador={vigilador}
+                        setVigilador={setVigilador}
+                        porteros={porteros}
+                    />
+                ) : (
+                    <MovCard
+                        key={mov.id}
+                        mov={mov}
+                        onCompleted={handleCompleted}
+                        vigilador={vigilador}
+                        setVigilador={setVigilador}
+                        porteros={porteros}
+                    />
+                )
             )}
+
+            <datalist id="porteros-list">
+                {porteros.map(p => (
+                    <option key={p.id} value={p.descripcion} />
+                ))}
+            </datalist>
         </div>
     );
 }

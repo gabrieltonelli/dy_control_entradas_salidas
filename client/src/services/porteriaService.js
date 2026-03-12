@@ -8,10 +8,13 @@ export const checkPorteria = (email) =>
 export const getPendientes = (email) =>
     axios.get(`${API_URL}/porteria/pendientes`, { params: { email } });
 
-export const completeMovimiento = (id, { email, horaCompletado, observacionPorteria }) =>
-    axios.put(`${API_URL}/porteria/${id}/complete`, { email, horaCompletado, observacionPorteria });
+export const completeMovimiento = (id, { email, horaCompletado, observacionPorteria, vigilador }) =>
+    axios.put(`${API_URL}/porteria/${id}/complete`, { email, horaCompletado, observacionPorteria, vigilador });
 
 export const getHistorial = (email, { desde, hasta, estado, page } = {}) =>
     axios.get(`${API_URL}/porteria/historial`, {
         params: { email, desde, hasta, estado, page },
     });
+
+export const getPorteros = () =>
+    axios.get(`${API_URL}/masters/porteros`);

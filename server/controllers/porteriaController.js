@@ -135,7 +135,7 @@ exports.getPendientes = async (req, res) => {
 // ---------------------------------------------------------------
 exports.completeMovimiento = async (req, res) => {
     const { id } = req.params;
-    const { email, horaCompletado, observacionPorteria } = req.body;
+    const { email, horaCompletado, observacionPorteria, vigilador } = req.body;
 
     if (!email) return res.status(400).json({ error: 'Email requerido' });
 
@@ -178,9 +178,10 @@ exports.completeMovimiento = async (req, res) => {
             `UPDATE movimientos
              SET idEstado = ?,
                  fechaHoraCompletado = ?,
-                 observacionPorteria = ?
+                 observacionPorteria = ?,
+                 vigilador = ?
              WHERE id = ?`,
-            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, id]
+            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, id]
         );
 
         await connection.commit();

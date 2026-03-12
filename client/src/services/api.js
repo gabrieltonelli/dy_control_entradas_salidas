@@ -10,6 +10,7 @@ export const MastersService = {
     getMovementTypes: () => api.get('/masters/movement-types'),
     getMovementStates: () => api.get('/masters/movement-states'),
     getMe: (email) => api.get(`/masters/me?email=${email}`),
+    getPorteros: () => api.get('/masters/porteros'),
 };
 
 export const MovementsService = {
