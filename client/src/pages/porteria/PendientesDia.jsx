@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMsal } from '@azure/msal-react';
-import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility, ShieldCheck } from 'lucide-react';
 import { getPendientes, completeMovimiento, getPorteros } from '../../services/porteriaService';
 import './PendientesDia.css';
 
@@ -19,6 +19,7 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const [obs, setObs] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const { accounts } = useMsal();
     const email = accounts[0]?.username;
 
@@ -35,7 +36,8 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                 observacionPorteria: obs.trim() || null,
                 vigilador
             });
-            onCompleted(mov.id);
+            setSuccess(true);
+            setTimeout(() => onCompleted(mov.id), 450);
         } catch (e) {
             setError(e.response?.data?.error || 'Error al completar');
         } finally { setLoading(false); }
@@ -45,7 +47,7 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const persona = mov.persona_interna_nombre || mov.idPersonaExterna || '—';
 
     return (
-        <div className={`mov-card${open ? ' expanded' : ''}`}>
+        <div className={`mov-card${open ? ' expanded' : ''}${success ? ' card-success' : ''}`}>
             <div className="mov-card-header" onClick={() => { if (!open) setHora(horaActual()); setOpen(o => !o); }}>
                 <div className="mov-card-left">
                     <span className="mov-persona">{persona}</span>
@@ -58,6 +60,12 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                         <span className="badge badge-tipo">{mov.tipo_nombre}</span>
                         <span className="badge badge-motivo">{mov.motivo}</span>
                         {mov.idGrupo > 0 && <span className="badge badge-grupo">🔗 Paso {mov.ordenGrupo}/{mov.grupo_total} · {mov.grupo_completados} ✓</span>}
+                        {mov.autorizante_nombre && (
+                            <span className="badge badge-autorizante">
+                                <ShieldCheck size={11} style={{ marginRight: 3 }} />
+                                {mov.autorizante_nombre}
+                            </span>
+                        )}
                         {totalItems > 0 && <span className="badge badge-items">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>}
                     </div>
                 </div>
@@ -133,6 +141,7 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const [obs, setObs] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const { accounts } = useMsal();
     const email = accounts[0]?.username;
 
@@ -149,7 +158,8 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                 observacionPorteria: obs.trim() || null,
                 vigilador
             });
-            onCompleted(mov.id);
+            setSuccess(true);
+            setTimeout(() => onCompleted(mov.id), 450);
         } catch (e) {
             setError(e.response?.data?.error || 'Error al completar');
         } finally { setLoading(false); }
@@ -159,7 +169,7 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
     const totalItems = (mov.articulos?.length || 0) + (mov.documentos?.length || 0);
 
     return (
-        <div className={`simple-card${open ? ' expanded' : ''}`}>
+        <div className={`simple-card${open ? ' expanded' : ''}${success ? ' card-success' : ''}`}>
             <div className="simple-card-header" onClick={() => { if (!open) setHora(horaActual()); setOpen(o => !o); }}>
                 <div className="simple-persona">{persona}</div>
                 <div className="simple-ruta">
@@ -169,6 +179,9 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                 </div>
                 <div className="simple-tipo">
                     {mov.tipo_nombre} · <strong>{mov.motivo}</strong>{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}
+                    {mov.autorizante_nombre && (
+                        <> · <span title="Autorizado por"><ShieldCheck size={13} style={{ verticalAlign: 'middle', margin: '0 2px 0 4px' }} />{mov.autorizante_nombre}</span></>
+                    )}
                     {mov.idGrupo > 0 && (
                         <span className="badge badge-grupo" style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
                             🔗 Paso {mov.ordenGrupo}/{mov.grupo_total}
