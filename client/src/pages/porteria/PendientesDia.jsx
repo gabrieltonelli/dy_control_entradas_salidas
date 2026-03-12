@@ -46,6 +46,7 @@ function MovCard({ mov, onCompleted }) {
                     </span>
                     <div className="mov-badges">
                         <span className="badge badge-tipo">{mov.tipo_nombre}</span>
+                        <span className="badge badge-motivo">{mov.motivo}</span>
                         {mov.idGrupo > 0 && <span className="badge badge-grupo">🔗 Paso {mov.ordenGrupo}/{mov.grupo_total} · {mov.grupo_completados} ✓</span>}
                         {totalItems > 0 && <span className="badge badge-items">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>}
                     </div>
@@ -90,9 +91,17 @@ function MovCard({ mov, onCompleted }) {
                             <textarea placeholder="Ingresá una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
                         </div>
                         {error && <p style={{ color: 'var(--dy-red)', fontSize: '0.85rem', margin: 0 }}>{error}</p>}
-                        <button className="btn-completar" onClick={handleComplete} disabled={loading}>
-                            <CheckCircle size={18} />{loading ? 'Completando...' : 'Completar paso'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                            <button className="btn-completar" onClick={handleComplete} disabled={loading} style={{ flex: 1 }}>
+                                <CheckCircle size={18} />{loading ? 'Completando...' : 'Completar paso'}
+                            </button>
+                            {mov.motivo?.toLowerCase() !== 'requerimiento laboral' && (
+                                <div className="alert-fichaje">
+                                    <Accessibility size={16} />
+                                    <span>Requiere fichaje</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -133,7 +142,7 @@ function SimpleCard({ mov, onCompleted }) {
                     {mov.destino_nombre}
                 </div>
                 <div className="simple-tipo">
-                    {mov.tipo_nombre}{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}
+                    {mov.tipo_nombre} · <strong>{mov.motivo}</strong>{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}
                     {mov.idGrupo > 0 && (
                         <span className="badge badge-grupo" style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
                             🔗 Paso {mov.ordenGrupo}/{mov.grupo_total}
@@ -182,9 +191,17 @@ function SimpleCard({ mov, onCompleted }) {
                             <textarea placeholder="Escribí una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
                         </div>
                         {error && <p style={{ color: 'var(--dy-red)', fontSize: '1rem', margin: 0, fontWeight: 700 }}>{error}</p>}
-                        <button className="btn-completar-simple" onClick={handleComplete} disabled={loading}>
-                            <CheckCircle size={26} />{loading ? 'Completando...' : 'COMPLETAR'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <button className="btn-completar-simple" onClick={handleComplete} disabled={loading} style={{ flex: 1 }}>
+                                <CheckCircle size={26} />{loading ? 'Completando...' : 'COMPLETAR'}
+                            </button>
+                            {mov.motivo?.toLowerCase() !== 'requerimiento laboral' && (
+                                <div className="alert-fichaje simple">
+                                    <Accessibility size={24} />
+                                    <span>REQUIERE FICHAJE</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

@@ -196,13 +196,14 @@ function Historial({ porteria }) {
                                     <th>Fecha</th>
                                     <th>Persona</th>
                                     <th>Tipo</th>
+                                    <th>Motivo</th>
                                     <th>Origen → Destino</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {movements.length === 0 && (
-                                    <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>Sin resultados</td></tr>
+                                    <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>Sin resultados</td></tr>
                                 )}
                                 {movements.map(m => {
                                     const vencidoVisual = isVencidoVisual(m);
@@ -213,6 +214,7 @@ function Historial({ porteria }) {
                                             <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraRegistro, m.estado_nombre === 'Completado')}</td>
                                             <td>{m.persona_interna_nombre || m.idPersonaExterna || '—'}</td>
                                             <td>{m.tipo_nombre}</td>
+                                            <td style={{ fontSize: '0.85rem' }}>{m.motivo}</td>
                                             <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{m.origen_nombre} → {m.destino_nombre}</td>
                                             <td>
                                                 <span className="estado-badge" style={{ background: colors.bg, color: colors.color }}>

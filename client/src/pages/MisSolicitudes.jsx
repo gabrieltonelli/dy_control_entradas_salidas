@@ -111,6 +111,16 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) =
                 </div>
                 <div className="solicitud-card__header-right">
                     <span className="solicitud-card__tipo">{mov.tipo_nombre}</span>
+                    <span style={{
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        padding: '2px 8px',
+                        borderRadius: '20px',
+                        backgroundColor: 'rgba(139,92,246,0.1)',
+                        color: '#a78bfa',
+                        border: '1px solid rgba(139,92,246,0.2)',
+                        marginLeft: '8px'
+                    }}>{mov.motivo}</span>
                     <button className="solicitud-card__expand-btn">
                         {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </button>
