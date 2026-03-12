@@ -105,6 +105,9 @@ VITE_API_URL=http://localhost:5000/api
 # Azure AD (autenticación)
 VITE_AZURE_AD_CLIENT_ID=tu_client_id
 VITE_AZURE_AD_TENANT_ID=tu_tenant_id
+
+# Intervalo de sincronización automática en segundos para portería (default: 60)
+VITE_SYNC_INTERVAL_SECONDS=60
 ```
 
 ---
@@ -412,6 +415,7 @@ Esto:
 - Visualización de artículos y documentos adjuntos
 - Al expandir: presetea la hora actual (editable), campo de observación y botón **Completar**
 - Respeta la lógica de grupos: muestra el primer paso pendiente de cada serie
+- **Sincronización automática:** la pantalla se actualiza en segundo plano según el intervalo definido en `VITE_SYNC_INTERVAL_SECONDS`.
 
 **Historial** (`/porteria/historial`)
 - Filtros por rango de fechas y estado

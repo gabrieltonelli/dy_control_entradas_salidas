@@ -207,17 +207,30 @@ function PendientesDia({ porteria }) {
         });
     };
 
-    const fetchData = useCallback(async () => {
-        setLoading(true); setError('');
+    const fetchData = useCallback(async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
+        setError('');
         try {
             const res = await getPendientes(email);
             setMovimientos(res.data);
         } catch (e) {
-            setError(e.response?.data?.error || 'Error al cargar los movimientos');
-        } finally { setLoading(false); }
+            if (!isBackground) setError(e.response?.data?.error || 'Error al cargar los movimientos');
+        } finally {
+            if (!isBackground) setLoading(false);
+        }
     }, [email]);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        fetchData();
+
+        // Sincronización automática
+        const intervalSeconds = parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60;
+        const intervalId = setInterval(() => {
+            fetchData(true); // Carga en background
+        }, intervalSeconds * 1000);
+
+        return () => clearInterval(intervalId);
+    }, [fetchData]);
 
     const handleCompleted = (id) => setMovimientos(prev => prev.filter(m => m.id !== id));
 
