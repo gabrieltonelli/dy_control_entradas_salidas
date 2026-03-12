@@ -40,10 +40,26 @@ const ESTADO_COLORS = {
     'Anulado': { bg: 'rgba(139,92,246,0.15)', color: '#a78bfa' },
 };
 
-function formatFecha(str) {
+function formatFecha(str, conHora = false) {
     if (!str) return '—';
-    const d = new Date(str);
-    return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Extraer solo los números de fecha y hora usando regex
+    const match = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})[T ](\d{1,2}):(\d{1,2})/);
+
+    if (match) {
+        const [_, y, m, d, hh, mm] = match;
+        const res = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+        return conHora ? `${res} ${hh.padStart(2, '0')}:${mm.padStart(2, '0')}` : res;
+    }
+
+    // Si no tiene hora, intentar solo fecha
+    const dateMatch = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (dateMatch) {
+        const [_, y, m, d] = dateMatch;
+        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+    }
+
+    return str;
 }
 
 function Historial({ porteria }) {
@@ -90,16 +106,26 @@ function Historial({ porteria }) {
             // Traer todos los registros del filtro (página por página)
             let allRows = [];
             let p = 1, totalPages = 1;
+            // Para el filtro 'vencido_visual' pedimos estado pendiente al backend
+            const estadoApi = estado === 'vencido_visual' ? '1' : estado;
+
             do {
-                const res = await getHistorial(email, { desde, hasta, estado, page: p });
-                allRows = [...allRows, ...res.data.movements];
+                const res = await getHistorial(email, { desde, hasta, estado: estadoApi, page: p });
+                let pageMovs = res.data.movements;
+
+                // Filtrado local de vencidos visuales
+                if (estado === 'vencido_visual') {
+                    pageMovs = pageMovs.filter(isVencidoVisual);
+                }
+
+                allRows = [...allRows, ...pageMovs];
                 totalPages = res.data.pagination.totalPages;
                 p++;
             } while (p <= totalPages);
 
             const rows = allRows.map(m => ({
                 'ID': m.id,
-                'Fecha': formatFecha(m.fechaHoraRegistro),
+                'Fecha': formatFecha(m.fechaHoraRegistro, m.estado_nombre === 'Completado'),
                 'Tipo': m.tipo_nombre,
                 'Persona': m.persona_interna_nombre || m.idPersonaExterna || '',
                 'Origen': m.origen_nombre,
@@ -109,7 +135,6 @@ function Historial({ porteria }) {
                 'Motivo': m.motivo || '',
                 'Observación': m.observacion || '',
                 'Obs. Portería': m.observacionPorteria || '',
-                'Hora completado': formatFecha(m.fechaHoraCompletado),
             }));
 
             const ws = XLSX.utils.json_to_sheet(rows);
@@ -173,12 +198,11 @@ function Historial({ porteria }) {
                                     <th>Tipo</th>
                                     <th>Origen → Destino</th>
                                     <th>Estado</th>
-                                    <th>Hora completado</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {movements.length === 0 && (
-                                    <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>Sin resultados</td></tr>
+                                    <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>Sin resultados</td></tr>
                                 )}
                                 {movements.map(m => {
                                     const vencidoVisual = isVencidoVisual(m);
@@ -186,7 +210,7 @@ function Historial({ porteria }) {
                                     const colors = ESTADO_COLORS[estadoLabel] || ESTADO_COLORS[m.estado_nombre] || {};
                                     return (
                                         <tr key={m.id}>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraRegistro)}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraRegistro, m.estado_nombre === 'Completado')}</td>
                                             <td>{m.persona_interna_nombre || m.idPersonaExterna || '—'}</td>
                                             <td>{m.tipo_nombre}</td>
                                             <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{m.origen_nombre} → {m.destino_nombre}</td>
@@ -195,7 +219,6 @@ function Historial({ porteria }) {
                                                     {estadoLabel}
                                                 </span>
                                             </td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraCompletado)}</td>
                                         </tr>
                                     );
                                 })}

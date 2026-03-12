@@ -252,7 +252,9 @@ exports.getHistorial = async (req, res) => {
              LEFT JOIN legajos      lp ON m.personaInterna    = lp.legajo
              LEFT JOIN legajos      le ON m.personaAutorizante = le.legajo
              ${baseWhere}
-             ORDER BY m.fechaHoraRegistro DESC
+             ORDER BY 
+                CASE WHEN m.idEstado = 1 AND DATE(m.fechaHoraRegistro) >= CURDATE() THEN 0 ELSE 1 END,
+                m.fechaHoraRegistro DESC
              LIMIT ? OFFSET ?`,
             [...baseParams, pageSize, offset]
         );
