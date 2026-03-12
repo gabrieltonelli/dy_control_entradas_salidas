@@ -82,8 +82,7 @@ function MovCard({ mov, onCompleted }) {
                         <div>
                             <label>Hora de paso</label>
                             <div className="hora-row">
-                                <input type="time" value={hora} onChange={e => setHora(e.target.value)} />
-                                <span className="hora-icon-btn"><Clock size={16} /></span>
+                                <input type="time" value={hora} onChange={e => setHora(e.target.value)} onClick={e => e.target.showPicker?.()} />
                             </div>
                         </div>
                         <div>
@@ -168,8 +167,7 @@ function SimpleCard({ mov, onCompleted }) {
                         <div>
                             <label>Hora de paso</label>
                             <div className="simple-hora-row">
-                                <input type="time" value={hora} onChange={e => setHora(e.target.value)} />
-                                <span className="simple-hora-icon"><Clock size={22} /></span>
+                                <input type="time" value={hora} onChange={e => setHora(e.target.value)} onClick={e => e.target.showPicker?.()} />
                             </div>
                         </div>
                         <div>
