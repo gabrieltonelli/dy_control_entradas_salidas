@@ -193,6 +193,8 @@ function PendientesDia({ porteria }) {
     const [movimientos, setMovimientos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [lastSync, setLastSync] = useState(new Date());
+    const [countdown, setCountdown] = useState(parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60);
 
     // Vista simplificada persistida en localStorage
     const [vistaSimple, setVistaSimple] = useState(() =>
@@ -213,6 +215,9 @@ function PendientesDia({ porteria }) {
         try {
             const res = await getPendientes(email);
             setMovimientos(res.data);
+            const now = new Date();
+            setLastSync(now);
+            setCountdown(parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60);
         } catch (e) {
             if (!isBackground) setError(e.response?.data?.error || 'Error al cargar los movimientos');
         } finally {
@@ -222,12 +227,19 @@ function PendientesDia({ porteria }) {
 
     useEffect(() => {
         fetchData();
+        // Sincronización automática se maneja en el efecto del countdown para mayor precisión
+    }, [fetchData]);
 
-        // Sincronización automática
-        const intervalSeconds = parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60;
+    useEffect(() => {
         const intervalId = setInterval(() => {
-            fetchData(true); // Carga en background
-        }, intervalSeconds * 1000);
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    fetchData(true);
+                    return parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60;
+                }
+                return prev - 1;
+            });
+        }, 1000);
 
         return () => clearInterval(intervalId);
     }, [fetchData]);
@@ -241,8 +253,19 @@ function PendientesDia({ porteria }) {
     return (
         <div style={{ padding: '20px 16px', maxWidth: vistaSimple ? 600 : 700, margin: '0 auto' }}>
             <div className="porteria-header">
-                <h1>Movimientos pendientes</h1>
-                <span className="subtitle">{porteria?.nombre} · {today}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h1>Movimientos pendientes</h1>
+                        <span className="subtitle">{porteria?.nombre} · {today}</span>
+                    </div>
+                    <div className="sync-info">
+                        <span className="sync-time">Sincronizado: {lastSync.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                        <div className="sync-countdown">
+                            <div className="sync-progress" style={{ width: `${(countdown / (parseInt(import.meta.env.VITE_SYNC_INTERVAL_SECONDS) || 60)) * 10000 / 100}%` }}></div>
+                            <span>Próxima en {countdown}s</span>
+                        </div>
+                    </div>
+                </div>
                 <div className="header-actions">
                     <button className="refresh-btn" onClick={fetchData}>
                         <RefreshCw size={14} /> Actualizar
