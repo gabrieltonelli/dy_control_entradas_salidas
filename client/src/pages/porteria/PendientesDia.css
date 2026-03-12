@@ -318,12 +318,12 @@
 ════════════════════════════════════════ */
 .simple-card {
     border-radius: 18px;
-    border: 3px solid var(--card-border);
+    border: 3px solid #3b82f6;
     background: var(--card-bg);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     overflow: hidden;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
-    transition: border-color 0.2s;
+    box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.35), 0 10px 15px -6px rgba(59, 130, 246, 0.25);
+    transition: all 0.2s ease;
 }
 
 .simple-card.expanded {

@@ -233,6 +233,33 @@ exports.getMovements = async (req, res) => {
              LEFT JOIN legajos lp ON m.personaInterna = lp.legajo
              ORDER BY m.fechaHoraRegistro DESC`
         );
+
+        // Fetch articles and documents for these movements
+        if (rows.length > 0) {
+            const movementIds = rows.map(r => r.id);
+            const [articles] = await pool.query(
+                `SELECT a.*, lo.nombre as origen_nombre, ld.nombre as destino_nombre
+                 FROM articulos a
+                 LEFT JOIN lugares lo ON a.idLugarOrigen = lo.id
+                 LEFT JOIN lugares ld ON a.idLugarDestino = ld.id
+                 WHERE a.idMovimiento IN (?)`,
+                [movementIds]
+            );
+            const [documents] = await pool.query(
+                `SELECT d.*, lo.nombre as origen_nombre, ld.nombre as destino_nombre
+                 FROM documentos d
+                 LEFT JOIN lugares lo ON d.idLugarOrigen = lo.id
+                 LEFT JOIN lugares ld ON d.idLugarDestino = ld.id
+                 WHERE d.idMovimiento IN (?)`,
+                [movementIds]
+            );
+
+            rows.forEach(mov => {
+                mov.articulos = articles.filter(a => a.idMovimiento === mov.id);
+                mov.documentos = documents.filter(d => d.idMovimiento === mov.id);
+            });
+        }
+
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -340,6 +367,32 @@ exports.getMisSolicitudes = async (req, res) => {
              LIMIT ? OFFSET ?`,
             [...whereParams, pageSize, offset]
         );
+
+        // Fetch articles and documents for these movements
+        if (rows.length > 0) {
+            const movementIds = rows.map(r => r.id);
+            const [articles] = await pool.query(
+                `SELECT a.*, lo.nombre as origen_nombre, ld.nombre as destino_nombre
+                 FROM articulos a
+                 LEFT JOIN lugares lo ON a.idLugarOrigen = lo.id
+                 LEFT JOIN lugares ld ON a.idLugarDestino = ld.id
+                 WHERE a.idMovimiento IN (?)`,
+                [movementIds]
+            );
+            const [documents] = await pool.query(
+                `SELECT d.*, lo.nombre as origen_nombre, ld.nombre as destino_nombre
+                 FROM documentos d
+                 LEFT JOIN lugares lo ON d.idLugarOrigen = lo.id
+                 LEFT JOIN lugares ld ON d.idLugarDestino = ld.id
+                 WHERE d.idMovimiento IN (?)`,
+                [movementIds]
+            );
+
+            rows.forEach(mov => {
+                mov.articulos = articles.filter(a => a.idMovimiento === mov.id);
+                mov.documentos = documents.filter(d => d.idMovimiento === mov.id);
+            });
+        }
 
         // Badge de solicitados pendientes de acción (solo autorizadores)
         let pendingActionCount = 0;

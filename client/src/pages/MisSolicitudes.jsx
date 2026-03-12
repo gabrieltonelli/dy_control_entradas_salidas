@@ -6,7 +6,7 @@ import Modal from '../components/Modal';
 import {
     Clock, CheckCircle, XCircle, AlertCircle, RefreshCw,
     ChevronDown, ChevronUp, Check, X, User, MapPin, Calendar,
-    FileText, ChevronLeft, ChevronRight, AlertTriangle
+    FileText, ChevronLeft, ChevronRight, AlertTriangle, Package, FileDigit
 } from 'lucide-react';
 import './MisSolicitudes.css';
 
@@ -20,8 +20,21 @@ const ESTADO_ANULADO = 6;
 // Extrae la fecha YYYY-MM-DD del campo datetime sin conversión de timezone
 const extraerFechaStr = (fechaHoraRegistro) => {
     if (!fechaHoraRegistro) return null;
-    // Si viene como Date object de mysql2, toISOString puede restar horas → usamos el string directamente
     return String(fechaHoraRegistro).substring(0, 10); // "YYYY-MM-DD"
+};
+
+// Extrae la hora HH:mm del campo datetime
+const extraerHoraStr = (fechaHoraRegistro) => {
+    if (!fechaHoraRegistro) return null;
+    // Si es un objeto Date o un string ISO, buscamos la parte de la hora
+    const s = String(fechaHoraRegistro);
+    if (s.includes('T')) {
+        return s.split('T')[1].substring(0, 5);
+    }
+    if (s.includes(' ')) {
+        return s.split(' ')[1].substring(0, 5);
+    }
+    return null;
 };
 
 // Detecta si un movimiento Pendiente cuya fecha ya pasó (vencida visualmente)
@@ -109,6 +122,9 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) =
                     <span><User size={13} /> {mov.persona_interna_nombre || mov.personaInterna}</span>
                     <span><MapPin size={13} /> {mov.origen_nombre} → {mov.destino_nombre}</span>
                     <span><Calendar size={13} /> {fecha}</span>
+                    {mov.idEstado === ESTADO_COMPLETADO && extraerHoraStr(mov.fechaHoraRegistro) && (
+                        <span><Clock size={13} /> {extraerHoraStr(mov.fechaHoraRegistro)} hs</span>
+                    )}
                 </div>
             </div>
 
@@ -144,6 +160,73 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) =
                         <div className="solicitud-card__observacion">
                             <FileText size={13} />
                             <span>{mov.observacion}</span>
+                        </div>
+                    )}
+
+                    {(mov.articulos?.length > 0 || mov.documentos?.length > 0) && (
+                        <div className="solicitud-card__items">
+                            {mov.articulos?.length > 0 && (
+                                <div className="solicitud-card__items-group">
+                                    <h4 className="solicitud-card__items-title"><Package size={14} /> Artículos</h4>
+                                    <div className="solicitud-card__items-list">
+                                        {mov.articulos.map((art, idx) => (
+                                            <div key={`art-${art.id || idx}`} className="solicitud-card__item">
+                                                <div className="solicitud-card__item-header">
+                                                    <span className="solicitud-card__item-name">{art.descripcion}</span>
+                                                    <span className="solicitud-card__item-qty">{art.cantidad} {art.presentacion || 'u.'}</span>
+                                                </div>
+                                                <div className="solicitud-card__item-details">
+                                                    <span className="solicitud-card__item-detail">
+                                                        <MapPin size={11} /> {art.origen_nombre} → {art.destino_nombre}
+                                                    </span>
+                                                    {art.destinatario && (
+                                                        <span className="solicitud-card__item-detail">
+                                                            <User size={11} /> Dest: {art.destinatario}
+                                                        </span>
+                                                    )}
+                                                    {art.sinRetorno === 1 && (
+                                                        <span className="solicitud-card__item-detail" style={{ color: '#ef4444' }}>
+                                                            Sin retorno
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {art.observacion && (
+                                                    <p className="solicitud-card__item-obs">{art.observacion}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {mov.documentos?.length > 0 && (
+                                <div className="solicitud-card__items-group">
+                                    <h4 className="solicitud-card__items-title"><FileDigit size={14} /> Documentos</h4>
+                                    <div className="solicitud-card__items-list">
+                                        {mov.documentos.map((doc, idx) => (
+                                            <div key={`doc-${doc.id || idx}`} className="solicitud-card__item">
+                                                <div className="solicitud-card__item-header">
+                                                    <span className="solicitud-card__item-name">{doc.descripcion}</span>
+                                                    <span className="solicitud-card__item-qty">{doc.cantidad} {doc.tipo || 'doc.'}</span>
+                                                </div>
+                                                <div className="solicitud-card__item-details">
+                                                    <span className="solicitud-card__item-detail">
+                                                        <MapPin size={11} /> {doc.origen_nombre} → {doc.destino_nombre}
+                                                    </span>
+                                                    {doc.destinatario && (
+                                                        <span className="solicitud-card__item-detail">
+                                                            <User size={11} /> Dest: {doc.destinatario}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {doc.observacion && (
+                                                    <p className="solicitud-card__item-obs">{doc.observacion}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
