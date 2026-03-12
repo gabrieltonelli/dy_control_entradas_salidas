@@ -46,7 +46,7 @@ function MovCard({ mov, onCompleted }) {
                     </span>
                     <div className="mov-badges">
                         <span className="badge badge-tipo">{mov.tipo_nombre}</span>
-                        {mov.idGrupo > 0 && <span className="badge badge-grupo">Paso {mov.ordenGrupo}/{mov.grupo_total} · {mov.grupo_completados} ✓</span>}
+                        {mov.idGrupo > 0 && <span className="badge badge-grupo">🔗 Paso {mov.ordenGrupo}/{mov.grupo_total} · {mov.grupo_completados} ✓</span>}
                         {totalItems > 0 && <span className="badge badge-items">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>}
                     </div>
                 </div>
@@ -132,7 +132,14 @@ function SimpleCard({ mov, onCompleted }) {
                     <span className="arrow">→</span>
                     {mov.destino_nombre}
                 </div>
-                <div className="simple-tipo">{mov.tipo_nombre}{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}</div>
+                <div className="simple-tipo">
+                    {mov.tipo_nombre}{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}
+                    {mov.idGrupo > 0 && (
+                        <span className="badge badge-grupo" style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
+                            🔗 Paso {mov.ordenGrupo}/{mov.grupo_total}
+                        </span>
+                    )}
+                </div>
                 <div className="simple-expand-hint">
                     {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     {open ? 'Cerrar' : 'Tocar para completar'}
