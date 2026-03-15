@@ -221,6 +221,31 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .badge-tipo {
     background: rgba(99, 102, 241, 0.15);
     color: #818cf8;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-ingreso {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.badge-egreso {
+    background: rgba(228, 5, 33, 0.15);
+    color: var(--dy-red);
+}
+
+.text-ingreso {
+    color: #10b981;
+}
+
+.text-egreso {
+    color: var(--dy-red);
+}
+
+.simple-badge-tipo {
+    display: inline-flex;
+    align-items: center;
 }
 
 .badge-motivo {
@@ -584,6 +609,8 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     letter-spacing: 0.03em;
     animation: alert-pulse 1.5s infinite;
     white-space: nowrap;
+    justify-content: center;
+    flex: 1 1 auto;
 }
 
 .alert-fichaje.simple {
@@ -609,6 +636,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     100% {
         box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
         border-color: rgba(245, 158, 11, 0.4);
+    }
+}
+
+.alert-fichaje .text-mobile {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .alert-fichaje .text-desktop {
+        display: none;
+    }
+    .alert-fichaje .text-mobile {
+        display: inline;
     }
 }
 

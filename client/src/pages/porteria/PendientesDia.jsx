@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../config/AuthContext';
-import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility, ShieldCheck, LogIn, LogOut } from 'lucide-react';
 import { getPendientes, completeMovimiento, getPorteros } from '../../services/porteriaService';
 import './PendientesDia.css';
 
@@ -57,7 +57,10 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                         {mov.destino_nombre}
                     </span>
                     <div className="mov-badges">
-                        <span className="badge badge-tipo">{mov.tipo_nombre}</span>
+                        <span className={`badge badge-tipo ${mov.tipo_nombre?.toLowerCase().includes('ingreso') ? 'badge-ingreso' : mov.tipo_nombre?.toLowerCase().includes('egreso') ? 'badge-egreso' : ''}`}>
+                            {mov.tipo_nombre?.toLowerCase().includes('ingreso') ? <LogIn size={11} style={{ marginRight: 3 }} /> : mov.tipo_nombre?.toLowerCase().includes('egreso') ? <LogOut size={11} style={{ marginRight: 3 }} /> : null}
+                            {mov.tipo_nombre}
+                        </span>
                         <span className="badge badge-motivo">{mov.motivo}</span>
                         {mov.idGrupo > 0 && <span className="badge badge-grupo">🔗 Paso {mov.ordenGrupo}/{mov.grupo_total} · {mov.grupo_completados} ✓</span>}
                         {mov.autorizante_nombre && (
@@ -105,6 +108,10 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                             </div>
                         </div>
                         <div>
+                            <label>Observación (opcional)</label>
+                            <textarea placeholder="Escribí una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
+                        </div>
+                        <div>
                             <label>Vigilador / Portero</label>
                             <input
                                 list="porteros-list"
@@ -116,14 +123,15 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                             />
                         </div>
                         {error && <p style={{ color: 'var(--dy-red)', fontSize: '0.85rem', margin: 0 }}>{error}</p>}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                            <button className="btn-completar" onClick={handleComplete} disabled={loading} style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px', flexWrap: 'wrap' }}>
+                            <button className="btn-completar" onClick={handleComplete} disabled={loading} style={{ flex: '1 1 auto', minWidth: '180px' }}>
                                 <CheckCircle size={18} />{loading ? 'Completando...' : 'Completar paso'}
                             </button>
                             {mov.motivo?.toLowerCase() !== 'requerimiento laboral' && (
                                 <div className="alert-fichaje">
                                     <Accessibility size={16} />
-                                    <span>Requiere fichaje</span>
+                                    <span className="text-desktop">Requiere fichaje</span>
+                                    <span className="text-mobile">CON FICHAJE</span>
                                 </div>
                             )}
                         </div>
@@ -178,7 +186,11 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                     {mov.destino_nombre}
                 </div>
                 <div className="simple-tipo">
-                    {mov.tipo_nombre} · <strong>{mov.motivo}</strong>{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}
+                    <span className={`simple-badge-tipo ${mov.tipo_nombre?.toLowerCase().includes('ingreso') ? 'text-ingreso' : mov.tipo_nombre?.toLowerCase().includes('egreso') ? 'text-egreso' : ''}`}>
+                        {mov.tipo_nombre?.toLowerCase().includes('ingreso') ? <LogIn size={15} style={{ verticalAlign: 'middle', marginRight: 4 }} /> : mov.tipo_nombre?.toLowerCase().includes('egreso') ? <LogOut size={15} style={{ verticalAlign: 'middle', marginRight: 4 }} /> : null}
+                        <strong style={{ verticalAlign: 'middle' }}>{mov.tipo_nombre?.toUpperCase()}</strong>
+                    </span>
+                    <span style={{ verticalAlign: 'middle' }}>{' · '}<strong>{mov.motivo}</strong>{totalItems > 0 ? ` · ${totalItems} ítem(s)` : ''}</span>
                     {mov.autorizante_nombre && (
                         <> · <span title="Autorizado por"><ShieldCheck size={13} style={{ verticalAlign: 'middle', margin: '0 2px 0 4px' }} />{mov.autorizante_nombre}</span></>
                     )}
@@ -241,14 +253,15 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
                             <textarea placeholder="Escribí una observación si es necesario..." value={obs} onChange={e => setObs(e.target.value)} />
                         </div>
                         {error && <p style={{ color: 'var(--dy-red)', fontSize: '1rem', margin: 0, fontWeight: 700 }}>{error}</p>}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <button className="btn-completar-simple" onClick={handleComplete} disabled={loading} style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                            <button className="btn-completar-simple" onClick={handleComplete} disabled={loading} style={{ flex: '1 1 auto', minWidth: '200px' }}>
                                 <CheckCircle size={26} />{loading ? 'Completando...' : 'COMPLETAR'}
                             </button>
                             {mov.motivo?.toLowerCase() !== 'requerimiento laboral' && (
                                 <div className="alert-fichaje simple">
                                     <Accessibility size={24} />
-                                    <span>REQUIERE FICHAJE</span>
+                                    <span className="text-desktop">REQUIERE FICHAJE</span>
+                                    <span className="text-mobile">CON FICHAJE</span>
                                 </div>
                             )}
                         </div>
