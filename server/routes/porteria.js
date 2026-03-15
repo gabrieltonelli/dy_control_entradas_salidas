@@ -11,6 +11,9 @@ router.get('/pendientes', porteriaController.getPendientes);
 // Completar un movimiento
 router.put('/:id/complete', porteriaController.completeMovimiento);
 
+// Validar y completar movimiento vía QR
+router.post('/scan-qr', porteriaController.scanQR);
+
 // Historial con filtros y paginación
 router.get('/historial', porteriaController.getHistorial);
 

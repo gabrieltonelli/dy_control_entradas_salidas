@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './Modal.css';
 
 const Modal = ({ isOpen, onClose, title, message, onConfirm, type = 'info', confirmLabel = 'Continuar', cancelLabel = 'Cancelar', showCancel = true }) => {
@@ -18,7 +19,7 @@ const Modal = ({ isOpen, onClose, title, message, onConfirm, type = 'info', conf
         onClose();
     };
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={showCancel ? onClose : undefined}>
             <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
@@ -39,7 +40,8 @@ const Modal = ({ isOpen, onClose, title, message, onConfirm, type = 'info', conf
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const crypto = require('crypto');
+
 
 const ESTADO_PENDIENTE = 1;
 const ESTADO_COMPLETADO = 2;
@@ -269,6 +271,89 @@ exports.getHistorial = async (req, res) => {
                 totalPages: Math.ceil(total / pageSize),
             },
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+// ---------------------------------------------------------------
+// @desc  Validar QR y completar movimiento
+// @route POST /api/porteria/scan-qr
+// ---------------------------------------------------------------
+exports.scanQR = async (req, res) => {
+    const { qrData, email, vigilador } = req.body;
+    if (!qrData || !email) return res.status(400).json({ error: 'Datos de escaneo incompletos' });
+
+    try {
+        const secret = process.env.QR_SECRET || 'dy_internal_secret_key_2026_qr';
+        
+        let id;
+        try {
+            // Desencriptar el QR (formato esperado: id:hash)
+            const parts = qrData.split(':');
+            if (parts.length !== 2) throw new Error('Formato inválido');
+            
+            id = parts[0];
+            const receivedHash = parts[1];
+            
+            const expectedHash = crypto.createHmac('sha256', secret)
+                .update(id.toString())
+                .digest('hex')
+                .substring(0, 10);
+                
+            if (receivedHash !== expectedHash) {
+                return res.status(403).json({ error: 'Código QR inválido o manipulado' });
+            }
+        } catch (e) {
+            return res.status(400).json({ error: 'No se pudo leer el código QR' });
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // 1. Verificar portería
+            const [portRows] = await connection.query(
+                'SELECT id FROM porterias WHERE email = ? AND activa = 1',
+                [email]
+            );
+            if (portRows.length === 0) {
+                return res.status(403).json({ error: 'Esta cuenta no tiene permisos de portería' });
+            }
+
+            // 2. Verificar movimiento (debe estar PENDIENTE y SER HOY)
+            const [movRows] = await connection.query(
+                `SELECT * FROM movimientos 
+                 WHERE id = ? AND idEstado = ? AND DATE(fechaHoraRegistro) = CURDATE()`,
+                [id, ESTADO_PENDIENTE]
+            );
+
+            if (movRows.length === 0) {
+                return res.status(404).json({ error: 'La autorización no es válida para hoy o ya fue procesada' });
+            }
+
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+            // 3. Completar
+            await connection.query(
+                `UPDATE movimientos
+                 SET idEstado = ?,
+                     fechaHoraCompletado = ?,
+                     observacionPorteria = CONCAT(COALESCE(observacionPorteria, ''), ' [Completado vía QR]'),
+                     vigilador = ?
+                 WHERE id = ?`,
+                [ESTADO_COMPLETADO, now, vigilador || 'SISTEMA QR', id]
+            );
+
+            await connection.commit();
+            res.json({ message: 'Autorización procesada correctamente vía QR', id });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

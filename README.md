@@ -88,6 +88,9 @@ PAGE_SIZE_SOLICITUDES=20
 AZURE_AD_CLIENT_ID=tu_client_id
 AZURE_AD_TENANT_ID=tu_tenant_id
 AZURE_AD_CLIENT_SECRET=tu_client_secret
+
+# Firma de Códigos QR (HMAC SHA-256)
+QR_SECRET=tu_clave_secreta_para_qr_aqui
 ```
 
 ### Frontend — `/client/.env`
@@ -265,6 +268,11 @@ Al ingresar, el sistema redirige al portal de Microsoft. Usar cuenta corporativa
 
 Visualiza los movimientos activos registrados en el día. Las tarjetas cambian de color según el estado (Pendiente / Completado) y muestran quién autorizó el movimiento.
 
+### 2.1. Autorización mediante Código QR 📱
+Para agilizar el paso por los puntos de control, el sistema cuenta con validación por QR:
+- **Usuario Portante:** En la sección "Mis Solicitudes", las autorizaciones en estado **Pendiente** muestran un botón *"Mostrar Código QR"*. Al pulsarlo, se genera un código único firmado digitalmente.
+- **Personal de Portería:** Dispone de un botón flotante (FAB) con el icono de QR en la esquina inferior derecha. Al escanear el código del usuario, el sistema valida la firma, verifica que la autorización sea válida para el día de la fecha y marca el movimiento como **Completado** instantáneamente, registrando el vigilador seleccionado.
+
 ### 3. Nueva Solicitud (Formulario de Movimiento)
 
 - Elegí el origen y destino del movimiento.
@@ -415,6 +423,7 @@ Esto:
 - Visualización de artículos y documentos adjuntos
 - Al expandir: presetea la hora actual (editable), campo de observación y botón **Completar**
 - Respeta la lógica de grupos: muestra el primer paso pendiente de cada serie
+- **Escaneo de QR:** Botón flotante (FAB) siempre disponible para procesar entradas/salidas en segundos sin búsqueda manual. Al escanear con éxito, la lista de pendientes se actualiza automáticamente.
 - **Sincronización automática:** la pantalla se actualiza en segundo plano según el intervalo definido en `VITE_SYNC_INTERVAL_SECONDS`.
 
 **Historial** (`/porteria/historial`)

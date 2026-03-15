@@ -451,8 +451,15 @@ function PendientesDia({ porteria }) {
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(intervalId);
+    }, [fetchData]);
+
+    useEffect(() => {
+        const handleQRSuccess = () => {
+            fetchData(true);
+        };
+        window.addEventListener('qr-scan-success', handleQRSuccess);
+        return () => window.removeEventListener('qr-scan-success', handleQRSuccess);
     }, [fetchData]);
 
     const handleCompleted = (id) => setMovimientos(prev => prev.filter(m => m.id !== id));

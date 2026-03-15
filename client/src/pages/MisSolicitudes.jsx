@@ -6,8 +6,10 @@ import Modal from '../components/Modal';
 import {
     Clock, CheckCircle, XCircle, AlertCircle, RefreshCw,
     ChevronDown, ChevronUp, Check, X, User, MapPin, Calendar,
-    FileText, ChevronLeft, ChevronRight, AlertTriangle, Package, FileDigit
+    FileText, ChevronLeft, ChevronRight, AlertTriangle, Package, FileDigit, QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import CryptoJS from 'crypto-js';
 import './MisSolicitudes.css';
 
 const ESTADO_PENDIENTE = 1;
@@ -86,7 +88,7 @@ const GrupoBadge = ({ mov }) => {
     );
 };
 
-const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) => {
+const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel, onShowQR }) => {
     const [expanded, setExpanded] = useState(false);
     const isPendingMyAuth = esAutorizador && mov.idEstado === ESTADO_SOLICITADO;
     const isPendingCancel = esAutorizador && mov.idEstado === ESTADO_PENDIENTE;
@@ -261,11 +263,24 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel }) =
                             </Button>
                         </div>
                     )}
+                    {!vencida && mov.idEstado === ESTADO_PENDIENTE && (
+                        <div className="solicitud-card__qr-section" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border)', textAlign: 'center' }}>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); onShowQR(mov); }}
+                                style={{ width: '100%', gap: '8px' }}
+                            >
+                                <QrCode size={18} /> Mostrar Código QR para portería
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
     );
 };
+
 
 // Componente de paginación
 const Pagination = ({ pagination, onPageChange }) => {
@@ -337,8 +352,15 @@ const MisSolicitudes = () => {
     const [rejectModal, setRejectModal] = useState({ open: false, mov: null, observacion: '' });
     const [cancelModal, setCancelModal] = useState({ open: false, mov: null, observacion: '' });
     const [approveModal, setApproveModal] = useState({ open: false, mov: null });
+    const [qrModal, setQrModal] = useState({ open: false, mov: null });
     const [actionLoading, setActionLoading] = useState(false);
     const [actionResult, setActionResult] = useState(null);
+
+    const generateQRData = (movId) => {
+        const secret = 'dy_internal_secret_key_2026_qr';
+        const hash = CryptoJS.HmacSHA256(movId.toString(), secret).toString(CryptoJS.enc.Hex).substring(0, 10);
+        return `${movId}:${hash}`;
+    };
 
     const fetchData = useCallback(async (currentPage, currentFiltro) => {
         setLoading(true);
@@ -504,6 +526,7 @@ const MisSolicitudes = () => {
                                 onApprove={(m) => setApproveModal({ open: true, mov: m })}
                                 onReject={(m) => setRejectModal({ open: true, mov: m, observacion: '' })}
                                 onCancel={(m) => setCancelModal({ open: true, mov: m, observacion: '' })}
+                                onShowQR={(m) => setQrModal({ open: true, mov: m })}
                             />
                         ))}
                     </div>
@@ -614,6 +637,33 @@ const MisSolicitudes = () => {
                 cancelLabel="Cancelar"
                 onConfirm={handleCancel}
                 onCancel={() => setCancelModal({ open: false, mov: null, observacion: '' })}
+            />
+
+            {/* Modal QR */}
+            <Modal
+                isOpen={qrModal.open}
+                onClose={() => setQrModal({ open: false, mov: null })}
+                title="Autorización QR"
+                message={
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '0' }}>
+                        <div style={{ background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+                            <QRCodeSVG
+                                value={qrModal.mov ? generateQRData(qrModal.mov.id) : ''}
+                                size={200}
+                                level="H"
+                                includeMargin={true}
+                            />
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <p style={{ fontWeight: '800', fontSize: '1.4rem', marginBottom: '2px', color: 'var(--primary)' }}>
+                                {qrModal.mov?.persona_interna_nombre || qrModal.mov?.idPersonaExterna}
+                            </p>
+                            <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Muestre este código en portería</p>
+                        </div>
+                    </div>
+                }
+                confirmLabel="Cerrar"
+                showCancel={false}
             />
         </div>
     );
