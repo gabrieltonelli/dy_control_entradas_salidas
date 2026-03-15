@@ -21,6 +21,7 @@ export const MovementsService = {
     approve: (id, email) => api.put(`/movements/${id}/approve`, { email }),
     reject: (id, email, observacion) => api.put(`/movements/${id}/reject`, { email, observacion }),
     cancel: (id, email, observacion) => api.put(`/movements/${id}/cancel`, { email, observacion }),
+    getStatus: (id) => api.get(`/movements/${id}/status`),
 };
 
 export default api;

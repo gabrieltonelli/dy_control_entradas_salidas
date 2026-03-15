@@ -352,7 +352,7 @@ const MisSolicitudes = () => {
     const [rejectModal, setRejectModal] = useState({ open: false, mov: null, observacion: '' });
     const [cancelModal, setCancelModal] = useState({ open: false, mov: null, observacion: '' });
     const [approveModal, setApproveModal] = useState({ open: false, mov: null });
-    const [qrModal, setQrModal] = useState({ open: false, mov: null });
+    const [qrModal, setQrModal] = useState({ open: false, mov: null, scanned: false });
     const [actionLoading, setActionLoading] = useState(false);
     const [actionResult, setActionResult] = useState(null);
 
@@ -378,6 +378,31 @@ const MisSolicitudes = () => {
     useEffect(() => {
         if (email) fetchData(page, filtro);
     }, [fetchData, email, page, filtro]);
+
+    // Polling para detectar si el QR fue escaneado por el portero
+    useEffect(() => {
+        let interval;
+        if (qrModal.open && qrModal.mov && !qrModal.scanned) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await MovementsService.getStatus(qrModal.mov.id);
+                    if (res.data.idEstado === ESTADO_COMPLETADO) {
+                        setQrModal(prev => ({ ...prev, scanned: true }));
+                        clearInterval(interval);
+                        // Refrescar la lista de movimientos
+                        fetchData(page, filtro);
+                        // Cerrar el modal automáticamente después de un momento
+                        setTimeout(() => {
+                            setQrModal({ open: false, mov: null, scanned: false });
+                        }, 4000); // 4 segundos para que vea el check verde
+                    }
+                } catch (err) {
+                    console.error('Error polling QR status:', err);
+                }
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [qrModal.open, qrModal.mov, qrModal.scanned, fetchData, page, filtro]);
 
     const handleFiltroChange = (nuevoFiltro) => {
         setFiltro(nuevoFiltro);
@@ -643,26 +668,44 @@ const MisSolicitudes = () => {
             <Modal
                 isOpen={qrModal.open}
                 onClose={() => setQrModal({ open: false, mov: null })}
-                title="Autorización QR"
+                title={qrModal.scanned ? "¡Éxito!" : "Autorización QR"}
                 message={
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '0' }}>
-                        <div style={{ background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
-                            <QRCodeSVG
-                                value={qrModal.mov ? generateQRData(qrModal.mov.id) : ''}
-                                size={200}
-                                level="H"
-                                includeMargin={true}
-                            />
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <p style={{ fontWeight: '800', fontSize: '1.4rem', marginBottom: '2px', color: 'var(--primary)' }}>
-                                {qrModal.mov?.persona_interna_nombre || qrModal.mov?.idPersonaExterna}
-                            </p>
-                            <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Muestre este código en portería</p>
-                        </div>
+                        {qrModal.scanned ? (
+                            <div style={{ padding: '20px 0', textAlign: 'center', animation: 'modalScaleUp 0.4s ease-out' }}>
+                                <div style={{ 
+                                    width: '100px', height: '100px', borderRadius: '50%', 
+                                    background: 'rgba(34, 197, 94, 0.12)', color: '#22c55e',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    margin: '0 auto 20px',
+                                    boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)'
+                                }}>
+                                    <Check size={60} strokeWidth={3} />
+                                </div>
+                                <p style={{ fontWeight: '900', fontSize: '1.6rem', color: '#22c55e', marginBottom: '8px' }}>Ingreso Autorizado</p>
+                                <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Tu solicitud ha sido completada correctamente.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div style={{ background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+                                    <QRCodeSVG
+                                        value={qrModal.mov ? generateQRData(qrModal.mov.id) : ''}
+                                        size={200}
+                                        level="H"
+                                        includeMargin={true}
+                                    />
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontWeight: '800', fontSize: '1.4rem', marginBottom: '2px', color: 'var(--primary)' }}>
+                                        {qrModal.mov?.persona_interna_nombre || qrModal.mov?.idPersonaExterna}
+                                    </p>
+                                    <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Muestre este código en portería</p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 }
-                confirmLabel="Cerrar"
+                confirmLabel={qrModal.scanned ? "Entendido" : "Cerrar"}
                 showCancel={false}
             />
         </div>

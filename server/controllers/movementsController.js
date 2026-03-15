@@ -606,3 +606,22 @@ exports.cancelMovement = async (req, res) => {
         connection.release();
     }
 };
+
+// @desc    Get current status of a movement
+// @route   GET /api/movements/:id/status
+exports.getMovementStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await pool.query(
+            'SELECT idEstado FROM movimientos WHERE id = ?',
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Movimiento no encontrado' });
+        }
+        res.json({ idEstado: rows[0].idEstado });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};

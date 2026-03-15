@@ -179,11 +179,13 @@ exports.completeMovimiento = async (req, res) => {
         await connection.query(
             `UPDATE movimientos
              SET idEstado = ?,
-                 fechaHoraCompletado = ?,
+                 fechaHoraRegistro = ?,
+                 fechaHoraCompletado = NULL,
                  observacionPorteria = ?,
-                 vigilador = ?
+                 vigilador = ?,
+                 usuario_app = ?
              WHERE id = ?`,
-            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, id]
+            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
         );
 
         await connection.commit();
@@ -339,11 +341,13 @@ exports.scanQR = async (req, res) => {
             await connection.query(
                 `UPDATE movimientos
                  SET idEstado = ?,
-                     fechaHoraCompletado = ?,
+                     fechaHoraRegistro = ?,
+                     fechaHoraCompletado = NULL,
                      observacionPorteria = CONCAT(COALESCE(observacionPorteria, ''), ' [Completado vía QR]'),
-                     vigilador = ?
+                     vigilador = ?,
+                     usuario_app = ?
                  WHERE id = ?`,
-                [ESTADO_COMPLETADO, now, vigilador || 'SISTEMA QR', id]
+                [ESTADO_COMPLETADO, now, vigilador || 'SISTEMA QR', email, id]
             );
 
             await connection.commit();
