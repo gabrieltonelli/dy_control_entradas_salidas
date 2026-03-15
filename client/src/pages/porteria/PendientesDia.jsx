@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../config/AuthContext';
-import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility, ShieldCheck, LogIn, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw, CheckCircle, PackageOpen, FileText, ShieldOff, Clock, Accessibility, ShieldCheck, LogIn, LogOut, MapPin, User, Package, FileDigit } from 'lucide-react';
 import { getPendientes, completeMovimiento, getPorteros } from '../../services/porteriaService';
 import './PendientesDia.css';
 
@@ -78,26 +78,77 @@ function MovCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
             {open && (
                 <div className="mov-card-body">
                     {mov.articulos?.length > 0 && (
-                        <div className="items-section">
-                            <h4><PackageOpen size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Artículos</h4>
-                            {mov.articulos.map(a => (
-                                <div key={a.id} className="item-row">
-                                    <span className="item-qty">×{a.cantidad}</span>
-                                    <span>{a.descripcion}</span>
-                                    {a.sinRetorno && <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sin retorno</span>}
-                                </div>
-                            ))}
+                        <div className="porteria-items-group">
+                            <h4><Package size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Artículos</h4>
+                            <div className="porteria-items-list">
+                                {mov.articulos.map(a => (
+                                    <div key={a.id} className="porteria-item-card">
+                                        <div className="porteria-item-header">
+                                            <span className="porteria-item-name">{a.descripcion}</span>
+                                            <span className="porteria-item-qty">{a.cantidad} {a.presentacion || 'u.'}</span>
+                                        </div>
+                                        <div className="porteria-item-details">
+                                            <span className="porteria-item-detail">
+                                                <MapPin size={11} /> Destino: {mov.destino_nombre}
+                                            </span>
+                                            {a.destinatario && (
+                                                <span className="porteria-item-detail">
+                                                    <User size={11} /> Destinatario: {a.destinatario}
+                                                </span>
+                                            )}
+                                            {a.sinRetorno === 1 ? (
+                                                <span className="porteria-item-badge badge-sin-retorno">
+                                                    Sin retorno
+                                                </span>
+                                            ) : (
+                                                <span className="porteria-item-badge badge-con-retorno">
+                                                    Con retorno
+                                                </span>
+                                            )}
+                                        </div>
+                                        {a.observacion && (
+                                            <p className="porteria-item-obs">{a.observacion}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     {mov.documentos?.length > 0 && (
-                        <div className="items-section">
-                            <h4><FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Documentos</h4>
-                            {mov.documentos.map(d => (
-                                <div key={d.id} className="item-row">
-                                    <span className="item-qty">×{d.cantidad}</span>
-                                    <span>{d.descripcion || d.tipo}</span>
-                                </div>
-                            ))}
+                        <div className="porteria-items-group">
+                            <h4><FileDigit size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Documentos</h4>
+                            <div className="porteria-items-list">
+                                {mov.documentos.map(d => (
+                                    <div key={d.id} className="porteria-item-card">
+                                        <div className="porteria-item-header">
+                                            <span className="porteria-item-name">{d.tipo ? `${d.tipo.toUpperCase()} ${d.descripcion}` : d.descripcion}</span>
+                                            <span className="porteria-item-qty">{d.cantidad} doc.</span>
+                                        </div>
+                                        <div className="porteria-item-details">
+                                            <span className="porteria-item-detail">
+                                                <MapPin size={11} /> Destino: {mov.destino_nombre}
+                                            </span>
+                                            {d.destinatario && (
+                                                <span className="porteria-item-detail">
+                                                    <User size={11} /> Destinatario: {d.destinatario}
+                                                </span>
+                                            )}
+                                            {d.sinRetorno === 1 ? (
+                                                <span className="porteria-item-badge badge-sin-retorno">
+                                                    Sin retorno
+                                                </span>
+                                            ) : (
+                                                <span className="porteria-item-badge badge-con-retorno">
+                                                    Con retorno
+                                                </span>
+                                            )}
+                                        </div>
+                                        {d.observacion && (
+                                            <p className="porteria-item-obs">{d.observacion}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     <div className="complete-form">
@@ -209,25 +260,77 @@ function SimpleCard({ mov, onCompleted, vigilador, setVigilador, porteros }) {
             {open && (
                 <div className="simple-card-body">
                     {mov.articulos?.length > 0 && (
-                        <div className="simple-items-section">
-                            <h4><PackageOpen size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Artículos</h4>
-                            {mov.articulos.map(a => (
-                                <div key={a.id} className="simple-item-row">
-                                    <span className="simple-item-qty">×{a.cantidad}</span>
-                                    <span>{a.descripcion}</span>
-                                </div>
-                            ))}
+                        <div className="porteria-items-group">
+                            <h4><Package size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Artículos</h4>
+                            <div className="porteria-items-list">
+                                {mov.articulos.map(a => (
+                                    <div key={a.id} className="porteria-item-card">
+                                        <div className="porteria-item-header">
+                                            <span className="porteria-item-name">{a.descripcion}</span>
+                                            <span className="porteria-item-qty">{a.cantidad} {a.presentacion || 'u.'}</span>
+                                        </div>
+                                        <div className="porteria-item-details">
+                                            <span className="porteria-item-detail">
+                                                <MapPin size={11} /> Destino: {mov.destino_nombre}
+                                            </span>
+                                            {a.destinatario && (
+                                                <span className="porteria-item-detail">
+                                                    <User size={11} /> Destinatario: {a.destinatario}
+                                                </span>
+                                            )}
+                                            {a.sinRetorno === 1 ? (
+                                                <span className="porteria-item-badge badge-sin-retorno">
+                                                    Sin retorno
+                                                </span>
+                                            ) : (
+                                                <span className="porteria-item-badge badge-con-retorno">
+                                                    Con retorno
+                                                </span>
+                                            )}
+                                        </div>
+                                        {a.observacion && (
+                                            <p className="porteria-item-obs">{a.observacion}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     {mov.documentos?.length > 0 && (
-                        <div className="simple-items-section">
-                            <h4><FileText size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Documentos</h4>
-                            {mov.documentos.map(d => (
-                                <div key={d.id} className="simple-item-row">
-                                    <span className="simple-item-qty">×{d.cantidad}</span>
-                                    <span>{d.descripcion || d.tipo}</span>
-                                </div>
-                            ))}
+                        <div className="porteria-items-group">
+                            <h4><FileDigit size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Documentos</h4>
+                            <div className="porteria-items-list">
+                                {mov.documentos.map(d => (
+                                    <div key={d.id} className="porteria-item-card">
+                                        <div className="porteria-item-header">
+                                            <span className="porteria-item-name">{d.tipo ? `${d.tipo.toUpperCase()} ${d.descripcion}` : d.descripcion}</span>
+                                            <span className="porteria-item-qty">{d.cantidad} doc.</span>
+                                        </div>
+                                        <div className="porteria-item-details">
+                                            <span className="porteria-item-detail">
+                                                <MapPin size={11} /> Destino: {mov.destino_nombre}
+                                            </span>
+                                            {d.destinatario && (
+                                                <span className="porteria-item-detail">
+                                                    <User size={11} /> Destinatario: {d.destinatario}
+                                                </span>
+                                            )}
+                                            {d.sinRetorno === 1 ? (
+                                                <span className="porteria-item-badge badge-sin-retorno">
+                                                    Sin retorno
+                                                </span>
+                                            ) : (
+                                                <span className="porteria-item-badge badge-con-retorno">
+                                                    Con retorno
+                                                </span>
+                                            )}
+                                        </div>
+                                        {d.observacion && (
+                                            <p className="porteria-item-obs">{d.observacion}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     <div className="simple-complete-form">
