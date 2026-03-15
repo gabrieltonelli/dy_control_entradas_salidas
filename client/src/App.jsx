@@ -23,6 +23,7 @@ import PorteriaGuard from './pages/porteria/PorteriaGuard';
 import PendientesDia from './pages/porteria/PendientesDia';
 import Historial from './pages/porteria/Historial';
 import Reglamento from './pages/Reglamento';
+import UsuarioNormalGuard from './components/UsuarioNormalGuard';
 
 function App() {
   return (
@@ -34,11 +35,11 @@ function App() {
               <Router>
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<MovementForm />} />
-                    <Route path="/nuevo" element={<MovementForm />} />
-                    <Route path="/status" element={<StatusPage />} />
+                    <Route path="/" element={<UsuarioNormalGuard><MovementForm /></UsuarioNormalGuard>} />
+                    <Route path="/nuevo" element={<UsuarioNormalGuard><MovementForm /></UsuarioNormalGuard>} />
+                    <Route path="/status" element={<UsuarioNormalGuard><StatusPage /></UsuarioNormalGuard>} />
                     <Route path="/configuracion" element={<Settings />} />
-                    <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
+                    <Route path="/mis-solicitudes" element={<UsuarioNormalGuard><MisSolicitudes /></UsuarioNormalGuard>} />
                     <Route path="/reglamento" element={<Reglamento />} />
                     <Route path="/porteria" element={
                       <PorteriaGuard>{porteria => <PendientesDia porteria={porteria} />}</PorteriaGuard>

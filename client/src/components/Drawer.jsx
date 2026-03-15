@@ -2,32 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History, BookOpen } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../config/AuthContext';
-import { checkPorteria } from '../services/porteriaService';
 
 const Drawer = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
-    const email = user?.email;
+    const { esPortero, porteria } = useAuth();
 
-    const [porteria, setPorteria] = useState(null);
-
-    useEffect(() => {
-        if (!email) return;
-        checkPorteria(email)
-            .then(res => { if (res.data.esPortero) setPorteria(res.data.porteria); })
-            .catch(() => { });
-    }, [email]);
-
-    const menuItems = [
+    const menuItems = !esPortero ? [
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
         { icon: <ClipboardList size={20} />, label: 'Mis Solicitudes', path: '/mis-solicitudes' },
+        { icon: <BookOpen size={20} />, label: 'Reglamento', path: '/reglamento' },
+        { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
+    ] : [
         { icon: <BookOpen size={20} />, label: 'Reglamento', path: '/reglamento' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
 
     // Ítems exclusivos de portería (solo si es portero)
-    const porteriaItems = porteria
+    const porteriaItems = esPortero && porteria
         ? [
             { icon: <ShieldCheck size={20} />, label: 'Pendientes del día', path: '/porteria' },
             { icon: <History size={20} />, label: 'Historial portería', path: '/porteria/historial' },

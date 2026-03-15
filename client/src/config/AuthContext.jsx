@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./msal";
+import { checkPorteria } from "../services/porteriaService";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -10,6 +11,8 @@ export const AuthProvider = ({ children }) => {
     const [googleUser, setGoogleUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
+    const [porteria, setPorteria] = useState(null);
+    const [esPortero, setEsPortero] = useState(null);
 
     useEffect(() => {
         const storedGoogleUser = localStorage.getItem('google_user');
@@ -43,8 +46,31 @@ export const AuthProvider = ({ children }) => {
         } else {
             setIsAuthenticated(false);
             setUser(null);
+            setPorteria(null);
+            setEsPortero(null);
         }
     }, [isMsAuthenticated, accounts, googleUser]);
+
+    useEffect(() => {
+        if (user?.email) {
+            checkPorteria(user.email)
+                .then(res => {
+                    setEsPortero(res.data.esPortero);
+                    if (res.data.esPortero) {
+                        setPorteria(res.data.porteria);
+                    } else {
+                        setPorteria(null);
+                    }
+                })
+                .catch(() => {
+                    setEsPortero(false);
+                    setPorteria(null);
+                });
+        } else {
+            setEsPortero(null);
+            setPorteria(null);
+        }
+    }, [user?.email]);
 
     const loginMicrosoft = () => {
         instance.loginRedirect(loginRequest).catch(e => console.error(e));
@@ -68,6 +94,8 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             isAuthenticated,
             user,
+            porteria,
+            esPortero,
             loginMicrosoft,
             loginGoogle,
             logout
