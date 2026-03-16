@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History, BookOpen } from 'lucide-react';
+import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History, BookOpen, LifeBuoy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../config/AuthContext';
 
@@ -12,9 +12,11 @@ const Drawer = ({ isOpen, onClose }) => {
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
         { icon: <ClipboardList size={20} />, label: 'Mis Solicitudes', path: '/mis-solicitudes' },
         { icon: <BookOpen size={20} />, label: 'Novedades', path: '/reglamento' },
+        { icon: <LifeBuoy size={20} />, label: 'Soporte', path: '/soporte' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ] : [
         { icon: <BookOpen size={20} />, label: 'Novedades', path: '/reglamento' },
+        { icon: <LifeBuoy size={20} />, label: 'Soporte', path: '/soporte' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
 

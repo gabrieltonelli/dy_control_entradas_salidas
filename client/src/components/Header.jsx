@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../config/AuthContext";
-import { Menu, Sun, Moon, LogOut, User } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, User, MessageSquarePlus } from 'lucide-react';
 import logo from '../assets/logo-don-yeyo-png-sin-fondo.png';
 
 const Header = ({ onMenuClick, theme, toggleTheme }) => {
     const { user, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const navigate = useNavigate();
 
     const name = user?.name || "Usuario";
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -34,6 +36,15 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
             <div className="header-right">
                 <button className="mode-toggle desktop-only" onClick={toggleTheme} title="Cambiar modo">
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+
+                <button 
+                    className="mode-toggle" 
+                    onClick={() => navigate('/soporte?tab=feedback')} 
+                    title="Enviar Feedback"
+                    style={{ color: 'var(--primary)' }}
+                >
+                    <MessageSquarePlus size={22} />
                 </button>
 
                 <div

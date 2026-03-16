@@ -18,11 +18,13 @@ const masterRoutes = require('./routes/masters');
 const movementRoutes = require('./routes/movements');
 const porteriaRoutes = require('./routes/porteria');
 const notificationRoutes = require('./routes/notifications');
+const supportRoutes = require('./routes/support');
 
 app.use('/api/masters', masterRoutes);
 app.use('/api/movements', movementRoutes);
 app.use('/api/porteria', porteriaRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/support', supportRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Control de Ingresos y Egresos API' });

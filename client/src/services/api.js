@@ -24,4 +24,10 @@ export const MovementsService = {
     getStatus: (id) => api.get(`/movements/${id}/status`),
 };
 
+export const SupportService = {
+    sendFeedback: (data) => api.post('/support/feedback', data),
+    getFaqs: () => api.get('/support/faqs'),
+    getVideos: () => api.get('/support/videos'),
+};
+
 export default api;
