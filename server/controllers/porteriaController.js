@@ -5,6 +5,11 @@ const crypto = require('crypto');
 const ESTADO_PENDIENTE = 1;
 const ESTADO_COMPLETADO = 2;
 
+// Helper para obtener hoy en formato YYYY-MM-DD ajustado a Argentina
+function getHoyArgentina() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+}
+
 // ---------------------------------------------------------------
 // Helper: obtener los idLugar que controla la portería del email
 // ---------------------------------------------------------------
@@ -49,6 +54,9 @@ exports.getPendientes = async (req, res) => {
 
     try {
         const lugarIds = await getLugaresDePorteria(email);
+        const hoy = getHoyArgentina();
+        console.log(`[PENDIENTES] User: ${email}, Hoy: ${hoy}, Lugares: ${lugarIds}`);
+
         if (lugarIds.length === 0) {
             return res.status(403).json({ error: 'Esta cuenta no tiene portería asignada' });
         }
@@ -77,7 +85,7 @@ exports.getPendientes = async (req, res) => {
              LEFT JOIN legajos       lp ON m.personaInterna = lp.legajo
              LEFT JOIN legajos       le ON m.personaAutorizante = le.legajo
              WHERE m.idEstado = ?
-               AND DATE(m.fechaHoraRegistro) = CURDATE()
+               AND DATE(m.fechaHoraRegistro) = ?
                AND (m.idLugarOrigen IN (?) OR m.idLugarDestino IN (?))
                AND (
                    m.idGrupo = 0
@@ -89,7 +97,7 @@ exports.getPendientes = async (req, res) => {
                    )
                )
              ORDER BY m.fechaHoraRegistro ASC`,
-            [ESTADO_COMPLETADO, ESTADO_PENDIENTE, lugarIds, lugarIds, ESTADO_COMPLETADO]
+            [ESTADO_COMPLETADO, ESTADO_PENDIENTE, getHoyArgentina(), lugarIds, lugarIds, ESTADO_COMPLETADO]
         );
 
         // Cargar artículos y documentos de cada movimiento
@@ -330,8 +338,8 @@ exports.scanQR = async (req, res) => {
             // 2. Verificar movimiento (debe estar PENDIENTE y SER HOY)
             const [movRows] = await connection.query(
                 `SELECT * FROM movimientos 
-                 WHERE id = ? AND idEstado = ? AND DATE(fechaHoraRegistro) = CURDATE()`,
-                [id, ESTADO_PENDIENTE]
+                 WHERE id = ? AND idEstado = ? AND DATE(fechaHoraRegistro) = ?`,
+                [id, ESTADO_PENDIENTE, getHoyArgentina()]
             );
 
             if (movRows.length === 0) {

@@ -473,7 +473,7 @@ function PendientesDia({ porteria }) {
             <div className="porteria-header">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                        <h1>Movimientos pendientes</h1>
+                        <h1>Movimientos pendientes (v2)</h1>
                         <span className="subtitle">{porteria?.nombre} · {today}</span>
                     </div>
                     <div className="sync-info">

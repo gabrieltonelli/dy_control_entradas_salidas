@@ -1,70 +1,75 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+function getHoyArgentina() {
+    const d = new Date();
+    const hoy = d.toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+    console.log(`[DEBUG DATE] Server Time: ${d.toISOString()}, Hoy Arg: ${hoy}`);
+    return hoy;
+}
+
 async function checkMovement() {
+    console.log('--- REVISANDO LOGICA CLIENTE ---');
+    const hoyArg = getHoyArgentina();
+    console.log('Hoy Argentina (calculado):', hoyArg);
+    
     const pool = mysql.createPool({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASS,
         database: process.env.DB_NAME,
         port: process.env.DB_PORT,
-        timezone: '-03:00'
+        timezone: process.env.DB_TIMEZONE || '+00:00'
     });
 
-    const email = 'gabrielt@donyeyo.com.ar';
-
     try {
-        console.log('--- MOVIMIENTO 169 ---');
+        console.log('\n--- MOVIMIENTO 169 ---');
         const [movs] = await pool.query('SELECT * FROM movimientos WHERE id = 169');
         const mov = movs[0];
         if (!mov) {
             console.log('No existe.');
         } else {
             console.log('ID:', mov.id);
-            console.log('idLugarOrigen:', mov.idLugarOrigen);
-            console.log('idLugarDestino:', mov.idLugarDestino);
+            console.log('idEstado:', mov.idEstado);
+            console.log('fechaHoraRegistro (RAW):', mov.fechaHoraRegistro);
             
+            const [localDateCheck] = await pool.query('SELECT DATE(?) as regDate', [mov.fechaHoraRegistro]);
+            const regDateStr = localDateCheck[0].regDate.toISOString().split('T')[0];
+            
+            console.log('Fecha Registro (YYYY-MM-DD):', regDateStr);
+            console.log('Coincide con Hoy Arg (' + hoyArg + '):', regDateStr === hoyArg);
+
+            if (mov.idGrupo > 0) {
+                const [minRows] = await pool.query(
+                    `SELECT MIN(m2.ordenGrupo) as minOrden
+                     FROM movimientos m2
+                     WHERE m2.idGrupo = ? AND m2.idEstado != 2`,
+                    [mov.idGrupo]
+                );
+                const minOrden = minRows[0].minOrden;
+                console.log('idGrupo:', mov.idGrupo);
+                console.log('ordenGrupo (Este registro):', mov.ordenGrupo);
+                console.log('minOrden (Siguiente pendiente):', minOrden);
+                console.log('¿Es el que debe mostrarse?:', mov.ordenGrupo === minOrden);
+            } else {
+                console.log('No pertenece a un grupo.');
+            }
+
+            const email = 'gabrielt@donyeyo.com.ar';
             console.log('\n--- PORTERIA: ' + email + ' ---');
             const [portRows] = await pool.query(
-                `SELECT p.id as idPorteria, p.nombre as porteria_nombre, pd.idLugar, l.nombre as lugar_nombre
+                `SELECT pd.idLugar, l.nombre
                  FROM porterias p
-                 LEFT JOIN porteriaDependencias pd ON pd.idPorteria = p.id
-                 LEFT JOIN lugares l ON pd.idLugar = l.id
+                 JOIN porteriaDependencias pd ON pd.idPorteria = p.id
+                 JOIN lugares l ON pd.idLugar = l.id
                  WHERE p.email = ? AND p.activa = 1`,
                 [email]
             );
+            console.log('Lugares controlados:', portRows.map(r => `${r.idLugar} (${r.nombre})`));
             
-            if (portRows.length === 0) {
-                console.log('No se encontró configuración de portería para este email.');
-            } else {
-                console.log('Portería encontrada:', portRows[0].porteria_nombre);
-                const lugarIds = portRows.map(r => r.idLugar);
-                console.log('Lugares controlados IDs:', lugarIds);
-                
-                console.log('\n--- EVALUACION DE FILTROS ---');
-                console.log('1. idEstado = 1 (PENDIENTE):', mov.idEstado === 1 ? 'OK' : 'FAIL (idEstado: ' + mov.idEstado + ')');
-                
-                const [curdate] = await pool.query('SELECT CURDATE() as hoy');
-                const hoyStr = curdate[0].hoy.toISOString().split('T')[0];
-                const regStr = mov.fechaHoraRegistro.toISOString().split('T')[0];
-                console.log('2. Fecha Registro (' + regStr + ') es HOY (' + hoyStr + '):', regStr === hoyStr ? 'OK' : 'FAIL');
-                
-                const coincideLugar = lugarIds.includes(mov.idLugarOrigen) || lugarIds.includes(mov.idLugarDestino);
-                console.log('3. Algun Lugar coincide:', coincideLugar ? 'OK' : 'FAIL');
-                
-                if (mov.idGrupo > 0) {
-                    const [minRows] = await pool.query(
-                        `SELECT MIN(m2.ordenGrupo) as minOrden
-                         FROM movimientos m2
-                         WHERE m2.idGrupo = ? AND m2.idEstado != 2`,
-                        [mov.idGrupo]
-                    );
-                    const minOrden = minRows[0].minOrden;
-                    console.log('4. Es el paso actual del grupo (' + mov.ordenGrupo + ' == ' + minOrden + '):', mov.ordenGrupo === minOrden ? 'OK' : 'FAIL');
-                } else {
-                    console.log('4. No pertenece a grupo: OK');
-                }
-            }
+            const lugarIds = portRows.map(r => r.idLugar);
+            console.log('Origen habilitado:', lugarIds.includes(mov.idLugarOrigen));
+            console.log('Destino habilitado:', lugarIds.includes(mov.idLugarDestino));
         }
     } catch (err) {
         console.error(err);
