@@ -10,6 +10,7 @@ const QRScanner = ({ onScanSuccess }) => {
     const [lastScanId, setLastScanId] = useState(null);
     const [status, setStatus] = useState('idle'); // idle, scanning, success, error
     const [message, setMessage] = useState('');
+    const [requiresClockIn, setRequiresClockIn] = useState(false);
     const { user } = useAuth();
     
     useEffect(() => {
@@ -54,13 +55,17 @@ const QRScanner = ({ onScanSuccess }) => {
             
             setStatus('success');
             setMessage(response.data.message);
+            setRequiresClockIn(!!response.data.requiereFichaje);
+            
             if (onScanSuccess) onScanSuccess(response.data.id);
             
-            // Auto close after 2 seconds on success
-            setTimeout(() => {
-                setIsOpen(false);
-                resetState();
-            }, 2000);
+            // Auto close after some time if NO clock-in required, otherwise wait for user to acknowledge
+            if (!response.data.requiereFichaje) {
+                setTimeout(() => {
+                    setIsOpen(false);
+                    resetState();
+                }, 2000);
+            }
             
         } catch (error) {
             setStatus('error');
@@ -73,6 +78,7 @@ const QRScanner = ({ onScanSuccess }) => {
         setStatus('idle');
         setMessage('');
         setLastScanId(null);
+        setRequiresClockIn(false);
     };
 
     const toggleOpen = () => {
@@ -125,6 +131,22 @@ const QRScanner = ({ onScanSuccess }) => {
                                         <Check size={40} />
                                     </div>
                                     <p>{message}</p>
+                                    
+                                    {requiresClockIn && (
+                                        <div className="qr-fichaje-alert">
+                                            <AlertCircle size={20} />
+                                            <div>
+                                                <strong>¡MOVIMIENTO CON FICHAJE!</strong>
+                                                <p>Por favor, solicite al personal que realice el fichaje correspondiente.</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {requiresClockIn && (
+                                        <button className="btn btn-primary qr-finish-btn" onClick={toggleOpen}>
+                                            Entendido / Cerrar
+                                        </button>
+                                    )}
                                 </div>
                             )}
                             

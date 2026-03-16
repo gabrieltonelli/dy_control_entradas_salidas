@@ -176,16 +176,19 @@ exports.completeMovimiento = async (req, res) => {
             fechaHoraCompletado = new Date().toISOString().slice(0, 19).replace('T', ' ');
         }
 
+        // Si no hay hora manual, usamos NOW() de MySQL (que ya tiene el offset -03:00)
         await connection.query(
             `UPDATE movimientos
              SET idEstado = ?,
-                 fechaHoraRegistro = ?,
+                 fechaHoraRegistro = ${horaCompletado ? '?' : 'NOW()'},
                  fechaHoraCompletado = NULL,
                  observacionPorteria = ?,
                  vigilador = ?,
                  usuario_app = ?
              WHERE id = ?`,
-            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
+            horaCompletado 
+                ? [ESTADO_COMPLETADO, `${new Date().toISOString().slice(0, 10)} ${horaCompletado}:00`, observacionPorteria || null, vigilador || null, email, id]
+                : [ESTADO_COMPLETADO, observacionPorteria || null, vigilador || null, email, id]
         );
 
         await connection.commit();
@@ -335,23 +338,28 @@ exports.scanQR = async (req, res) => {
                 return res.status(404).json({ error: 'La autorización no es válida para hoy o ya fue procesada' });
             }
 
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
-            // 3. Completar
+            // 3. Completar usando NOW() para la hora exacta de Argentina
             await connection.query(
                 `UPDATE movimientos
                  SET idEstado = ?,
-                     fechaHoraRegistro = ?,
+                     fechaHoraRegistro = NOW(),
                      fechaHoraCompletado = NULL,
                      observacionPorteria = CONCAT(COALESCE(observacionPorteria, ''), ' [Completado vía QR]'),
                      vigilador = ?,
                      usuario_app = ?
                  WHERE id = ?`,
-                [ESTADO_COMPLETADO, now, vigilador || 'SISTEMA QR', email, id]
+                [ESTADO_COMPLETADO, vigilador || 'SISTEMA QR', email, id]
             );
 
             await connection.commit();
-            res.json({ message: 'Autorización procesada correctamente vía QR', id });
+            
+            const requiereFichaje = movRows[0].motivo?.toLowerCase() !== 'requerimiento laboral';
+            
+            res.json({ 
+                message: 'Autorización procesada correctamente vía QR', 
+                id, 
+                requiereFichaje 
+            });
         } catch (error) {
             await connection.rollback();
             throw error;
