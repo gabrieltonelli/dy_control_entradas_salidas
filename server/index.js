@@ -17,10 +17,12 @@ app.use(express.json());
 const masterRoutes = require('./routes/masters');
 const movementRoutes = require('./routes/movements');
 const porteriaRoutes = require('./routes/porteria');
+const notificationRoutes = require('./routes/notifications');
 
 app.use('/api/masters', masterRoutes);
 app.use('/api/movements', movementRoutes);
 app.use('/api/porteria', porteriaRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Control de Ingresos y Egresos API' });

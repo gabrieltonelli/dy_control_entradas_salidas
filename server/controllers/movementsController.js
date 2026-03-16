@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { movementSchema } = require('../validations/movementSchema');
+const notificationService = require('../services/notificationService');
 
 // Estado IDs
 const ESTADO_PENDIENTE = 1;
@@ -96,7 +97,7 @@ exports.createMovement = async (req, res) => {
                 return res.status(400).json({ error: 'Validation failed', details: [{ message: 'Debe seleccionar un autorizante para el movimiento' }] });
             }
             const [authRows] = await connection.query(
-                'SELECT legajo, esAutorizador FROM legajos WHERE legajo = ?',
+                'SELECT legajo, esAutorizador, email FROM legajos WHERE legajo = ?',
                 [movement.personaAutorizante]
             );
             if (authRows.length === 0 || authRows[0].esAutorizador !== 1) {
@@ -211,6 +212,18 @@ exports.createMovement = async (req, res) => {
             id: movementId,
             estado: idEstadoInicial
         });
+
+        // 9. Enviar notificación push al autorizante (fuera de la transacción)
+        if (idEstadoInicial === ESTADO_SOLICITADO && authRows[0]?.email) {
+            // Buscamos detalles del tipo para el mensaje
+            const [typeRows] = await pool.query('SELECT nombre FROM movimientoTipos WHERE id = ?', [movement.idTipo]);
+            const [persRows] = await pool.query('SELECT apellido_nombre FROM legajos WHERE legajo = ?', [movement.personaInterna]);
+            
+            notificationService.notifyNewRequest(authRows[0].email, {
+                persona_interna_nombre: persRows[0]?.apellido_nombre || movement.personaInterna,
+                tipo_nombre: typeRows[0]?.nombre || 'movimiento'
+            });
+        }
 
     } catch (error) {
         await connection.rollback();

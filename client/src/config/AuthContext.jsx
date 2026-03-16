@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./msal";
 import { checkPorteria } from "../services/porteriaService";
+import { MastersService } from "../services/api";
+import { NotificationService } from "../services/notificationService";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -13,6 +15,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [porteria, setPorteria] = useState(null);
     const [esPortero, setEsPortero] = useState(null);
+    const [esAutorizador, setEsAutorizador] = useState(false);
+    const [legajoInfo, setLegajoInfo] = useState(null);
 
     useEffect(() => {
         const storedGoogleUser = localStorage.getItem('google_user');
@@ -66,9 +70,37 @@ export const AuthProvider = ({ children }) => {
                     setEsPortero(false);
                     setPorteria(null);
                 });
+
+            // Obtener info de legajo para ver si es autorizador
+            MastersService.getMe(user.email)
+                .then(res => {
+                    const info = res.data;
+                    setLegajoInfo(info);
+                    const isAuth = info.esAutorizador === 1;
+                    setEsAutorizador(isAuth);
+
+                    // Si es autorizador, intentar suscribir a notificaciones push
+                    if (isAuth) {
+                        NotificationService.checkSubscription().then(isSubscribed => {
+                            if (!isSubscribed) {
+                                // Pequeño delay para no abrumar al iniciar sesión
+                                setTimeout(() => {
+                                    NotificationService.subscribeUser(user.email);
+                                }, 3000);
+                            }
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Error obteniendo info de legajo:", err);
+                    setEsAutorizador(false);
+                    setLegajoInfo(null);
+                });
         } else {
             setEsPortero(null);
             setPorteria(null);
+            setEsAutorizador(false);
+            setLegajoInfo(null);
         }
     }, [user?.email]);
 
@@ -96,6 +128,8 @@ export const AuthProvider = ({ children }) => {
             user,
             porteria,
             esPortero,
+            esAutorizador,
+            legajoInfo,
             loginMicrosoft,
             loginGoogle,
             logout

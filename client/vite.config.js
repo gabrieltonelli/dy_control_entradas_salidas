@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.js',
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icons/*.png'],
         manifest: {
@@ -43,26 +46,6 @@ export default defineConfig(({ mode }) => {
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
-            },
-          ],
-        },
-        workbox: {
-          // NetworkFirst para las llamadas a la API del backend
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'api-cache',
-                networkTimeoutSeconds: 10,
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24, // 24 horas
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
             },
           ],
         },

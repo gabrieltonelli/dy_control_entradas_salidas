@@ -135,6 +135,23 @@ El sistema permite habilitar o deshabilitar ciertas funciones mediante variables
 
 ---
 
+## 🔔 Notificaciones Push
+El sistema utiliza **Web Push Notifications** para alertar a los autorizantes cuando reciben una nueva solicitud.
+
+### Configuración del Servidor (.env)
+Para que las notificaciones funcionen, deben generarse llaves VAPID:
+1. Ejecutar en el servidor: `node generate_vapid_v2.js` (generará un archivo `vapid_env.txt`).
+2. Copiar las llaves resultantes al `.env` del servidor:
+   - `VAPID_PUBLIC_KEY=`
+   - `VAPID_PRIVATE_KEY=`
+
+### Funcionamiento
+- Cuando un usuario crea una solicitud que requiere autorización, el servidor busca las suscripciones push asociadas al email del autorizante y envía la notificación.
+- El cliente (PWA) solicita permiso para notificaciones automáticamente a los usuarios con rol de autorizante.
+- Funciona en navegadores modernos, aplicaciones instaladas (Desktop) y dispositivos Android (para iOS requiere que el usuario instale la PWA en el home screen en versiones recientes).
+
+---
+
 ## 🔐 Configuración de Azure AD
 
 Para que el login con cuentas `@donyeyo.com.ar` funcione:
