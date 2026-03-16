@@ -263,7 +263,7 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel, onS
                             </Button>
                         </div>
                     )}
-                    {!vencida && mov.idEstado === ESTADO_PENDIENTE && (
+                    {!vencida && mov.idEstado === ESTADO_PENDIENTE && import.meta.env.VITE_ENABLE_QR !== 'false' && (
                         <div className="solicitud-card__qr-section" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border)', textAlign: 'center' }}>
                             <Button
                                 variant="secondary"

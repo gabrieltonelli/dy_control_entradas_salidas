@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
                 provider: 'microsoft',
                 avatar: null // MS Graph would be needed for this
             });
-        } else if (googleUser) {
+        } else if (googleUser && import.meta.env.VITE_ENABLE_GOOGLE_LOGIN !== 'false') {
             setIsAuthenticated(true);
             setUser({
                 name: googleUser.name,

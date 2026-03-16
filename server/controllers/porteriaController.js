@@ -299,6 +299,9 @@ exports.scanQR = async (req, res) => {
     if (!qrData || !email) return res.status(400).json({ error: 'Datos de escaneo incompletos' });
 
     try {
+        if (process.env.ENABLE_QR === 'false') {
+            return res.status(403).json({ error: 'El uso de códigos QR está deshabilitado temporalmente.' });
+        }
         const secret = process.env.QR_SECRET || 'dy_internal_secret_key_2026_qr';
         
         let id;

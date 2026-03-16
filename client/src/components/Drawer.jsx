@@ -11,10 +11,10 @@ const Drawer = ({ isOpen, onClose }) => {
     const menuItems = !esPortero ? [
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
         { icon: <ClipboardList size={20} />, label: 'Mis Solicitudes', path: '/mis-solicitudes' },
-        { icon: <BookOpen size={20} />, label: 'Reglamento', path: '/reglamento' },
+        { icon: <BookOpen size={20} />, label: 'Novedades', path: '/reglamento' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ] : [
-        { icon: <BookOpen size={20} />, label: 'Reglamento', path: '/reglamento' },
+        { icon: <BookOpen size={20} />, label: 'Novedades', path: '/reglamento' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
 

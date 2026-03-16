@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
                 {children}
             </main>
             
-            {esPortero && <QRScanner onScanSuccess={() => {
+            {esPortero && import.meta.env.VITE_ENABLE_QR !== 'false' && <QRScanner onScanSuccess={() => {
                 // Si estamos en la página de portería, refrescar los datos
                 if (window.location.pathname.includes('/porteria')) {
                     // Una forma simple de forzar el refresh es disparar un evento o recargar si es necesario, 

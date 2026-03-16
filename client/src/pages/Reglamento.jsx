@@ -16,10 +16,10 @@ const Reglamento = () => {
             try {
                 // El URL viene de variable de entorno configurado como export?format=csv
                 const sheetUrl = import.meta.env.VITE_REGLAMENTO_SHEET_URL;
-                console.log('Cargando reglamento desde:', sheetUrl);
+                console.log('Cargando novedades desde:', sheetUrl);
 
                 if (!sheetUrl) {
-                    throw new Error('La URL del reglamento no está configurada.');
+                    throw new Error('La URL de las novedades no está configurada.');
                 }
 
                 // Usamos responseType text para asegurar compatibilidad con CSV de Google
@@ -42,7 +42,7 @@ const Reglamento = () => {
                 setData(jsonData);
             } catch (err) {
                 console.error('Error al cargar la hoja de Google:', err);
-                setError('No se pudo cargar el reglamento. Verifica la conexión o la configuración de la URL.');
+                setError('No se pudo cargar las novedades. Verifica la conexión o la configuración de la URL.');
             } finally {
                 setLoading(false);
             }
@@ -94,8 +94,8 @@ const Reglamento = () => {
                 <div className="header-icon-box">
                     <BookOpen size={32} />
                 </div>
-                <h1 className="page-title">Reglamento Normativo<span className="dot">.</span></h1>
-                <p className="page-subtitle">Marco regulatorio y disposiciones vigentes del sistema CIE.</p>
+                <h1 className="page-title">Novedades<span className="dot">.</span></h1>
+                <p className="page-subtitle">Novedades del sistema CIE.</p>
             </header>
 
             <div className="search-bar-container">
@@ -150,7 +150,7 @@ const Reglamento = () => {
                 {!loading && data.length === 0 && !error && (
                     <div className="no-data-message glass" style={{ padding: '40px', borderRadius: '20px' }}>
                         <BookOpen size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
-                        <p>El reglamento está vacío o la hoja de cálculo no tiene registros válidos.</p>
+                        <p>No hay novedades para mostrar por el momento.</p>
                     </div>
                 )}
             </div>

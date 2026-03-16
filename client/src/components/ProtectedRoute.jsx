@@ -75,32 +75,36 @@ export const ProtectedRoute = ({ children }) => {
                         Inicia sesión con Microsoft
                     </Button>
 
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        width: '100%',
-                        maxWidth: '320px',
-                        margin: '8px 0',
-                        color: 'var(--text-muted)',
-                        fontSize: '0.9rem'
-                    }}>
-                        <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
-                        <span>O</span>
-                        <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
-                    </div>
+                    {import.meta.env.VITE_ENABLE_GOOGLE_LOGIN !== 'false' && (
+                        <>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                width: '100%',
+                                maxWidth: '320px',
+                                margin: '8px 0',
+                                color: 'var(--text-muted)',
+                                fontSize: '0.9rem'
+                            }}>
+                                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                                <span>O</span>
+                                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                            </div>
 
-                    <Button
-                        className="btn-google"
-                        onClick={() => handleGoogleLogin()}
-                    >
-                        <img
-                            src={googleLogo}
-                            alt="Google"
-                            style={{ height: '26px', width: '26px', objectFit: 'contain' }}
-                        />
-                        Inicia sesión con Google
-                    </Button>
+                            <Button
+                                className="btn-google"
+                                onClick={() => handleGoogleLogin()}
+                            >
+                                <img
+                                    src={googleLogo}
+                                    alt="Google"
+                                    style={{ height: '26px', width: '26px', objectFit: 'contain' }}
+                                />
+                                Inicia sesión con Google
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         );

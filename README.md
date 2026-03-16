@@ -91,6 +91,9 @@ AZURE_AD_CLIENT_SECRET=tu_client_secret
 
 # Firma de Códigos QR (HMAC SHA-256)
 QR_SECRET=tu_clave_secreta_para_qr_aqui
+
+# Zona horaria (para consistencia con Argentina)
+DB_TIMEZONE=-03:00
 ```
 
 ### Frontend — `/client/.env`
@@ -111,7 +114,24 @@ VITE_AZURE_AD_TENANT_ID=tu_tenant_id
 
 # Intervalo de sincronización automática en segundos para portería (default: 60)
 VITE_SYNC_INTERVAL_SECONDS=60
+
+# Feature Flags (habilitar/deshabilitar funciones)
+VITE_ENABLE_GOOGLE_LOGIN=true
+VITE_ENABLE_DOCUMENTS=true
 ```
+
+---
+
+## 🚩 Feature Flags (Banderas de Funcionalidad)
+
+El sistema permite habilitar o deshabilitar ciertas funciones mediante variables de entorno en el frontend (`client/.env`). Por defecto ambas están activas:
+
+- `VITE_ENABLE_GOOGLE_LOGIN`: (true/false) Define si se muestra o no la opción de inicio de sesión con Google.
+- `VITE_ENABLE_DOCUMENTS`: (true/false) Define si los usuarios pueden adjuntar documentación (Remitos, Facturas, etc.) a sus solicitudes.
+- `VITE_ENABLE_QR`: (true/false) Habilita o deshabilita la generación y escaneo de códigos QR para autorizaciones.
+
+> [!NOTE]
+> Para máxima seguridad, estas flags también se pueden configurar en el backend (`server/.env` como `ENABLE_GOOGLE_LOGIN`, `ENABLE_DOCUMENTS` y `ENABLE_QR`) para asegurar que la API rechace peticiones no permitidas.
 
 ---
 
@@ -271,7 +291,9 @@ Visualiza los movimientos activos registrados en el día. Las tarjetas cambian d
 ### 2.1. Autorización mediante Código QR 📱
 Para agilizar el paso por los puntos de control, el sistema cuenta con validación por QR:
 - **Usuario Portante:** En la sección "Mis Solicitudes", las autorizaciones en estado **Pendiente** muestran un botón *"Mostrar Código QR"*. Al pulsarlo, se genera un código único firmado digitalmente.
-- **Personal de Portería:** Dispone de un botón flotante (FAB) con el icono de QR en la esquina inferior derecha. Al escanear el código del usuario, el sistema valida la firma, verifica que la autorización sea válida para el día de la fecha y marca el movimiento como **Completado** instantáneamente, registrando el vigilador seleccionado.
+- **Sincronización en Tiempo Real:** Una vez que el portero escanea el código, la pantalla del usuario portante recibe la confirmación automáticamente, muestra un mensaje de éxito y refresca su listado de solicitudes, cerrando el QR sin intervención del usuario.
+- **Personal de Portería:** Dispone de un botón flotante (FAB) con el icono de QR. Al escanear, el sistema valida la firma y la vigencia. 
+    - **Alerta de Fichaje:** Si el movimiento requiere fichaje (motivos distintos a "Requerimiento Laboral"), el portero verá una alerta visual prominente indicando que debe solicitar el fichaje al personal antes de dejarlo pasar.
 
 ### 3. Nueva Solicitud (Formulario de Movimiento)
 
@@ -430,6 +452,26 @@ Esto:
 - Filtros por rango de fechas y estado
 - Tabla paginada (50 registros por página)
 - **Exportación a Excel** (.xlsx) de todos los registros filtrados
+
+### 🛠️ Administración de Porteros y Dependencias
+
+Para que un usuario pueda acceder al módulo de portería y ver los movimientos correspondientes, se deben seguir estos pasos en la base de datos:
+
+1.  **Habilitar el Usuario como Portero**:
+    Agregar un registro en la tabla `porterias`. 
+    - `email`: El correo electrónico `@donyeyo.com.ar` del usuario.
+    - `nombre`: Nombre descriptivo (ej: "Portería Planta 1").
+    - `activa`: Debe estar en `1`.
+
+2.  **Asignar Lugares de Control**:
+    Un portero solo ve movimientos relacionados con sus dependencias asignadas. Esto se configura en la tabla intermedia `porteriaDependencias`.
+    - `idPorteria`: El ID generado en el paso anterior.
+    - `idLugar`: El ID de la tabla `lugares` que esa portería debe controlar.
+    
+    > [!TIP]
+    > Si una portería controla múltiples lugares (ej: Entrada Principal y Playa de Carga), simplemente agregue múltiples filas en `porteriaDependencias` para esa misma `idPorteria`.
+    
+    **Lógica de visibilidad**: Un movimiento aparecerá en la pantalla del portero si el **Origen** O el **Destino** coinciden con alguno de sus lugares asignados.
 
 ---
 

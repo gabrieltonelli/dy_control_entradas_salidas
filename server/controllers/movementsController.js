@@ -159,6 +159,11 @@ exports.createMovement = async (req, res) => {
 
         // 7. Insert Documents
         if (documents.length > 0) {
+            if (process.env.ENABLE_DOCUMENTS === 'false') {
+                await connection.rollback();
+                connection.release();
+                return res.status(400).json({ error: 'La carga de documentos está deshabilitada temporalmente.' });
+            }
             for (const doc of documents) {
                 await connection.query(
                     `INSERT INTO documentos 

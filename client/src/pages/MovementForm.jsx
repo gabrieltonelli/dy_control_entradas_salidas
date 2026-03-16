@@ -695,139 +695,141 @@ const MovementForm = () => {
                     )}
                 </Card>
 
-                <Card>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h2 style={{ fontSize: '1.25rem' }}>Documentación</h2>
-                        <Button variant="secondary" size="sm" type="button" onClick={addDocument} disabled={isSubmitting}>
-                            <Plus size={16} />
-                            <span className="desktop-only">Agregar Documento</span>
-                            <span className="mobile-only">Agregar</span>
-                        </Button>
-                    </div>
-                    {formData.documents.map((doc, index) => (
-                        <div key={index} style={{
-                            border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius)',
-                            padding: '20px',
-                            paddingTop: '16px',
-                            marginBottom: '20px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                            position: 'relative'
-                        }}>
-                            {/* Botón eliminar (posición absoluta) */}
-                            <Button
-                                variant="ghost"
-                                type="button"
-                                onClick={() => removeDocument(index)}
-                                style={{ position: 'absolute', top: '12px', padding: '6px', color: 'var(--error)', float: 'right' }}
-                                disabled={isSubmitting}
-                            >
-                                <Trash2 size={18} />
-                            </Button>
-
-                            {/* Renglón 1: Datos principales */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', paddingRight: '36px' }}>
-                                <Select
-                                    label="Tipo"
-                                    name="tipo"
-                                    value={doc.tipo}
-                                    onChange={(e) => handleDocumentChange(index, e)}
-                                    options={['Remito', 'Factura', 'Presupuesto', 'Orden de compra', 'Otros']}
-                                    required
-                                    disabled={isSubmitting}
-                                />
-                                <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required disabled={isSubmitting} />
-                                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>Cant.</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-                                        <button
-                                            type="button"
-                                            disabled={isSubmitting || doc.cantidad <= 1}
-                                            onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: Math.max(1, (doc.cantidad || 1) - 1) } })}
-                                            style={{
-                                                padding: '0 14px', height: '46px', minHeight: '46px',
-                                                background: 'var(--surface)', border: '1px solid var(--border)',
-                                                borderRight: 'none', borderRadius: 'var(--radius) 0 0 var(--radius)',
-                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
-                                                opacity: isSubmitting || doc.cantidad <= 1 ? 0.5 : 1
-                                            }}
-                                        >−</button>
-                                        <input
-                                            type="number"
-                                            name="cantidad"
-                                            value={doc.cantidad}
-                                            min={1}
-                                            step={1}
-                                            readOnly
-                                            style={{
-                                                width: '60px', textAlign: 'center', outline: 'none',
-                                                height: '46px', border: '1px solid var(--border)',
-                                                borderLeft: 'none', borderRight: 'none',
-                                                background: 'var(--surface)', color: 'var(--text)',
-                                                fontSize: '1rem', fontWeight: '600'
-                                            }}
-                                            disabled={isSubmitting}
-                                        />
-                                        <button
-                                            type="button"
-                                            disabled={isSubmitting}
-                                            onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: (doc.cantidad || 1) + 1 } })}
-                                            style={{
-                                                padding: '0 14px', height: '46px', minHeight: '46px',
-                                                background: 'var(--surface)', border: '1px solid var(--border)',
-                                                borderLeft: 'none', borderRadius: '0 var(--radius) var(--radius) 0',
-                                                color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
-                                                opacity: isSubmitting ? 0.5 : 1
-                                            }}
-                                        >+</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Renglón 2: Logística */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end', marginTop: '4px' }}>
-                                <Select
-                                    label="Destino"
-                                    name="idLugarDestino"
-                                    value={doc.idLugarDestino}
-                                    onChange={(e) => handleDocumentChange(index, e)}
-                                    options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
-                                    required
-                                    includePlaceholder={false}
-                                    disabled={isSubmitting}
-                                />
-                                <Input
-                                    label={`Destinatario ${lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
-                                    name="destinatario"
-                                    value={doc.destinatario}
-                                    onChange={(e) => handleDocumentChange(index, e)}
-                                    maxLength={30}
-                                    required={lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0}
-                                    disabled={isSubmitting}
-                                />
-                                <Switch
-                                    name="conRetorno"
-                                    checked={doc.conRetorno !== false}
-                                    onChange={(e) => handleDocumentChange(index, e)}
-                                    activeLabel="Con Retorno"
-                                    inactiveLabel="Sin Retorno"
-                                    style={{ marginBottom: '16px' }}
-                                    disabled={isSubmitting}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
-                    {formData.documents.length > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                {import.meta.env.VITE_ENABLE_DOCUMENTS !== 'false' && (
+                    <Card>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '1.25rem' }}>Documentación</h2>
                             <Button variant="secondary" size="sm" type="button" onClick={addDocument} disabled={isSubmitting}>
                                 <Plus size={16} />
                                 <span className="desktop-only">Agregar Documento</span>
                                 <span className="mobile-only">Agregar</span>
                             </Button>
                         </div>
-                    )}
-                </Card>
+                        {formData.documents.map((doc, index) => (
+                            <div key={index} style={{
+                                border: '1px solid var(--border)',
+                                borderRadius: 'var(--radius)',
+                                padding: '20px',
+                                paddingTop: '16px',
+                                marginBottom: '20px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                position: 'relative'
+                            }}>
+                                {/* Botón eliminar (posición absoluta) */}
+                                <Button
+                                    variant="ghost"
+                                    type="button"
+                                    onClick={() => removeDocument(index)}
+                                    style={{ position: 'absolute', top: '12px', padding: '6px', color: 'var(--error)', float: 'right' }}
+                                    disabled={isSubmitting}
+                                >
+                                    <Trash2 size={18} />
+                                </Button>
+
+                                {/* Renglón 1: Datos principales */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', paddingRight: '36px' }}>
+                                    <Select
+                                        label="Tipo"
+                                        name="tipo"
+                                        value={doc.tipo}
+                                        onChange={(e) => handleDocumentChange(index, e)}
+                                        options={['Remito', 'Factura', 'Presupuesto', 'Orden de compra', 'Otros']}
+                                        required
+                                        disabled={isSubmitting}
+                                    />
+                                    <Input label="Descripción" name="descripcion" value={doc.descripcion} onChange={(e) => handleDocumentChange(index, e)} maxLength={100} required disabled={isSubmitting} />
+                                    <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>Cant.</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                                            <button
+                                                type="button"
+                                                disabled={isSubmitting || doc.cantidad <= 1}
+                                                onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: Math.max(1, (doc.cantidad || 1) - 1) } })}
+                                                style={{
+                                                    padding: '0 14px', height: '46px', minHeight: '46px',
+                                                    background: 'var(--surface)', border: '1px solid var(--border)',
+                                                    borderRight: 'none', borderRadius: 'var(--radius) 0 0 var(--radius)',
+                                                    color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                    opacity: isSubmitting || doc.cantidad <= 1 ? 0.5 : 1
+                                                }}
+                                            >−</button>
+                                            <input
+                                                type="number"
+                                                name="cantidad"
+                                                value={doc.cantidad}
+                                                min={1}
+                                                step={1}
+                                                readOnly
+                                                style={{
+                                                    width: '60px', textAlign: 'center', outline: 'none',
+                                                    height: '46px', border: '1px solid var(--border)',
+                                                    borderLeft: 'none', borderRight: 'none',
+                                                    background: 'var(--surface)', color: 'var(--text)',
+                                                    fontSize: '1rem', fontWeight: '600'
+                                                }}
+                                                disabled={isSubmitting}
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={isSubmitting}
+                                                onClick={() => handleDocumentChange(index, { target: { name: 'cantidad', value: (doc.cantidad || 1) + 1 } })}
+                                                style={{
+                                                    padding: '0 14px', height: '46px', minHeight: '46px',
+                                                    background: 'var(--surface)', border: '1px solid var(--border)',
+                                                    borderLeft: 'none', borderRadius: '0 var(--radius) var(--radius) 0',
+                                                    color: 'var(--text)', fontSize: '1.2rem', cursor: 'pointer',
+                                                    opacity: isSubmitting ? 0.5 : 1
+                                                }}
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Renglón 2: Logística */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end', marginTop: '4px' }}>
+                                    <Select
+                                        label="Destino"
+                                        name="idLugarDestino"
+                                        value={doc.idLugarDestino}
+                                        onChange={(e) => handleDocumentChange(index, e)}
+                                        options={lugares.map(l => ({ id: l.id, label: l.nombre }))}
+                                        required
+                                        includePlaceholder={false}
+                                        disabled={isSubmitting}
+                                    />
+                                    <Input
+                                        label={`Destinatario ${lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0 ? '' : '(opcional)'}`}
+                                        name="destinatario"
+                                        value={doc.destinatario}
+                                        onChange={(e) => handleDocumentChange(index, e)}
+                                        maxLength={30}
+                                        required={lugares.find(l => String(l.id) === String(doc.idLugarDestino))?.esDependencia === 0}
+                                        disabled={isSubmitting}
+                                    />
+                                    <Switch
+                                        name="conRetorno"
+                                        checked={doc.conRetorno !== false}
+                                        onChange={(e) => handleDocumentChange(index, e)}
+                                        activeLabel="Con Retorno"
+                                        inactiveLabel="Sin Retorno"
+                                        style={{ marginBottom: '16px' }}
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        {formData.documents.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.875rem' }}>No hay documentos registrados.</p>}
+                        {formData.documents.length > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                <Button variant="secondary" size="sm" type="button" onClick={addDocument} disabled={isSubmitting}>
+                                    <Plus size={16} />
+                                    <span className="desktop-only">Agregar Documento</span>
+                                    <span className="mobile-only">Agregar</span>
+                                </Button>
+                            </div>
+                        )}
+                    </Card>
+                )}
 
                 <div style={{ marginTop: '32px' }}>
                     <Button
