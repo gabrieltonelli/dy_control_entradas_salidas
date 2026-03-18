@@ -222,3 +222,26 @@
     50% { border-color: #3b82f6; box-shadow: 0 0 15px 0 rgba(13, 44, 92, 0.1); }
     100% { border-color: var(--dy-blue); box-shadow: 0 0 0 0 rgba(13, 44, 92, 0.2); }
 }
+
+/* Dark Theme Overrides */
+.dark-theme .qr-fab.active {
+    background-color: var(--primary);
+    color: var(--dy-blue);
+}
+
+.dark-theme .qr-loading-spinner {
+    border-top-color: var(--primary);
+}
+
+.dark-theme .qr-fichaje-alert {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .qr-fichaje-alert strong {
+    color: var(--primary);
+}
+
+.dark-theme .qr-fichaje-alert p {
+    color: rgba(255, 255, 255, 0.7) !important;
+}

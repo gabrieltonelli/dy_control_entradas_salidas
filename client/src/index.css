@@ -586,6 +586,11 @@ select:focus {
     transition: all 0.3s;
 }
 
+.dark-theme .nav-card-icon {
+    background: rgba(248, 250, 252, 0.1);
+    color: var(--text);
+}
+
 .support-nav-card.active .nav-card-icon {
     background: rgba(255, 255, 255, 0.1);
     color: white;

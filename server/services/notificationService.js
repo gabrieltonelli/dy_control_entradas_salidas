@@ -57,7 +57,45 @@ async function notifyNewRequest(autorizanteEmail, movement) {
     return sendPushNotification(autorizanteEmail, payload);
 }
 
+/**
+ * Notifica al solicitante sobre el cambio de estado de su solicitud
+ */
+async function notifyRequestStatus(requesterEmail, movementId, status, details = {}) {
+    let title = '';
+    let body = '';
+    
+    switch (status) {
+        case 'approved':
+            title = '✅ Solicitud aprobada';
+            body = `Tu solicitud #${movementId} ha sido aprobada por el autorizante.`;
+            break;
+        case 'rejected':
+            title = '❌ Solicitud rechazada';
+            body = `Tu solicitud #${movementId} ha sido rechazada.`;
+            if (details.observacion) body += ` Motivo: ${details.observacion}`;
+            break;
+        case 'cancelled':
+            title = '🚫 Solicitud anulada';
+            body = `Tu solicitud #${movementId} ha sido anulada.`;
+            if (details.observacion) body += ` Motivo: ${details.observacion}`;
+            break;
+    }
+
+    const payload = {
+        title,
+        body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        data: {
+            url: '/mis-solicitudes'
+        }
+    };
+
+    return sendPushNotification(requesterEmail, payload);
+}
+
 module.exports = {
     sendPushNotification,
-    notifyNewRequest
+    notifyNewRequest,
+    notifyRequestStatus
 };

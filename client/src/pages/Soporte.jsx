@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     MessageSquare,
     HelpCircle,
@@ -32,6 +32,7 @@ const Soporte = () => {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openFaq, setOpenFaq] = useState(null);
+    const contentRef = useRef(null);
 
     // Estado del formulario de feedback
     const [feedback, setFeedback] = useState({
@@ -69,6 +70,14 @@ const Soporte = () => {
     const handleTabChange = (tab) => {
         setActiveTab(tab);
         navigate(`/soporte?tab=${tab}`);
+        
+        // Hacer scroll suave hasta el contenido
+        if (contentRef.current) {
+            const yOffset = -100; // Offset para no quedar pegado al tope
+            const element = contentRef.current;
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
     };
 
     const handleFeedbackSubmit = async (e) => {
@@ -153,7 +162,7 @@ const Soporte = () => {
             </div>
 
             {/* Contenido de Secciones */}
-            <div className="support-content-area">
+            <div className="support-content-area" ref={contentRef}>
 
                 {/* FAQ SECTION */}
                 {activeTab === 'faq' && (
@@ -202,8 +211,8 @@ const Soporte = () => {
                                 <p className="text-muted" style={{ fontSize: '1.2rem', margin: '16px auto 40px', maxWidth: '500px' }}>
                                     {successMessage}
                                 </p>
-                                <button 
-                                    onClick={() => setSuccessMessage('')} 
+                                <button
+                                    onClick={() => setSuccessMessage('')}
                                     className="submit-feedback-btn"
                                     style={{ maxWidth: '300px', margin: '0 auto' }}
                                 >
@@ -215,7 +224,7 @@ const Soporte = () => {
                                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                                     <MessageSquare size={40} style={{ color: 'var(--primary)', marginBottom: '16px' }} />
                                     <h2>Tu opinión nos importa</h2>
-                                    <p className="text-muted">Ayudanos a mejorar de Don Yeyo Manager compartiendo tus sugerencias o reportando problemas.</p>
+                                    <p className="text-muted">Ayudanos a mejorar Don Yeyo Manager compartiendo tus sugerencias o reportando problemas.</p>
                                 </div>
 
                                 <form onSubmit={handleFeedbackSubmit} className="feedback-form">

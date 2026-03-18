@@ -146,8 +146,9 @@ Para que las notificaciones funcionen, deben generarse llaves VAPID:
    - `VAPID_PRIVATE_KEY=`
 
 ### Funcionamiento
-- Cuando un usuario crea una solicitud que requiere autorización, el servidor busca las suscripciones push asociadas al email del autorizante y envía la notificación.
-- El cliente (PWA) solicita permiso para notificaciones automáticamente a los usuarios con rol de autorizante.
+- **Hacia el Autorizante:** Cuando un usuario crea una solicitud que requiere autorización, el servidor busca las suscripciones push asociadas al email del autorizante y le envía una notificación de "Nueva solicitud pendiente".
+- **Hacia el Solicitante:** Cuando el autorizante toma una acción sobre la solicitud (Aprobar, Rechazar o Anular), el sistema notifica automáticamente al usuario que originó la solicitud informando el nuevo estado y el motivo (en caso de rechazo o anulación).
+- El cliente (PWA) solicita permiso para notificaciones automáticamente a los usuarios.
 - Funciona en navegadores modernos, aplicaciones instaladas (Desktop) y dispositivos Android (para iOS requiere que el usuario instale la PWA en el home screen en versiones recientes).
 
 ---

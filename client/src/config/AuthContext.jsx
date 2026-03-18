@@ -79,17 +79,15 @@ export const AuthProvider = ({ children }) => {
                     const isAuth = info.esAutorizador === 1;
                     setEsAutorizador(isAuth);
 
-                    // Si es autorizador, intentar suscribir a notificaciones push
-                    if (isAuth) {
-                        NotificationService.checkSubscription().then(isSubscribed => {
-                            if (!isSubscribed) {
-                                // Pequeño delay para no abrumar al iniciar sesión
-                                setTimeout(() => {
-                                    NotificationService.subscribeUser(user.email);
-                                }, 3000);
-                            }
-                        });
-                    }
+                    // Intentar suscribir a notificaciones push (para autorizadores y solicitantes)
+                    NotificationService.checkSubscription().then(isSubscribed => {
+                        if (!isSubscribed) {
+                            // Pequeño delay para no abrumar al iniciar sesión
+                            setTimeout(() => {
+                                NotificationService.subscribeUser(user.email);
+                            }, 3000);
+                        }
+                    });
                 })
                 .catch(err => {
                     console.error("Error obteniendo info de legajo:", err);

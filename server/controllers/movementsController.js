@@ -492,12 +492,16 @@ exports.approveMovement = async (req, res) => {
         }
 
         await connection.commit();
-
         const msg = mov.conRegreso
             ? 'Movimiento aprobado. La serie completa de movimientos encadenados está en estado Pendiente.'
             : 'Movimiento aprobado correctamente. Estado: Pendiente.';
 
         res.json({ message: msg });
+
+        // 9. Notificar al solicitante
+        if (mov.usuario_app) {
+            notificationService.notifyRequestStatus(mov.usuario_app, id, 'approved');
+        }
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
@@ -555,6 +559,11 @@ exports.rejectMovement = async (req, res) => {
 
         await connection.commit();
         res.json({ message: 'Movimiento rechazado. Los artículos y documentos asociados también fueron actualizados.' });
+
+        // 9. Notificar al solicitante
+        if (mov.usuario_app) {
+            notificationService.notifyRequestStatus(mov.usuario_app, id, 'rejected', { observacion });
+        }
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
@@ -617,6 +626,11 @@ exports.cancelMovement = async (req, res) => {
                 ? 'Serie de movimientos anulada correctamente. Todos los movimientos activos del grupo fueron anulados.'
                 : 'Movimiento anulado correctamente.'
         });
+
+        // 9. Notificar al solicitante
+        if (mov.usuario_app) {
+            notificationService.notifyRequestStatus(mov.usuario_app, id, 'cancelled', { observacion });
+        }
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
