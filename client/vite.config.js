@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
         srcDir: 'src',
         filename: 'sw.js',
         registerType: 'autoUpdate',
+        devOptions: {
+          enabled: true,
+          type: 'module'
+        },
         includeAssets: ['favicon.ico', 'icons/*.png'],
         manifest: {
           name: 'Don Yeyo Manager',

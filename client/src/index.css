@@ -926,3 +926,85 @@ select:focus {
 .support-nav-card.active .nav-card-content p {
     color: white !important;
 }
+
+/* Update Prompt (PWA) */
+.update-prompt-overlay {
+    position: fixed;
+    bottom: 40px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.update-prompt-card {
+    background: var(--surface) !important;
+    border: 2px solid var(--dy-red);
+    border-radius: 28px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 40px 80px rgba(228, 5, 33, 0.25);
+    max-width: 600px;
+    width: 100%;
+    pointer-events: auto;
+}
+
+.dark-theme .update-prompt-card {
+    background: var(--surface) !important;
+    border-color: var(--dy-red);
+}
+
+.update-prompt-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(228, 5, 33, 0.1);
+    color: var(--dy-red);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.update-prompt-content {
+    flex: 1;
+}
+
+.update-prompt-content h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.update-prompt-content p {
+    margin: 8px 0 16px 0;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.update-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+@media (max-width: 600px) {
+    .update-prompt-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 24px;
+    }
+    
+    .update-prompt-actions {
+        justify-content: center;
+    }
+    
+    .update-prompt-overlay {
+        bottom: 120px; /* Evitar que el botón flotante QR lo tape */
+    }
+}

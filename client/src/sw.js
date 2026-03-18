@@ -2,6 +2,13 @@ import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst } from 'workbox-strategies';
 
+// Listener para forzar la activación de una nueva versión
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Precache de assets
 precacheAndRoute(self.__WB_MANIFEST);
 

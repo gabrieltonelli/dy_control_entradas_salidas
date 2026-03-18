@@ -25,6 +25,7 @@ import Historial from './pages/porteria/Historial';
 import Reglamento from './pages/Reglamento';
 import Soporte from './pages/Soporte';
 import UsuarioNormalGuard from './components/UsuarioNormalGuard';
+import UpdatePrompt from './components/UpdatePrompt';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
       <GoogleOAuthProvider clientId={googleClientId}>
         <AuthProvider>
           <ThemeProvider>
+            <UpdatePrompt />
             <ProtectedRoute>
               <Router>
                 <Layout>
