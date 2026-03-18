@@ -16,27 +16,35 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 async function sendPushNotification(email, payload) {
     try {
         const [rows] = await pool.query(
-            'SELECT subscription FROM push_subscriptions WHERE email = ?',
+            'SELECT id, subscription FROM push_subscriptions WHERE email = ?',
             [email]
         );
 
-        if (rows.length === 0) return;
+        if (rows.length === 0) {
+            console.log(`[Push] No hay suscripciones para ${email}`);
+            return;
+        }
 
-        const notifications = rows.map(row => {
-            const subscription = JSON.parse(row.subscription);
-            return webpush.sendNotification(subscription, JSON.stringify(payload))
-                .catch(err => {
-                    if (err.statusCode === 404 || err.statusCode === 410) {
-                        // Suscripción expirada o inexistente, eliminarla
-                        pool.query('DELETE FROM push_subscriptions WHERE subscription = ?', [row.subscription]);
-                    }
-                    console.error('Error enviando notificación push:', err);
-                });
+        console.log(`[Push] Enviando a ${email}: ${rows.length} suscripción(es) encontradas`);
+
+        const notifications = rows.map(async (row) => {
+            try {
+                const subscription = JSON.parse(row.subscription);
+                await webpush.sendNotification(subscription, JSON.stringify(payload));
+                console.log(`[Push] ✅ Enviado OK a suscripción ID ${row.id} de ${email}`);
+            } catch (err) {
+                console.error(`[Push] ❌ Error en suscripción ID ${row.id} de ${email}: ${err.statusCode} - ${err.message}`);
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                    // Suscripción expirada o inexistente, eliminarla
+                    await pool.query('DELETE FROM push_subscriptions WHERE id = ?', [row.id]);
+                    console.log(`[Push] 🗑️ Suscripción ID ${row.id} eliminada (expirada)`);
+                }
+            }
         });
 
         await Promise.all(notifications);
     } catch (error) {
-        console.error('Error en sendPushNotification:', error);
+        console.error('[Push] Error general en sendPushNotification:', error);
     }
 }
 

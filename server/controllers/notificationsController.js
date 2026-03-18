@@ -13,12 +13,15 @@ exports.subscribe = async (req, res) => {
     try {
         const subStr = JSON.stringify(subscription);
         
-        // Usar INSERT IGNORE o ON DUPLICATE KEY UPDATE para evitar duplicados
+        // Timestamp en hora Argentina (el servidor MySQL de RDS está en UTC)
+        const nowAr = new Date().toLocaleString('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires' });
+        
+        // Usar ON DUPLICATE KEY UPDATE para evitar duplicados
         await pool.query(
             `INSERT INTO push_subscriptions (email, subscription, created_at) 
-             VALUES (?, ?, NOW()) 
-             ON DUPLICATE KEY UPDATE created_at = NOW()`,
-            [email, subStr]
+             VALUES (?, ?, ?) 
+             ON DUPLICATE KEY UPDATE created_at = ?`,
+            [email, subStr, nowAr, nowAr]
         );
 
         res.status(201).json({ message: 'Suscripción guardada correctamente' });

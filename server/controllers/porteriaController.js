@@ -10,6 +10,14 @@ function getHoyArgentina() {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 }
 
+// Helper para obtener fecha+hora actual en formato YYYY-MM-DD HH:MM:SS ajustado a Argentina
+function getNowArgentina() {
+    const now = new Date();
+    const str = now.toLocaleString('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires' });
+    // sv-SE produce "YYYY-MM-DD HH:MM:SS" directamente
+    return str;
+}
+
 // ---------------------------------------------------------------
 // Helper: obtener los idLugar que controla la portería del email
 // ---------------------------------------------------------------
@@ -174,29 +182,25 @@ exports.completeMovimiento = async (req, res) => {
             return res.status(400).json({ error: 'Solo se pueden completar movimientos en estado "Pendiente"' });
         }
 
-        // Construir fechaHoraCompletado: fecha actual + horaCompletado (HH:MM)
+        // Construir fechaHoraCompletado: fecha actual + horaCompletado (HH:MM) en horario Argentina
         let fechaHoraCompletado;
         if (horaCompletado) {
-            const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const today = getHoyArgentina(); // YYYY-MM-DD en hora Argentina
             fechaHoraCompletado = `${today} ${horaCompletado}:00`;
         } else {
-            // Hora actual si no se especifica
-            fechaHoraCompletado = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            fechaHoraCompletado = getNowArgentina(); // Hora actual Argentina
         }
 
-        // Si no hay hora manual, usamos NOW() de MySQL (que ya tiene el offset -03:00)
         await connection.query(
             `UPDATE movimientos
              SET idEstado = ?,
-                 fechaHoraRegistro = ${horaCompletado ? '?' : 'NOW()'},
+                 fechaHoraRegistro = ?,
                  fechaHoraCompletado = NULL,
                  observacionPorteria = ?,
                  vigilador = ?,
                  usuario_app = ?
              WHERE id = ?`,
-            horaCompletado 
-                ? [ESTADO_COMPLETADO, `${new Date().toISOString().slice(0, 10)} ${horaCompletado}:00`, observacionPorteria || null, vigilador || null, email, id]
-                : [ESTADO_COMPLETADO, observacionPorteria || null, vigilador || null, email, id]
+            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
         );
 
         await connection.commit();
@@ -349,17 +353,17 @@ exports.scanQR = async (req, res) => {
                 return res.status(404).json({ error: 'La autorización no es válida para hoy o ya fue procesada' });
             }
 
-            // 3. Completar usando NOW() para la hora exacta de Argentina
+            // 3. Completar usando hora exacta de Argentina
             await connection.query(
                 `UPDATE movimientos
                  SET idEstado = ?,
-                     fechaHoraRegistro = NOW(),
+                     fechaHoraRegistro = ?,
                      fechaHoraCompletado = NULL,
                      observacionPorteria = CONCAT(COALESCE(observacionPorteria, ''), ' [Completado vía QR]'),
                      vigilador = ?,
                      usuario_app = ?
                  WHERE id = ?`,
-                [ESTADO_COMPLETADO, vigilador || 'SISTEMA QR', email, id]
+                [ESTADO_COMPLETADO, getNowArgentina(), vigilador || 'SISTEMA QR', email, id]
             );
 
             await connection.commit();
