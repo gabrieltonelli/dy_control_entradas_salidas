@@ -87,6 +87,7 @@ exports.createMovement = async (req, res) => {
         // Determinar autorizante y estado inicial
         let personaAutorizanteLegajo;
         let idEstadoInicial;
+        let autorizanteEmail = null; // email del autorizante para notificación
 
         if (currentUserEsAutorizador) {
             personaAutorizanteLegajo = currentUserLegajo;
@@ -106,6 +107,7 @@ exports.createMovement = async (req, res) => {
             }
             personaAutorizanteLegajo = movement.personaAutorizante;
             idEstadoInicial = ESTADO_SOLICITADO;
+            autorizanteEmail = authRows[0].email; // guardar para la notificación
         }
 
         // 5. Insert Movement
@@ -214,15 +216,18 @@ exports.createMovement = async (req, res) => {
         });
 
         // 9. Enviar notificación push al autorizante (fuera de la transacción)
-        if (idEstadoInicial === ESTADO_SOLICITADO && authRows[0]?.email) {
+        if (idEstadoInicial === ESTADO_SOLICITADO && autorizanteEmail) {
+            console.log(`[Push] Notificando al autorizante: ${autorizanteEmail}`);
             // Buscamos detalles del tipo para el mensaje
             const [typeRows] = await pool.query('SELECT nombre FROM movimientoTipos WHERE id = ?', [movement.idTipo]);
             const [persRows] = await pool.query('SELECT apellido_nombre FROM legajos WHERE legajo = ?', [movement.personaInterna]);
             
-            notificationService.notifyNewRequest(authRows[0].email, {
+            await notificationService.notifyNewRequest(autorizanteEmail, {
                 persona_interna_nombre: persRows[0]?.apellido_nombre || movement.personaInterna,
                 tipo_nombre: typeRows[0]?.nombre || 'movimiento'
             });
+        } else if (idEstadoInicial === ESTADO_SOLICITADO) {
+            console.warn('[Push] No se pudo notificar al autorizante: autorizanteEmail es null');
         }
 
     } catch (error) {

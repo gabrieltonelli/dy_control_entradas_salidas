@@ -1,12 +1,13 @@
-Modificaciones a realizar:
-- Los nombres de personas deben estar capitalizados
-- Relojito del panel de porteria
-- Movimientos pendientes debe actualizarse cada N segundos por variable de entorno
+Historial de movimientos: 
+- Buscar por tipo
+- Buscar por solicitante
+- Buscar por autorizante
+- Buscar por lugar
+- Buscar por estado
 
-Bugfixes:
-- la version del programa no se esta mostrando correctamente
+Historial de movimientos: boton deshacer para movimientos completados solo para porteria
 
-Dashboard de power BI para mostrar estadisticas de movimientos
+Nueva sección para autorizantes con Dashboard para mostrar estadisticas de movimientos
 - cantidad de movimientos por dia
 - cantidad de movimientos por tipo
 - cantidad de movimientos por usuario

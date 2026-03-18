@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.js',
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         devOptions: {
           enabled: true,
           type: 'module'
