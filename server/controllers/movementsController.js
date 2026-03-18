@@ -190,14 +190,23 @@ exports.createMovement = async (req, res) => {
             }
         }
 
-        // 8. Generar movimientos derivados (solo si autorizador directo Y conRegreso)
-        if (movement.conRegreso && idEstadoInicial === ESTADO_PENDIENTE) {
-            console.log(`Invocando movimientos derivados para ID: ${movementId}`);
-            try {
-                await connection.query('CALL sp_GenerarMovimientosDerivados(?)', [movementId]);
-            } catch (spError) {
-                console.error('Error en Store Procedure sp_GenerarMovimientosDerivados:', spError);
-                throw new Error(`Error procesando movimientos derivados: ${spError.message}`);
+        // 8. Generar movimientos derivados
+        // El SP se invoca cuando:
+        //   a) conRegreso=true: genera los 4 registros del ciclo completo (egreso A, ingreso B, egreso B, ingreso A)
+        //   b) ambos lugares son dependencias internas (esDependencia=1): genera egreso A + ingreso B aunque sea sin retorno
+        if (idEstadoInicial === ESTADO_PENDIENTE) {
+            const [[origenInfo]] = await connection.query('SELECT esDependencia FROM lugares WHERE id = ?', [movement.idLugarOrigen]);
+            const [[destinoInfo]] = await connection.query('SELECT esDependencia FROM lugares WHERE id = ?', [movement.idLugarDestino]);
+            const ambosDependencias = origenInfo?.esDependencia === 1 && destinoInfo?.esDependencia === 1;
+
+            if (movement.conRegreso || ambosDependencias) {
+                console.log(`Invocando movimientos derivados para ID: ${movementId} (conRegreso=${movement.conRegreso}, ambosDependencias=${ambosDependencias})`);
+                try {
+                    await connection.query('CALL sp_GenerarMovimientosDerivados(?)', [movementId]);
+                } catch (spError) {
+                    console.error('Error en Store Procedure sp_GenerarMovimientosDerivados:', spError);
+                    throw new Error(`Error procesando movimientos derivados: ${spError.message}`);
+                }
             }
         }
 
@@ -217,15 +226,18 @@ exports.createMovement = async (req, res) => {
 
         // 9. Enviar notificación push al autorizante (fuera de la transacción)
         if (idEstadoInicial === ESTADO_SOLICITADO && autorizanteEmail) {
-            console.log(`[Push] Notificando al autorizante: ${autorizanteEmail}`);
-            // Buscamos detalles del tipo para el mensaje
-            const [typeRows] = await pool.query('SELECT nombre FROM movimientoTipos WHERE id = ?', [movement.idTipo]);
-            const [persRows] = await pool.query('SELECT apellido_nombre FROM legajos WHERE legajo = ?', [movement.personaInterna]);
-            
-            await notificationService.notifyNewRequest(autorizanteEmail, {
-                persona_interna_nombre: persRows[0]?.apellido_nombre || movement.personaInterna,
-                tipo_nombre: typeRows[0]?.nombre || 'movimiento'
-            });
+            try {
+                console.log(`[Push] Notificando al autorizante: ${autorizanteEmail}`);
+                const [typeRows] = await pool.query('SELECT nombre FROM movimientoTipos WHERE id = ?', [movement.idTipo]);
+                const [persRows] = await pool.query('SELECT apellido_nombre FROM legajos WHERE legajo = ?', [movement.personaInterna]);
+                
+                await notificationService.notifyNewRequest(autorizanteEmail, {
+                    persona_interna_nombre: persRows[0]?.apellido_nombre || movement.personaInterna,
+                    tipo_nombre: typeRows[0]?.nombre || 'movimiento'
+                });
+            } catch (notifErr) {
+                console.error('[Push] Error notificando al autorizante:', notifErr);
+            }
         } else if (idEstadoInicial === ESTADO_SOLICITADO) {
             console.warn('[Push] No se pudo notificar al autorizante: autorizanteEmail es null');
         }

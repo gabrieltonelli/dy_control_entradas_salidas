@@ -136,7 +136,7 @@ El sistema permite habilitar o deshabilitar ciertas funciones mediante variables
 ---
 
 ## 🔔 Notificaciones Push
-El sistema utiliza **Web Push Notifications** para alertar a los autorizantes cuando reciben una nueva solicitud.
+El sistema utiliza **Web Push Notifications** para alertar en tiempo real a los distintos actores del flujo de movimientos.
 
 ### Configuración del Servidor (.env)
 Para que las notificaciones funcionen, deben generarse llaves VAPID:
@@ -145,11 +145,47 @@ Para que las notificaciones funcionen, deben generarse llaves VAPID:
    - `VAPID_PUBLIC_KEY=`
    - `VAPID_PRIVATE_KEY=`
 
-### Funcionamiento
-- **Hacia el Autorizante:** Cuando un usuario crea una solicitud que requiere autorización, el servidor busca las suscripciones push asociadas al email del autorizante y le envía una notificación de "Nueva solicitud pendiente".
-- **Hacia el Solicitante:** Cuando el autorizante toma una acción sobre la solicitud (Aprobar, Rechazar o Anular), el sistema notifica automáticamente al usuario que originó la solicitud informando el nuevo estado y el motivo (en caso de rechazo o anulación).
-- El cliente (PWA) solicita permiso para notificaciones automáticamente a los usuarios.
-- Funciona en navegadores modernos, aplicaciones instaladas (Desktop) y dispositivos Android (para iOS requiere que el usuario instale la PWA en el home screen en versiones recientes).
+### Escenarios cubiertos
+
+| Evento | Quién recibe | Mensaje |
+|---|---|---|
+| Solicitante crea una solicitud | **Autorizante** | "Nueva solicitud pendiente" |
+| Autorizante aprueba la solicitud | **Solicitante** | "Solicitud aprobada" |
+| Autorizante rechaza la solicitud | **Solicitante** | "Solicitud rechazada + motivo" |
+| Autorizante anula la solicitud | **Solicitante** | "Solicitud anulada + motivo" |
+| Autorizante crea en nombre de otro | **Solicitante (personaInterna)** | "Movimiento creado en tu nombre" |
+| Portero completa el movimiento (manual o QR) | **Autorizante** | "Paso registrado en portería + hora" |
+
+### Suscripciones por dispositivo
+La tabla `push_subscriptions` almacena una suscripción **por navegador/dispositivo**. Un mismo usuario puede tener múltiples registros si usa la app desde distintos navegadores o tiene installada la PWA. Las suscripciones expiradas se eliminan automáticamente al primer intento fallido de envío.
+
+---
+
+### 🧪 Script de diagnóstico (`server/test_push.js`)
+
+Permite probar el sistema de notificaciones **sin necesidad de deployar**. Se ejecuta directamente desde la carpeta `server/`.
+
+```bash
+# Modo: solo verificar suscripciones del email (sin enviar nada)
+node test_push.js check gabrielt@donyeyo.com.ar
+
+# Modo: enviar una notificación genérica de prueba
+node test_push.js send leonelc@donyeyo.com.ar
+
+# Modo: simular "nueva solicitud pendiente" → para probar notificación al AUTORIZANTE
+node test_push.js request gabrielt@donyeyo.com.ar
+
+# Modo: simular "solicitud aprobada" → para probar notificación al SOLICITANTE
+node test_push.js status leonelc@donyeyo.com.ar
+
+# Modo: simular "movimiento creado en tu nombre" → para probar notificación al SOLICITANTE
+node test_push.js created leonelc@donyeyo.com.ar
+
+# Modo: simular "paso registrado en portería" → para probar notificación al AUTORIZANTE
+node test_push.js porteria gabrielt@donyeyo.com.ar
+```
+
+El script verifica que las VAPID keys estén configuradas, lista las suscripciones activas del email, envía la notificación a todos los dispositivos registrados, e informa si alguna suscripción fue expirada y eliminada automáticamente.
 
 ---
 
