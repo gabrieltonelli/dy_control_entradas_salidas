@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const crypto = require('crypto');
-
+const notificationService = require('../services/notificationService');
 
 const ESTADO_PENDIENTE = 1;
 const ESTADO_COMPLETADO = 2;
@@ -205,6 +205,33 @@ exports.completeMovimiento = async (req, res) => {
 
         await connection.commit();
         res.json({ message: 'Movimiento completado correctamente.' });
+
+        // Notificar al autorizante que el movimiento fue procesado en portería
+        try {
+            const [authEmailRows] = await pool.query(
+                `SELECT l.email, l.apellido_nombre AS persona_interna_nombre,
+                        aut.email AS autorizante_email,
+                        po.nombre AS porteria_nombre
+                 FROM movimientos m
+                 JOIN legajos l ON l.legajo = m.personaInterna
+                 JOIN legajos aut ON aut.legajo = m.personaAutorizante
+                 JOIN porterias po ON po.email = ?
+                 WHERE m.id = ?`,
+                [email, id]
+            );
+            if (authEmailRows[0]?.autorizante_email) {
+                const hora = fechaHoraCompletado.substring(11, 16); // HH:MM
+                await notificationService.notifyMovementCompleted(authEmailRows[0].autorizante_email, {
+                    id,
+                    persona_interna_nombre: authEmailRows[0].persona_interna_nombre,
+                    porteria_nombre: authEmailRows[0].porteria_nombre,
+                    fecha_completado: hora
+                });
+            }
+        } catch (notifErr) {
+            console.error('[Push] Error notificando al autorizante sobre paso en portería:', notifErr);
+        }
+
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
@@ -375,6 +402,33 @@ exports.scanQR = async (req, res) => {
                 id, 
                 requiereFichaje 
             });
+
+            // Notificar al autorizante que el movimiento fue procesado vía QR
+            try {
+                const mov = movRows[0];
+                const [authEmailRows] = await pool.query(
+                    `SELECT l.apellido_nombre AS persona_interna_nombre,
+                            aut.email AS autorizante_email,
+                            po.nombre AS porteria_nombre
+                     FROM legajos l
+                     JOIN legajos aut ON aut.legajo = ?
+                     JOIN porterias po ON po.email = ?
+                     WHERE l.legajo = ?`,
+                    [mov.personaAutorizante, email, mov.personaInterna]
+                );
+                if (authEmailRows[0]?.autorizante_email) {
+                    const hora = getNowArgentina().substring(11, 16); // HH:MM
+                    await notificationService.notifyMovementCompleted(authEmailRows[0].autorizante_email, {
+                        id,
+                        persona_interna_nombre: authEmailRows[0].persona_interna_nombre,
+                        porteria_nombre: authEmailRows[0].porteria_nombre,
+                        fecha_completado: hora
+                    });
+                }
+            } catch (notifErr) {
+                console.error('[Push] Error notificando al autorizante sobre paso QR en portería:', notifErr);
+            }
+
         } catch (error) {
             await connection.rollback();
             throw error;

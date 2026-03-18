@@ -102,8 +102,49 @@ async function notifyRequestStatus(requesterEmail, movementId, status, details =
     return sendPushNotification(requesterEmail, payload);
 }
 
+/**
+ * Notifica a un solicitante que un autorizante creó un movimiento en su nombre
+ */
+async function notifyMovementCreatedForYou(requesterEmail, movement) {
+    const payload = {
+        title: '📋 Movimiento creado en tu nombre',
+        body: `${movement.autorizante_nombre || 'Un autorizante'} generó un ${movement.tipo_nombre || 'movimiento'} a tu nombre. Ya está listo para ser presentado en portería.`,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        data: {
+            url: '/mis-solicitudes'
+        }
+    };
+
+    return sendPushNotification(requesterEmail, payload);
+}
+
+/**
+ * Notifica a un autorizante que su movimiento fue completado por portería
+ */
+async function notifyMovementCompleted(autorizanteEmail, movement) {
+    const hora = movement.fecha_completado || 'ahora recién';
+    const porteria = movement.porteria_nombre || 'portería';
+    const persona = movement.persona_interna_nombre || 'La persona';
+    const movId = movement.id || '';
+
+    const payload = {
+        title: '✅ Paso registrado en portería',
+        body: `${persona} pasó por ${porteria} a las ${hora}.`,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        data: {
+            url: `/mis-solicitudes`
+        }
+    };
+
+    return sendPushNotification(autorizanteEmail, payload);
+}
+
 module.exports = {
     sendPushNotification,
     notifyNewRequest,
-    notifyRequestStatus
+    notifyRequestStatus,
+    notifyMovementCreatedForYou,
+    notifyMovementCompleted
 };

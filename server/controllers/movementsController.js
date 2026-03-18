@@ -230,6 +230,27 @@ exports.createMovement = async (req, res) => {
             console.warn('[Push] No se pudo notificar al autorizante: autorizanteEmail es null');
         }
 
+        // 10. Si el autorizante creó en nombre de otro, notificar al solicitante (personaInterna)
+        if (idEstadoInicial === ESTADO_PENDIENTE) {
+            // El autorizante firmó el movimiento directamente → notificar al solicitante (personaInterna)
+            try {
+                const [typeRows] = await pool.query('SELECT nombre FROM movimientoTipos WHERE id = ?', [movement.idTipo]);
+                const [authNameRows] = await pool.query('SELECT apellido_nombre FROM legajos WHERE legajo = ?', [currentUserLegajo]);
+                // Buscar el email del solicitante (personaInterna)
+                const [persEmailRows] = await pool.query('SELECT email FROM legajos WHERE legajo = ?', [movement.personaInterna]);
+
+                if (persEmailRows[0]?.email && persEmailRows[0].email !== movement.usuario_app) {
+                    console.log(`[Push] Notificando al solicitante (creado en su nombre): ${persEmailRows[0].email}`);
+                    await notificationService.notifyMovementCreatedForYou(persEmailRows[0].email, {
+                        autorizante_nombre: authNameRows[0]?.apellido_nombre || 'El autorizante',
+                        tipo_nombre: typeRows[0]?.nombre || 'movimiento'
+                    });
+                }
+            } catch (err) {
+                console.error('[Push] Error notificando al solicitante sobre movimiento creado en su nombre:', err);
+            }
+        }
+
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ error: error.message });
