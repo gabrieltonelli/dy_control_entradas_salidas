@@ -527,7 +527,7 @@ const MovementForm = () => {
                             <Autocomplete
                                 label="Autorizante"
                                 containerId="field-persona-autorizante"
-                                placeholder="Empiece a escribir apellido..."
+                                placeholder="Seleccione un autorizante..."
                                 value={formData.movement.personaAutorizante}
                                 options={autorizadores.map(l => ({ id: l.legajo, label: l.apellido_nombre }))}
                                 onSelect={(opt) => {
@@ -539,6 +539,7 @@ const MovementForm = () => {
                                         }
                                     }));
                                 }}
+                                showAll={true} // Mostrar todos los autorizadores (aprox 28) de entrada
                                 required
                                 disabled={isSubmitting}
                             />

@@ -179,7 +179,7 @@ export const Select = ({ label, options = [], includePlaceholder = false, name, 
     );
 };
 
-export const Autocomplete = ({ label, options = [], onSelect, value = '', containerId, ...props }) => {
+export const Autocomplete = ({ label, options = [], onSelect, value = '', containerId, showAll = false, limit = 10, ...props }) => {
     const [inputValue, setInputValue] = React.useState('');
     const [showOptions, setShowOptions] = React.useState(false);
     // Persistir preferencia en localStorage
@@ -210,19 +210,23 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
     }, [value, options]);
 
     const filteredOptions = options.filter(opt => {
+        if (!inputValue) return true;
         const label = (opt.label || '').toLowerCase();
         const query = inputValue.toLowerCase();
         return busquedaExtendida
             ? label.includes(query)
             : label.startsWith(query);
-    }).slice(0, 10);
+    });
+
+    // Si showAll es true, no limitamos el resultado (o usamos un límite muy alto)
+    const displayOptions = showAll ? filteredOptions : filteredOptions.slice(0, limit);
 
     const handleBlur = () => {
         // Delay para permitir que el onMouseDown de la lista ocurra antes
         setTimeout(() => {
             setShowOptions(false);
             const currentSelected = selectedRef.current;
-            if (!currentSelected || currentSelected.label !== inputRef.current) {
+            if (!currentSelected || (currentSelected && currentSelected.label !== inputRef.current)) {
                 setInputValue('');
                 selectedRef.current = null;
                 onSelect({ id: '', label: '' });
@@ -291,7 +295,7 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                 autoComplete="off"
                 disabled={props.disabled}
             />
-            {showOptions && inputValue.length > 0 && (
+            {showOptions && (showAll || inputValue.length > 0) && (
                 <ul className="glass" style={{
                     position: 'absolute',
                     top: '100%',
@@ -307,8 +311,8 @@ export const Autocomplete = ({ label, options = [], onSelect, value = '', contai
                     padding: '8px 0',
                     backgroundColor: 'var(--surface)'
                 }}>
-                    {filteredOptions.length > 0 ? (
-                        filteredOptions.map((opt, i) => (
+                    {displayOptions.length > 0 ? (
+                        displayOptions.map((opt, i) => (
                             <li
                                 key={i}
                                 onMouseDown={(e) => {
