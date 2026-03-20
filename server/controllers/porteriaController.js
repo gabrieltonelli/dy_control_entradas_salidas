@@ -203,6 +203,11 @@ exports.completeMovimiento = async (req, res) => {
             [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
         );
 
+        // Lógica de Autorización Recurrente
+        if (mov.esRecurrente === 1 && (mov.idGrupo === 0 || mov.ordenGrupo === 1)) {
+            await handleRecurrence(connection, id);
+        }
+
         await connection.commit();
         res.json({ message: 'Movimiento completado correctamente.' });
 
@@ -252,13 +257,23 @@ exports.getHistorial = async (req, res) => {
     const offset = (Math.max(1, parseInt(page)) - 1) * pageSize;
 
     try {
-        const lugarIds = await getLugaresDePorteria(email);
-        if (lugarIds.length === 0) {
-            return res.status(403).json({ error: 'Esta cuenta no tiene portería asignada' });
-        }
+        // 1. Obtener rol del usuario para ver si es Sysadmin
+        const [userRows] = await pool.query('SELECT idRol FROM legajos WHERE email = ?', [email]);
+        const userRole = userRows.length > 0 ? userRows[0].idRol : 1;
 
+        let whereExtra = ' WHERE 1=1'; // Base WHERE para ir concatenando
         const params = [];
-        let whereExtra = '';
+
+        // 2. Filtro de ubicación (solo si NO es Sysadmin)
+        if (userRole < 100) {
+            const lugarIds = await getLugaresDePorteria(email);
+            if (lugarIds.length === 0) {
+                // Si no es portero y no es sysadmin, no debería ver nada acá
+                return res.json({ data: [], totalPages: 0 });
+            }
+            // Ve movimientos que involucren sus lugares de portería (origen o destino)
+            whereExtra += ` AND (m.idLugarOrigen IN (${lugarIds.join(',')}) OR m.idLugarDestino IN (${lugarIds.join(',')}))`;
+        }
 
         // Filtro por fechas
         if (desde) { whereExtra += ' AND DATE(m.fechaHoraRegistro) >= ?'; params.push(desde); }
@@ -270,11 +285,8 @@ exports.getHistorial = async (req, res) => {
             params.push(parseInt(estado));
         }
 
-        const baseWhere = `
-            WHERE (m.idLugarOrigen IN (?) OR m.idLugarDestino IN (?))
-            ${whereExtra}
-        `;
-        const baseParams = [lugarIds, lugarIds, ...params];
+        const baseWhere = whereExtra;
+        const baseParams = params;
 
         const [[{ total }]] = await pool.query(
             `SELECT COUNT(*) as total
@@ -393,6 +405,11 @@ exports.scanQR = async (req, res) => {
                 [ESTADO_COMPLETADO, getNowArgentina(), vigilador || 'SISTEMA QR', email, id]
             );
 
+            // Lógica de Autorización Recurrente
+            if (movRows[0].esRecurrente === 1 && (movRows[0].idGrupo === 0 || movRows[0].ordenGrupo === 1)) {
+                await handleRecurrence(connection, id);
+            }
+
             await connection.commit();
             
             const requiereFichaje = movRows[0].motivo?.toLowerCase() !== 'requerimiento laboral';
@@ -439,3 +456,88 @@ exports.scanQR = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// ---------------------------------------------------------------
+// Helper: Manejar la creación automática de autorizaciones recurrentes
+// ---------------------------------------------------------------
+async function handleRecurrence(connection, movId) {
+    try {
+        console.log(`[RECURRENCIA] Procesando para ID: ${movId}`);
+        // 1. Obtener datos del movimiento original
+        const [movRows] = await connection.query('SELECT * FROM movimientos WHERE id = ?', [movId]);
+        const mov = movRows[0];
+        if (!mov) {
+            console.error(`[RECURRENCIA] No se encontró el movimiento original ${movId}`);
+            return;
+        }
+
+        // 2. Calcular nueva fecha (mañana)
+        const originalDate = mov.fechaHoraRegistro instanceof Date ? mov.fechaHoraRegistro : new Date(mov.fechaHoraRegistro);
+        const nextDate = new Date(originalDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        
+        // Verificar vencimiento (si existe)
+        if (mov.vencimientoRecurrencias) {
+            const nextDateZero = new Date(nextDate);
+            nextDateZero.setHours(0, 0, 0, 0);
+            const vencimientoZero = new Date(mov.vencimientoRecurrencias);
+            vencimientoZero.setHours(0, 0, 0, 0);
+            
+            if (nextDateZero > vencimientoZero) {
+                console.log(`[RECURRENCIA] Límite alcanzado (${mov.vencimientoRecurrencias}). No se generará nueva serie.`);
+                return;
+            }
+        }
+
+        const nextDateStr = nextDate.toISOString().slice(0, 10) + ' 00:00:00';
+
+        // 3. Clonar movimiento base (Se clona como PENDIENTE para el día siguiente)
+        const [result] = await connection.query(
+            `INSERT INTO movimientos 
+            (idGrupo, ordenGrupo, idTipo, personaInterna, idPersonaExterna, fechaHoraRegistro, conRegreso, motivo, personaAutorizante, observacion, idEstado, idLugarOrigen, idLugarDestino, destinoDetalle, usuario_app, esRecurrente, vencimientoRecurrencias) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                0, 1, 
+                mov.idTipo, mov.personaInterna, mov.idPersonaExterna, nextDateStr, mov.conRegreso, mov.motivo, mov.personaAutorizante, 
+                mov.observacion ? `[RECURRENTE] ${mov.observacion}` : '[RECURRENTE]', 
+                1, // ESTADO_PENDIENTE (ya autorizada)
+                mov.idLugarOrigen, mov.idLugarDestino, mov.destinoDetalle, mov.usuario_app, 1,
+                mov.vencimientoRecurrencias || null
+            ]
+        );
+        const newId = result.insertId;
+
+        // 4. Clonar artículos
+        const [artRows] = await connection.query('SELECT * FROM articulos WHERE idMovimiento = ?', [movId]);
+        for (const art of artRows) {
+            await connection.query(
+                `INSERT INTO articulos 
+                (idMovimiento, descripcion, cantidad, idEstado, idLugarOrigen, idLugarDestino, remitente, destinatario, sinRetorno, presentacion, observacion, usuario_app) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [newId, art.descripcion, art.cantidad, 1, art.idLugarOrigen, art.idLugarDestino, art.remitente, art.destinatario, art.sinRetorno, art.presentacion, art.observacion, art.usuario_app]
+            );
+        }
+
+        // 5. Clonar documentos
+        const [docRows] = await connection.query('SELECT * FROM documentos WHERE idMovimiento = ?', [movId]);
+        for (const doc of docRows) {
+            await connection.query(
+                `INSERT INTO documentos 
+                (idMovimiento, descripcion, cantidad, idEstado, tipo, idLugarOrigen, idLugarDestino, remitente, destinatario, sinRetorno, observacion, usuario_app) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [newId, doc.descripcion, doc.cantidad, 1, doc.tipo, doc.idLugarOrigen, doc.idLugarDestino, doc.remitente, doc.destinatario, doc.sinRetorno, doc.observacion, doc.usuario_app]
+            );
+        }
+
+        // 6. Si conRegreso = 1, generar el ciclo completo para el nuevo día
+        if (mov.conRegreso) {
+            console.log(`[RECURRENCIA] Generando derivados para nuevo ID: ${newId}`);
+            await connection.query('CALL sp_GenerarMovimientosDerivados(?)', [newId]);
+        }
+        
+        console.log(`[RECURRENCIA] Nueva serie generada con ID: ${newId} para la fecha: ${nextDateStr}`);
+    } catch (err) {
+        console.error('[RECURRENCIA] Error clonando movimiento:', err);
+        // No lanzamos el error para no trabar el proceso de portería, pero se loguea.
+    }
+}

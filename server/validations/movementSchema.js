@@ -44,7 +44,9 @@ const movementSchema = z.object({
         observacion: z.string().max(500, 'La observación no puede superar los 500 caracteres').optional().nullable(),
         destinoDetalle: z.string().max(50, 'El detalle del destino no puede superar los 50 caracteres').optional().nullable(),
         fechaHoraRegistro: z.string().min(1, 'La fecha autorizada es obligatoria'),
-        usuario_app: z.string()
+        usuario_app: z.string(),
+        esRecurrente: z.boolean().optional().default(false),
+        vencimientoRecurrencias: z.string().optional().nullable()
     }).refine(data => data.idLugarOrigen !== data.idLugarDestino, {
         message: 'El origen y el destino deben ser distintos',
         path: ['idLugarDestino']

@@ -5,12 +5,15 @@ const api = axios.create({
 });
 
 export const MastersService = {
-    getLegajos: () => api.get('/masters/legajos'),
+    getLegajos: (page = 1, search = '') => api.get(`/masters/legajos?page=${page}&search=${encodeURIComponent(search)}`),
     getLugares: () => api.get('/masters/lugares'),
     getMovementTypes: () => api.get('/masters/movement-types'),
     getMovementStates: () => api.get('/masters/movement-states'),
     getMe: (email) => api.get(`/masters/me?email=${email}`),
     getPorteros: () => api.get('/masters/porteros'),
+    updateLegajo: (id, data) => api.put(`/masters/legajos/${id}`, data),
+    createLegajo: (data) => api.post('/masters/legajos', data),
+    deleteLegajo: (id) => api.delete(`/masters/legajos/${id}`),
 };
 
 export const MovementsService = {

@@ -1008,3 +1008,37 @@ select:focus {
         bottom: 120px; /* Evitar que el botón flotante QR lo tape */
     }
 }
+
+/* Legajos Admin Form Styles */
+.legajo-form {
+    width: 100%;
+    max-width: 100%;
+}
+
+.legajo-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.legajo-form input, 
+.legajo-form select {
+    width: 100% !important;
+}
+
+.legajo-form .error-text {
+    color: var(--error);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.legajo-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}

@@ -9,7 +9,7 @@ import { Plus, Trash2, Send, AlertTriangle } from 'lucide-react';
 import { useAuth } from "../config/AuthContext";
 
 const MovementForm = () => {
-    const { user } = useAuth();
+    const { user, hasRole, legajoInfo } = useAuth();
     const navigate = useNavigate();
     const currentUser = user || {};
 
@@ -52,6 +52,8 @@ const MovementForm = () => {
             observacion: '',
             destinoDetalle: '',
             conRegreso: false,
+            esRecurrente: false,
+            vencimientoRecurrencias: '',
             usuario_app: currentUser.username || currentUser.email || 'anonymous'
         },
         articles: [],
@@ -64,12 +66,21 @@ const MovementForm = () => {
         const fetchData = async () => {
             setIsLoadingMasters(true);
             try {
-                // Verify current user legajo
-                if (currentUser.username || currentUser.email) {
+                // Verify current user legajo (priorizar el del contexto si existe, especialmente útil para MOCK)
+                if (legajoInfo) {
+                    setMyLegajo(legajoInfo);
+                    setFormData(prev => ({
+                        ...prev,
+                        movement: {
+                            ...prev.movement,
+                            personaInterna: legajoInfo.legajo
+                        }
+                    }));
+                    setIsVerifyingLegajo(false);
+                } else if (currentUser.username || currentUser.email) {
                     try {
                         const meRes = await MastersService.getMe(currentUser.username || currentUser.email);
                         setMyLegajo(meRes.data);
-                        // Pre-setear personaInterna con el legajo del usuario logueado
                         setFormData(prev => ({
                             ...prev,
                             movement: {
@@ -162,13 +173,19 @@ const MovementForm = () => {
         const { name, value, type, checked } = e.target;
         const val = type === 'checkbox' ? checked : value;
 
-        setFormData(prev => ({
-            ...prev,
-            movement: {
-                ...prev.movement,
-                [name]: val
+        setFormData(prev => {
+            const nextMov = { ...prev.movement, [name]: val };
+            
+            // Si desactiva recurrencia, limpiar fecha de vencimiento
+            if (name === 'esRecurrente' && !val) {
+                nextMov.vencimientoRecurrencias = '';
             }
-        }));
+            
+            return {
+                ...prev,
+                movement: nextMov
+            };
+        });
     };
 
     const addArticle = () => {
@@ -396,10 +413,10 @@ const MovementForm = () => {
                             label="Tipo de movimiento"
                             name="idTipo"
                             containerId="field-tipo"
-                            value={formData.movement.idTipo}
+                            value={String(formData.movement.idTipo)}
                             onChange={handleMovChange}
-                            options={types.map(t => ({ id: t.id, label: t.nombre }))}
-                            disabled={true} // Siempre deshabilitado
+                            options={types && types.length > 0 ? types.map(t => ({ id: String(t.id), label: t.nombre })) : [{ id: '1', label: 'Egreso de personal' }]}
+                            disabled={true}
                             required
                         />
                         <Select
@@ -413,9 +430,9 @@ const MovementForm = () => {
                             includePlaceholder={false}
                             disabled={isSubmitting}
                         />
-
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '20px' }}>
                         <Switch
                             label="Retorno"
                             name="conRegreso"
@@ -437,6 +454,44 @@ const MovementForm = () => {
                             disabled={isSubmitting}
                         />
                     </div>
+
+                    { (hasRole(2) || userIsAutorizador) && (
+                        <div style={{ 
+                            gridColumn: '1 / -1', 
+                            marginTop: '10px',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                            gap: '20px',
+                            alignItems: 'start'
+                        }}>
+                            <Switch
+                                label="Autorización Recurrente"
+                                name="esRecurrente"
+                                checked={formData.movement.esRecurrente}
+                                onChange={handleMovChange}
+                                activeLabel="Se repite diariamente"
+                                inactiveLabel="Acción única"
+                                disabled={isSubmitting}
+                            />
+
+                             <div className="card-anim" style={{ opacity: formData.movement.esRecurrente ? 1 : 0.6, transition: 'opacity 0.2s' }}>
+                                <DatePicker
+                                    label="Vencimiento de Recurrencia"
+                                    name="vencimientoRecurrencias"
+                                    value={formData.movement.vencimientoRecurrencias}
+                                    onChange={handleMovChange}
+                                    min={today}
+                                    disabled={!formData.movement.esRecurrente || isSubmitting}
+                                />
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                    {formData.movement.esRecurrente 
+                                        ? "Opcional. Deja vacío para recurrencia indefinida." 
+                                        : "Activa la recurrencia para establecer un vencimiento."}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
                         <Select
                             label="Lugar de origen"

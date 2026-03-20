@@ -444,7 +444,7 @@ export const DatePicker = ({ label, value, onChange, name, min, max, containerId
     for (let i = 1; i <= totalDays; i++) days.push(i);
 
     return (
-        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1 }}>
+        <div id={containerId} ref={containerRef} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', opacity: props.disabled ? 0.6 : 1, zIndex: isOpen ? 2100 : 1 }}>
             {label && <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{label}</label>}
 
             <div

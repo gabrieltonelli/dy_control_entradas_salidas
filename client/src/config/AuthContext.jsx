@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./msal";
 import { checkPorteria } from "../services/porteriaService";
@@ -56,6 +56,28 @@ export const AuthProvider = ({ children }) => {
     }, [isMsAuthenticated, accounts, googleUser]);
 
     useEffect(() => {
+        // BYPASS DE AUTENTICACION PARA DESARROLLO LOCAL
+        if (import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === 'true') {
+            console.log("⚠️ MODO MOCK ACTIVADO: Entrando como Sysadmin");
+            setIsAuthenticated(true);
+            setUser({
+                name: "Gabriel Tonelli (DEBUG)",
+                email: "gabrielt@donyeyo.com.ar",
+                provider: 'mock',
+                avatar: null
+            });
+            setLegajoInfo({
+                legajo: 0,
+                apellido_nombre: "Gabriel Tonelli (DEBUG)",
+                email: "gabrielt@donyeyo.com.ar",
+                esAutorizador: 1,
+                idRol: 100
+            });
+            setEsAutorizador(true);
+            setEsPortero(false);
+            return;
+        }
+
         if (user?.email) {
             checkPorteria(user.email)
                 .then(res => {
@@ -120,6 +142,13 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Jerarquía de roles: devuelve true si el rol del usuario es >= al mínimo requerido
+    // Roles: 1 (Usuario), 2 (RRHH/Gestor), 100 (Sysadmin)
+    const hasRole = useCallback((minRole) => {
+        if (!legajoInfo) return false;
+        return (legajoInfo.idRol || 1) >= minRole;
+    }, [legajoInfo]);
+
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
@@ -128,6 +157,7 @@ export const AuthProvider = ({ children }) => {
             esPortero,
             esAutorizador,
             legajoInfo,
+            hasRole,
             loginMicrosoft,
             loginGoogle,
             logout

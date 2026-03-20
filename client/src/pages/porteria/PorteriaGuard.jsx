@@ -9,14 +9,17 @@ import { useAuth } from '../../config/AuthContext';
  * Si no lo es, redirige al home.
  */
 const PorteriaGuard = ({ children }) => {
-    const { esPortero, porteria } = useAuth();
+    const { esPortero, porteria, hasRole } = useAuth();
     const navigate = useNavigate();
 
+    const canEnter = esPortero === true || hasRole(2) || hasRole(100);
+
     useEffect(() => {
-        if (esPortero === false) {
+        // Solo redirigir si ya sabemos que NO es portero Y no tiene roles superiores
+        if (esPortero === false && !hasRole(2) && !hasRole(100)) {
             navigate('/', { replace: true });
         }
-    }, [esPortero, navigate]);
+    }, [esPortero, hasRole, navigate]);
 
     if (esPortero === null) {
         return (
@@ -26,8 +29,9 @@ const PorteriaGuard = ({ children }) => {
         );
     }
 
-    if (esPortero) {
-        return children(porteria);
+    if (canEnter) {
+        // Si es admin/RRHH pero no es portero, pasamos porteria como null
+        return children(esPortero ? porteria : { id: 0, nombre: 'Acceso Administración' });
     }
 
     return null;

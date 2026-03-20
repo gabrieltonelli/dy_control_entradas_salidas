@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History, BookOpen, LifeBuoy } from 'lucide-react';
+import { X, Settings, FilePlus, ClipboardList, ShieldCheck, History, BookOpen, LifeBuoy, Users } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../config/AuthContext';
 
 const Drawer = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { esPortero, porteria } = useAuth();
+    const { esPortero, porteria, hasRole } = useAuth();
 
     const menuItems = !esPortero ? [
         { icon: <FilePlus size={20} />, label: 'Nueva Solicitud', path: '/nuevo' },
         { icon: <ClipboardList size={20} />, label: 'Mis Solicitudes', path: '/mis-solicitudes' },
+        ...(hasRole(2) ? [{ icon: <Users size={20} />, label: 'Gestión Legajos', path: '/admin/legajos' }] : []),
         { icon: <BookOpen size={20} />, label: 'Novedades', path: '/reglamento' },
         { icon: <LifeBuoy size={20} />, label: 'Soporte', path: '/soporte' },
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
@@ -20,13 +21,12 @@ const Drawer = ({ isOpen, onClose }) => {
         { icon: <Settings size={20} />, label: 'Configuración', path: '/configuracion' },
     ];
 
-    // Ítems exclusivos de portería (solo si es portero)
-    const porteriaItems = esPortero && porteria
-        ? [
-            { icon: <ShieldCheck size={20} />, label: 'Pendientes del día', path: '/porteria' },
-            { icon: <History size={20} />, label: 'Historial portería', path: '/porteria/historial' },
-        ]
-        : [];
+    // Ítems de portería
+    const canSeeHistorial = esPortero || hasRole(2) || hasRole(100);
+    const porteriaItems = [
+        ...(esPortero && porteria ? [{ icon: <ShieldCheck size={20} />, label: 'Pendientes del día', path: '/porteria' }] : []),
+        ...(canSeeHistorial ? [{ icon: <History size={20} />, label: 'Historial portería', path: '/porteria/historial' }] : []),
+    ];
 
     const allItems = [...menuItems, ...porteriaItems];
 

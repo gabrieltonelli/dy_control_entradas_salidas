@@ -429,6 +429,29 @@ Accesible desde el menú lateral (Drawer). Permite ajustar preferencias del usua
 
 Todas las acciones (creación, edición, eliminación) se guardan automáticamente en la tabla `auditoria` de la base de datos mediante triggers configurados en MySQL.
 
+### 8. Roles y Jerarquía de Usuarios
+
+El sistema utiliza un esquema de roles jerárquicos definido por el campo `idRol` en la tabla `legajos`. A mayor ID de rol, mayores son los permisos acumulados.
+
+| ID Rol | Nombre | Permisos |
+|---|---|---|
+| **1** | Usuario | Solicitante estándar. Puede crear solicitudes (estado Solicitado). |
+| **2** | RRHH | **Autorizante por defecto**. Acceso al módulo de **Gestión de Legajos** para administrar roles y estados de autorizador del personal. |
+| **100** | Sysadmin | **Administrador total**. Incluye todos los permisos de RRHH y acceso técnico total. |
+
+#### Reglas de Jerarquía:
+- Un rol superior hereda todos los permisos del inferior (ej: el rol 100 tiene permisos de 2 y 1).
+- Los roles **2 (RRHH)** y **100 (Sysadmin)** son marcados automáticamente como **Autorizantes** (`esAutorizador = 1`).
+- Solo RRHH y Sysadmin pueden visualizar el punto de menú secreto en el Drawer para gestionar la tabla de legajos.
+
+### 9. Autorizaciones Recurrentes
+
+El sistema permite marcar una autorización como **Recurrente** (disponible para roles RRHH o superiores). 
+
+- **Funcionamiento**: Cuando un movimiento marcado como recurrente es **Completado** en portería, el sistema genera automáticamente una copia idéntica del movimiento (incluyendo artículos y documentos) para el **día siguiente**.
+- **Encadenados**: Si el movimiento original tenía retorno, la recurrencia generará el ciclo completo (Salida y Entrada) para la nueva fecha.
+- **Identificación**: Las observaciones del movimiento clonado comenzarán con el prefijo `[RECURRENTE]`.
+
 ---
 
 ## 🗄️ Actualización de Base de Datos (v1.1.0)
