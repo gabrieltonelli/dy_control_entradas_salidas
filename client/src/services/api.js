@@ -5,7 +5,7 @@ const api = axios.create({
 });
 
 export const MastersService = {
-    getLegajos: (page = 1, search = '') => api.get(`/masters/legajos?page=${page}&search=${encodeURIComponent(search)}`),
+    getLegajos: (page = 1, search = '', limit = null) => api.get(`/masters/legajos?page=${page}&search=${encodeURIComponent(search)}${limit ? `&limit=${limit}` : ''}`),
     getLugares: () => api.get('/masters/lugares'),
     getMovementTypes: () => api.get('/masters/movement-types'),
     getMovementStates: () => api.get('/masters/movement-states'),

@@ -103,13 +103,16 @@ const MovementForm = () => {
                 }
 
                 const [l, lug, t] = await Promise.all([
-                    MastersService.getLegajos(),
+                    MastersService.getLegajos(1, '', 5000), // Traer más legajos para el buscador del formulario
                     MastersService.getLugares(),
                     MastersService.getMovementTypes()
                 ]);
 
                 // Normalizar nombres de legajos (Capitalize)
-                const normalizedLegajos = l.data.map(item => ({
+                // AXIOS resp.data => { data: [], pagination: {} }
+                const legajosArray = l.data.data || (Array.isArray(l.data) ? l.data : []);
+                
+                const normalizedLegajos = legajosArray.map(item => ({
                     ...item,
                     apellido_nombre: capitalizeName(item.apellido_nombre)
                 }));

@@ -3,8 +3,8 @@ const pool = require('../config/db');
 // @desc    Get all legajos (paginated)
 // @route   GET /api/masters/legajos?page=&search=
 exports.getLegajos = async (req, res) => {
-    const { page = 1, search = '' } = req.query;
-    const pageSize = parseInt(process.env.PAGE_SIZE_LEGAJOS) || 50;
+    const { page = 1, search = '', limit } = req.query;
+    const pageSize = limit ? parseInt(limit) : (parseInt(process.env.PAGE_SIZE_LEGAJOS) || 50);
     const offset = (Math.max(1, parseInt(page)) - 1) * pageSize;
 
     try {
