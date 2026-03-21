@@ -413,13 +413,13 @@ const Legajos = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .admin-table { width: 100%; border-collapse: collapse; }
-                .admin-table th { text-align: left; padding: 15px; border-bottom: 2px solid var(--border); font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); }
+                .admin-table { width: 100%; border-collapse: collapse; min-width: 650px; }
+                .admin-table th { text-align: left; padding: 15px; border-bottom: 2px solid var(--border); font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
                 .admin-table td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
                 .admin-table tr:last-child td { border-bottom: none; }
                 .admin-table tr:hover { background: rgba(0,0,0,0.02); }
                 
-                .table-container { border-radius: 20px; overflow: hidden; margin-top: 20px; }
+                .table-container { border-radius: 20px; margin-top: 20px; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--surface); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
                 
                 .btn-action { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; transition: all 0.2s; }
                 .btn-action.edit:hover { color: var(--dy-red); border-color: var(--dy-red); background: #fff1f2; }

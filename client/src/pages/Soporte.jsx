@@ -88,7 +88,7 @@ const Soporte = () => {
                 ...feedback,
                 email: user.email,
                 dispositivo: navigator.userAgent,
-                version_app: window.__APP_VERSION__ || '1.0.0'
+                version_app: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0'
             });
             setSuccessMessage('¡Gracias! Tu feedback ha sido enviado correctamente y será revisado por el equipo de soporte.');
             setFeedback({ tipo: 'Sugerencia', comentario: '', valoracion: 5 });
