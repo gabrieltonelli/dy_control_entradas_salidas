@@ -129,6 +129,11 @@ El sistema permite habilitar o deshabilitar ciertas funciones mediante variables
 - `VITE_ENABLE_GOOGLE_LOGIN`: (true/false) Define si se muestra o no la opción de inicio de sesión con Google.
 - `VITE_ENABLE_DOCUMENTS`: (true/false) Define si los usuarios pueden adjuntar documentación (Remitos, Facturas, etc.) a sus solicitudes.
 - `VITE_ENABLE_QR`: (true/false) Habilita o deshabilita la generación y escaneo de códigos QR para autorizaciones.
+- `VITE_MOCK_AUTH`: (true/false) **Modo Bypass**. Si es `true`, el sistema ignora el login real y entra como el usuario definido en `VITE_MOCK_AUTH_EMAIL`.
+- `VITE_MOCK_AUTH_EMAIL`: El email del usuario a simular (ej: `gabrielt@donyeyo.com.ar`). **Requerido** si `VITE_MOCK_AUTH=true`.
+
+> [!WARNING]
+> El modo Mock Auth solo funciona en entorno de desarrollo (`npm run dev`). Si `VITE_MOCK_AUTH=true` pero no se define un email, el sistema mostrará una alerta y no permitirá el ingreso.
 
 > [!NOTE]
 > Para máxima seguridad, estas flags también se pueden configurar en el backend (`server/.env` como `ENABLE_GOOGLE_LOGIN`, `ENABLE_DOCUMENTS` y `ENABLE_QR`) para asegurar que la API rechace peticiones no permitidas.

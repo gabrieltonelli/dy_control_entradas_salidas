@@ -13,8 +13,8 @@ const MovementForm = () => {
     const navigate = useNavigate();
     const currentUser = user || {};
 
-    const today = new Date().toISOString().split('T')[0];
-    const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
+    const maxDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA');
 
     const [legajos, setLegajos] = useState([]);
     const [autorizadores, setAutorizadores] = useState([]); // solo los que tienen esAutorizador=1
@@ -44,7 +44,7 @@ const MovementForm = () => {
         movement: {
             idTipo: getSavedValue('idTipo', '1'),
             personaInterna: '', // Siempre vacío al cargar
-            fechaHoraRegistro: new Date().toISOString().split('T')[0], // Solo fecha para el input
+            fechaHoraRegistro: new Date().toLocaleDateString('en-CA'), // Solo fecha para el input
             idLugarOrigen: getSavedValue('idLugarOrigen', ''),
             idLugarDestino: getSavedValue('idLugarDestino', ''),
             motivo: getSavedValue('motivo', ''),

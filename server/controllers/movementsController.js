@@ -74,7 +74,7 @@ exports.createMovement = async (req, res) => {
 
         // Lookup usuario actual en legajos
         const [userRows] = await connection.query(
-            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            'SELECT legajo, esAutorizador, idRol FROM legajos WHERE email = ?',
             [movement.usuario_app]
         );
         if (userRows.length === 0) {
@@ -366,17 +366,22 @@ exports.getMisSolicitudes = async (req, res) => {
 
     try {
         const [userRows] = await pool.query(
-            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            'SELECT legajo, esAutorizador, idRol FROM legajos WHERE email = ?',
             [email]
         );
         if (userRows.length === 0) return res.status(404).json({ error: 'User not found' });
 
-        const { legajo, esAutorizador } = userRows[0];
+        const { legajo, esAutorizador, idRol } = userRows[0];
 
         // Condición de acceso por usuario/rol
         let whereClause;
         let whereParams;
-        if (esAutorizador) {
+
+        if (idRol >= 100) {
+            // Sysadmin: acceso total a todos los movimientos
+            whereClause = '1=1';
+            whereParams = [];
+        } else if (esAutorizador) {
             whereClause = '(m.usuario_app = ? OR m.personaAutorizante = ?)';
             whereParams = [email, legajo];
         } else {
@@ -522,7 +527,7 @@ exports.approveMovement = async (req, res) => {
         await connection.beginTransaction();
 
         const [userRows] = await connection.query(
-            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            'SELECT legajo, esAutorizador, idRol FROM legajos WHERE email = ?',
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
@@ -541,7 +546,7 @@ exports.approveMovement = async (req, res) => {
         if (mov.idEstado !== ESTADO_SOLICITADO) {
             return res.status(400).json({ error: 'Solo se pueden aprobar movimientos en estado "Solicitado"' });
         }
-        if (mov.personaAutorizante !== authLegajo) {
+        if (mov.personaAutorizante !== authLegajo && userRows[0].idRol < 100) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
@@ -593,7 +598,7 @@ exports.rejectMovement = async (req, res) => {
         await connection.beginTransaction();
 
         const [userRows] = await connection.query(
-            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            'SELECT legajo, esAutorizador, idRol FROM legajos WHERE email = ?',
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
@@ -613,7 +618,7 @@ exports.rejectMovement = async (req, res) => {
         if (mov.idEstado !== ESTADO_SOLICITADO) {
             return res.status(400).json({ error: 'Solo se pueden rechazar movimientos en estado "Solicitado"' });
         }
-        if (mov.personaAutorizante !== authLegajo) {
+        if (mov.personaAutorizante !== authLegajo && userRows[0].idRol < 100) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 
@@ -656,7 +661,7 @@ exports.cancelMovement = async (req, res) => {
         await connection.beginTransaction();
 
         const [userRows] = await connection.query(
-            'SELECT legajo, esAutorizador FROM legajos WHERE email = ?',
+            'SELECT legajo, esAutorizador, idRol FROM legajos WHERE email = ?',
             [email]
         );
         if (userRows.length === 0 || !userRows[0].esAutorizador) {
@@ -675,7 +680,7 @@ exports.cancelMovement = async (req, res) => {
         if (mov.idEstado !== ESTADO_PENDIENTE) {
             return res.status(400).json({ error: 'Solo se pueden anular movimientos en estado "Pendiente"' });
         }
-        if (mov.personaAutorizante !== authLegajo) {
+        if (mov.personaAutorizante !== authLegajo && userRows[0].idRol < 100) {
             return res.status(403).json({ error: 'No sos el autorizante asignado a este movimiento' });
         }
 

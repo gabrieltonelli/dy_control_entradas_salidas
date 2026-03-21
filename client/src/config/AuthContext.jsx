@@ -58,24 +58,30 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         // BYPASS DE AUTENTICACION PARA DESARROLLO LOCAL
         if (import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === 'true') {
-            console.log("⚠️ MODO MOCK ACTIVADO: Entrando como Sysadmin");
-            setIsAuthenticated(true);
-            setUser({
-                name: "Gabriel Tonelli (DEBUG)",
-                email: "gabrielt@donyeyo.com.ar",
-                provider: 'mock',
-                avatar: null
-            });
-            setLegajoInfo({
-                legajo: 0,
-                apellido_nombre: "Gabriel Tonelli (DEBUG)",
-                email: "gabrielt@donyeyo.com.ar",
-                esAutorizador: 1,
-                idRol: 100
-            });
-            setEsAutorizador(true);
-            setEsPortero(false);
-            return;
+            const mockEmail = import.meta.env.VITE_MOCK_AUTH_EMAIL;
+
+            if (!mockEmail) {
+                alert("⚠️ Error: VITE_MOCK_AUTH está activo pero falta setear VITE_MOCK_AUTH_EMAIL en el archivo .env");
+                console.error("VITE_MOCK_AUTH está activo pero falta setear VITE_MOCK_AUTH_EMAIL");
+                setIsAuthenticated(false);
+                setUser(null);
+                return;
+            }
+
+            if (!user || user.email !== mockEmail) {
+                console.log(`⚠️ MODO MOCK ACTIVADO: Entrando como ${mockEmail}`);
+                setIsAuthenticated(true);
+                setUser({
+                    name: "Usuario Mock",
+                    email: mockEmail,
+                    provider: 'mock',
+                    avatar: null
+                });
+                // No retornamos aquí para permitir que la lógica de abajo cargue sus permisos reales
+                // O podemos retornar y esperar a que el cambio de estado en user.email dispare el efecto de nuevo.
+                // Como user.email es dependencia, es más seguro retornar y dejar que el re-render maneje la carga.
+                return;
+            }
         }
 
         if (user?.email) {

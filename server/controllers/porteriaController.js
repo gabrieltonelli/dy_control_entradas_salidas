@@ -93,7 +93,7 @@ exports.getPendientes = async (req, res) => {
              LEFT JOIN legajos       lp ON m.personaInterna = lp.legajo
              LEFT JOIN legajos       le ON m.personaAutorizante = le.legajo
              WHERE m.idEstado = ?
-               AND DATE(m.fechaHoraRegistro) = ?
+               AND DATE(m.fechaHoraRegistro) <= ?
                AND (m.idLugarOrigen IN (?) OR m.idLugarDestino IN (?))
                AND (
                    m.idGrupo = 0
