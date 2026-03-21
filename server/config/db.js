@@ -16,14 +16,10 @@ const pool = mysql.createPool({
     charset: 'utf8mb4'
 });
 
-// ──────────────────────────────────────────────────────────────────────────
-// SOLUCIÓN TIMEZONE: fijar SET time_zone en cada nueva conexión al pool.
-// Así NOW(), CURRENT_TIMESTAMP, triggers y SPs usan siempre hora Argentina,
-// independientemente del timezone global del servidor RDS (UTC en AWS).
-// ──────────────────────────────────────────────────────────────────────────
-pool.pool.on('connection', (conn) => {
-    conn.query(`SET time_zone = '${TZ}'`, (err) => {
-        if (err) console.error('[DB] Error seteando time_zone:', err.message);
+// Aplicar el timezone en cada adquisición de conexión para asegurar consistencia
+pool.on('acquire', function (connection) {
+    connection.query(`SET time_zone = '${TZ}'`, (err) => {
+        if (err) console.error('[DB] Error seteando session time_zone:', err.message);
     });
 });
 

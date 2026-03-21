@@ -10,6 +10,14 @@ function getHoyArgentina() {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 }
 
+// Helper para obtener el día siguiente en formato YYYY-MM-DD ajustado a Argentina
+function getSiguienteDiaArgentina() {
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toLocaleDateString('en-CA');
+}
+
 // Helper para obtener fecha+hora actual en formato YYYY-MM-DD HH:MM:SS ajustado a Argentina
 function getNowArgentina() {
     const now = new Date();
@@ -60,15 +68,17 @@ exports.getPendientes = async (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).json({ error: 'Email requerido' });
 
+    const hoy = getHoyArgentina();
+    const manana = getSiguienteDiaArgentina();
+    const lugarIds = await getLugaresDePorteria(email);
+
+    if (lugarIds.length === 0) {
+        return res.status(403).json({ error: 'No tenés lugares de portería asignados (o portería inactiva)' });
+    }
+
+    console.log(`[PENDIENTES] User: ${email}, Hoy: ${hoy}, Mañana: ${manana}, Lugares: ${lugarIds}`);
+
     try {
-        const lugarIds = await getLugaresDePorteria(email);
-        const hoy = getHoyArgentina();
-        console.log(`[PENDIENTES] User: ${email}, Hoy: ${hoy}, Lugares: ${lugarIds}`);
-
-        if (lugarIds.length === 0) {
-            return res.status(403).json({ error: 'Esta cuenta no tiene portería asignada' });
-        }
-
         // Movimientos pendientes cuyo origen o destino es uno de los lugares de la portería.
         // Respeta lógica de grupos: solo el primer paso no completado de cada grupo.
         const [movements] = await pool.query(
@@ -93,8 +103,11 @@ exports.getPendientes = async (req, res) => {
              LEFT JOIN legajos       lp ON m.personaInterna = lp.legajo
              LEFT JOIN legajos       le ON m.personaAutorizante = le.legajo
              WHERE m.idEstado = ?
-               AND DATE(m.fechaHoraRegistro) <= ?
-               AND (m.idLugarOrigen IN (?) OR m.idLugarDestino IN (?))
+               AND (DATE(m.fechaHoraRegistro) = ? OR DATE(m.fechaHoraRegistro) = ?)
+               AND (
+                   (mt.direccion = 'saliente' AND m.idLugarOrigen IN (?))
+                   OR (mt.direccion = 'entrante' AND m.idLugarDestino IN (?))
+               )
                AND (
                    m.idGrupo = 0
                    OR m.ordenGrupo = (
@@ -105,7 +118,7 @@ exports.getPendientes = async (req, res) => {
                    )
                )
              ORDER BY m.fechaHoraRegistro ASC`,
-            [ESTADO_COMPLETADO, ESTADO_PENDIENTE, getHoyArgentina(), lugarIds, lugarIds, ESTADO_COMPLETADO]
+            [ESTADO_COMPLETADO, ESTADO_PENDIENTE, hoy, manana, lugarIds, lugarIds, ESTADO_COMPLETADO]
         );
 
         // Cargar artículos y documentos de cada movimiento
@@ -271,8 +284,11 @@ exports.getHistorial = async (req, res) => {
                 // Si no es portero y no es sysadmin, no debería ver nada acá
                 return res.json({ data: [], totalPages: 0 });
             }
-            // Ve movimientos que involucren sus lugares de portería (origen o destino)
-            whereExtra += ` AND (m.idLugarOrigen IN (${lugarIds.join(',')}) OR m.idLugarDestino IN (${lugarIds.join(',')}))`;
+            // Ve movimientos según dirección: saliente en origen, entrante en destino
+            whereExtra += ` AND (
+                (mt.direccion = 'saliente' AND m.idLugarOrigen IN (${lugarIds.join(',')}))
+                OR (mt.direccion = 'entrante' AND m.idLugarDestino IN (${lugarIds.join(',')}))
+            )`;
         }
 
         // Filtro por fechas
@@ -291,6 +307,7 @@ exports.getHistorial = async (req, res) => {
         const [[{ total }]] = await pool.query(
             `SELECT COUNT(*) as total
              FROM movimientos m
+             JOIN movimientoTipos mt ON m.idTipo = mt.id
              ${baseWhere}`,
             baseParams
         );

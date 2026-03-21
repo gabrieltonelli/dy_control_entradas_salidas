@@ -1,0 +1,14 @@
+﻿[dotenv@17.3.1] injecting env (18) from .env -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+CREATE TABLE `auditoria` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `entidad` varchar(30) NOT NULL,
+  `idEntidad` int NOT NULL,
+  `usuario` varchar(60) NOT NULL,
+  `vigilador` varchar(30) DEFAULT '',
+  `fechaHora` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `operacion` enum('create','delete','update','access') NOT NULL,
+  `evento` varchar(255) NOT NULL,
+  `modulo` varchar(50) DEFAULT NULL,
+  `query` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1213 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci

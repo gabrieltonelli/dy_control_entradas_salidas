@@ -232,8 +232,8 @@ exports.createMovement = async (req, res) => {
                         personaAutorizanteLegajo,
                         movement.observacion || '',
                         1,                                       // Pendiente
-                        movement.idLugarDestino,                 // INVERTIDO: origen = destino original
-                        movement.idLugarOrigen,                  // INVERTIDO: destino = origen original
+                        movement.idLugarOrigen,                 // Mantiene origen
+                        movement.idLugarDestino,                // Mantiene destino
                         movement.destinoDetalle || '',
                         movement.usuario_app
                     ]

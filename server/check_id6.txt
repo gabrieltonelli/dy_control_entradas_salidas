@@ -1,0 +1,9 @@
+﻿[dotenv@17.3.1] injecting env (18) from .env -- tip: ­ƒñû agentic secret storage: https://dotenvx.com/as2
+Successfully connected to MySQL database | session time_zone=-03:00 | NOW()=Sat Mar 21 2026 01:47:42 GMT-0300 (hora est├índar de Argentina)
+[
+  {
+    "id": 6,
+    "idEstado": 6,
+    "fechaHoraRegistro": "2026-03-02T03:00:00.000Z"
+  }
+]

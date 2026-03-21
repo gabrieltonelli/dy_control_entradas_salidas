@@ -4,6 +4,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+// Sincronizar la zona horaria de Node con la de la Base de Datos
+if (process.env.DB_TIMEZONE) {
+    process.env.TZ = process.env.DB_TIMEZONE;
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

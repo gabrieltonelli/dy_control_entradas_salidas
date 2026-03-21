@@ -1,0 +1,55 @@
+﻿[dotenv@17.3.1] injecting env (18) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+TRIGGER trg_art_ins ON articulos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('articulos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'create',
+   CONCAT('Art├¡culo a├▒adido: ', NEW.`descripcion`),
+   'Gestor de Objetos')
+TRIGGER trg_art_upd ON articulos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('articulos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'update',
+   'Cambio en estado o ubicaci├│n del art├¡culo',
+   'Gestor de Objetos')
+TRIGGER trg_art_del ON articulos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('articulos', OLD.`id`, OLD.`usuario_app`, OLD.`vigilador`, 'delete',
+   'Eliminaci├│n de art├¡culo del sistema',
+   'Gestor de Objetos')
+TRIGGER trg_doc_ins ON documentos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('documentos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'create',
+   CONCAT('Documento registrado tipo: ', NEW.`tipo`),
+   'Gestor de Documentaci├│n')
+TRIGGER trg_doc_upd ON documentos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('documentos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'update',
+   'Actualizaci├│n de metadatos del documento',
+   'Gestor de Documentaci├│n')
+TRIGGER trg_doc_del ON documentos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('documentos', OLD.`id`, OLD.`usuario_app`, OLD.`vigilador`, 'delete',
+   'Eliminaci├│n de documento',
+   'Gestor de Documentaci├│n')
+TRIGGER trg_mov_ins ON movimientos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('movimientos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'create',
+   'Nuevo movimiento registrado',
+   'Gestor de Recepci├│n')
+TRIGGER trg_mov_upd ON movimientos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('movimientos', NEW.`id`, NEW.`usuario_app`, NEW.`vigilador`, 'update',
+   'Actualizaci├│n de datos/estado del movimiento',
+   'Gestor de Recepci├│n')
+TRIGGER trg_mov_del ON movimientos: INSERT INTO `auditoria`
+  (`entidad`, `idEntidad`, `usuario`, `vigilador`, `operacion`, `evento`, `modulo`)
+VALUES
+  ('movimientos', OLD.`id`, OLD.`usuario_app`, OLD.`vigilador`, 'delete',
+   'Eliminaci├│n de registro de movimiento',
+   'Gestor de Recepci├│n')
