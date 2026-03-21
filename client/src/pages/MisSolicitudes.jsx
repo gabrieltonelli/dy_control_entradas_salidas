@@ -19,24 +19,30 @@ const ESTADO_SOLICITADO = 4;
 const ESTADO_RECHAZADO = 5;
 const ESTADO_ANULADO = 6;
 
-// Extrae la fecha YYYY-MM-DD del campo datetime sin conversión de timezone
+// Extrae la fecha YYYY-MM-DD del campo datetime usando el timezone local
 const extraerFechaStr = (fechaHoraRegistro) => {
     if (!fechaHoraRegistro) return null;
-    return String(fechaHoraRegistro).substring(0, 10); // "YYYY-MM-DD"
+    const s = String(fechaHoraRegistro);
+    if (!s.includes('T')) return s.substring(0, 10); // Si no es ISO, devolver directo
+    
+    const date = new Date(fechaHoraRegistro);
+    if (isNaN(date.getTime())) return s.substring(0, 10);
+    
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
-// Extrae la hora HH:mm del campo datetime
+// Extrae la hora HH:mm del campo datetime usando el timezone local
 const extraerHoraStr = (fechaHoraRegistro) => {
     if (!fechaHoraRegistro) return null;
-    // Si es un objeto Date o un string ISO, buscamos la parte de la hora
     const s = String(fechaHoraRegistro);
-    if (s.includes('T')) {
-        return s.split('T')[1].substring(0, 5);
+    if (!s.includes('T') && s.includes(' ')) {
+        return s.split(' ')[1].substring(0, 5); // Fallback para strings SQL puros
     }
-    if (s.includes(' ')) {
-        return s.split(' ')[1].substring(0, 5);
-    }
-    return null;
+    
+    const date = new Date(fechaHoraRegistro);
+    if (isNaN(date.getTime())) return null;
+    
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
 // Detecta si un movimiento Pendiente cuya fecha ya pasó (vencida visualmente)
@@ -134,8 +140,8 @@ const MovimientoCard = ({ mov, esAutorizador, onApprove, onReject, onCancel, onS
                     <span><User size={13} /> {mov.persona_interna_nombre || mov.personaInterna}</span>
                     <span><MapPin size={13} /> {mov.origen_nombre} → {mov.destino_nombre}</span>
                     <span><Calendar size={13} /> {fecha}</span>
-                    {mov.idEstado === ESTADO_COMPLETADO && extraerHoraStr(mov.fechaHoraRegistro) && (
-                        <span><Clock size={13} /> {extraerHoraStr(mov.fechaHoraRegistro)} hs</span>
+                    {mov.idEstado === ESTADO_COMPLETADO && extraerHoraStr(mov.fechaHoraCompletado || mov.fechaHoraRegistro) && (
+                        <span><Clock size={13} /> {extraerHoraStr(mov.fechaHoraCompletado || mov.fechaHoraRegistro)} hs</span>
                     )}
                 </div>
             </div>

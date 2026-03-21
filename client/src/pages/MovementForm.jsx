@@ -111,7 +111,7 @@ const MovementForm = () => {
                 // Normalizar nombres de legajos (Capitalize)
                 // AXIOS resp.data => { data: [], pagination: {} }
                 const legajosArray = l.data.data || (Array.isArray(l.data) ? l.data : []);
-                
+
                 const normalizedLegajos = legajosArray.map(item => ({
                     ...item,
                     apellido_nombre: capitalizeName(item.apellido_nombre)
@@ -178,12 +178,12 @@ const MovementForm = () => {
 
         setFormData(prev => {
             const nextMov = { ...prev.movement, [name]: val };
-            
+
             // Si desactiva recurrencia, limpiar fecha de vencimiento
             if (name === 'esRecurrente' && !val) {
                 nextMov.vencimientoRecurrencias = '';
             }
-            
+
             return {
                 ...prev,
                 movement: nextMov
@@ -458,9 +458,9 @@ const MovementForm = () => {
                         />
                     </div>
 
-                    { (hasRole(2) || userIsAutorizador) && (
-                        <div style={{ 
-                            gridColumn: '1 / -1', 
+                    {(hasRole(2) || userIsAutorizador) && (
+                        <div style={{
+                            gridColumn: '1 / -1',
                             marginTop: '10px',
                             display: 'grid',
                             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -468,7 +468,7 @@ const MovementForm = () => {
                             alignItems: 'start'
                         }}>
                             <Switch
-                                label="Autorización Recurrente"
+                                label="Recurrencia"
                                 name="esRecurrente"
                                 checked={formData.movement.esRecurrente}
                                 onChange={handleMovChange}
@@ -477,7 +477,7 @@ const MovementForm = () => {
                                 disabled={isSubmitting}
                             />
 
-                             <div className="card-anim" style={{ opacity: formData.movement.esRecurrente ? 1 : 0.6, transition: 'opacity 0.2s' }}>
+                            <div className="card-anim" style={{ opacity: formData.movement.esRecurrente ? 1 : 0.6, transition: 'opacity 0.2s' }}>
                                 <DatePicker
                                     label="Vencimiento de Recurrencia"
                                     name="vencimientoRecurrencias"
@@ -487,8 +487,8 @@ const MovementForm = () => {
                                     disabled={!formData.movement.esRecurrente || isSubmitting}
                                 />
                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                    {formData.movement.esRecurrente 
-                                        ? "Opcional. Deja vacío para recurrencia indefinida." 
+                                    {formData.movement.esRecurrente
+                                        ? "Opcional. Deja vacío para recurrencia indefinida."
                                         : "Activa la recurrencia para establecer un vencimiento."}
                                 </p>
                             </div>
