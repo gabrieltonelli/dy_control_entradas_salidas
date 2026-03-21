@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Sincronizar la zona horaria de Node con la de la Base de Datos
@@ -12,11 +13,24 @@ if (process.env.DB_TIMEZONE) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// rate-limit: Protección Anti-DOS (Máximo 250 reqs / IP cada 15 min)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 250, 
+    message: { error: 'Demasiadas solicitudes desde esta IP, por favor intenta en 15 minutos.' }
+});
+
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
-app.use(express.json());
+
+// Límite de carga útil HTTP de 2MB para evitar bloqueos por memoria (DOS)
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// Aplicar rate-limit a todas las rutas de la API
+app.use('/api', limiter);
 
 // Routes
 const masterRoutes = require('./routes/masters');
