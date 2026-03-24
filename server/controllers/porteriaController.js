@@ -277,12 +277,12 @@ exports.getHistorial = async (req, res) => {
         let whereExtra = ' WHERE 1=1'; // Base WHERE para ir concatenando
         const params = [];
 
-        // 2. Filtro de ubicación (solo si NO es Sysadmin)
-        if (userRole < 100) {
+        // 2. Filtro de ubicación (solo si NO es Sysadmin ni RRHH)
+        if (userRole < 2) {
             const lugarIds = await getLugaresDePorteria(email);
             if (lugarIds.length === 0) {
-                // Si no es portero y no es sysadmin, no debería ver nada acá
-                return res.json({ data: [], totalPages: 0 });
+                // Si no es portero, no debería ver nada acá
+                return res.json({ movements: [], pagination: { total: 0, page: 1, pageSize: 50, totalPages: 0 } });
             }
             // Ve movimientos según dirección: saliente en origen, entrante en destino
             whereExtra += ` AND (
