@@ -131,6 +131,7 @@ El sistema permite habilitar o deshabilitar ciertas funciones mediante variables
 - `VITE_ENABLE_QR`: (true/false) Habilita o deshabilita la generación y escaneo de códigos QR para autorizaciones.
 - `VITE_MOCK_AUTH`: (true/false) **Modo Bypass**. Si es `true`, el sistema ignora el login real y entra como el usuario definido en `VITE_MOCK_AUTH_EMAIL`.
 - `VITE_MOCK_AUTH_EMAIL`: El email del usuario a simular (ej: `gabrielt@donyeyo.com.ar`). **Requerido** si `VITE_MOCK_AUTH=true`.
+- `VITE_ENABLE_VERSION_CHECK`: (true/false) Habilita o deshabilita el aviso de nueva versión contra el servidor. **Por defecto es false** para evitar bucles durante el desarrollo local.
 
 > [!WARNING]
 > El modo Mock Auth solo funciona en entorno de desarrollo (`npm run dev`). Si `VITE_MOCK_AUTH=true` pero no se define un email, el sistema mostrará una alerta y no permitirá el ingreso.
@@ -321,7 +322,22 @@ El sistema está configurado como una **Progressive Web App**, lo que permite in
 | Assets estáticos (JS, CSS, íconos) | **Cache First** (pre-caché al instalar) | Permanente hasta nueva versión |
 | Llamadas a `/api/*` | **Network First** | 24 hs · máx. 100 entradas |
 
-El Service Worker se **actualiza automáticamente** (`registerType: 'autoUpdate'`): cuando se despliega una nueva versión, el SW se reemplaza en segundo plano y recarga la app.
+El Service Worker se **actualiza automáticamente** (`registerType: 'prompt'`): cuando se despliega una nueva versión, el SW se reemplaza en segundo plano y recarga la app.
+
+## 🔄 Actualizaciones del Sistema
+
+A partir de la v1.0.10, el sistema incluye un **Chequeo de Versión Forzoso** que compara la versión del cliente con la del servidor mediante una API dedicada (`/api/system/version`).
+
+- Si detecta que estás en una versión atrasada, verás un **modal bloqueante**.
+- Al presionar **Actualizar**, la app intentará desregistrar el caché antiguo para forzar la carga de la última versión.
+
+### ¿Cómo actualizar en caso de errores?
+
+| Dispositivo | Método |
+|---|---|
+| **PWA (Mobile/Desktop)** | Usar el botón de actualización en el modal. Si persiste, cerrar y volver a abrir la app. |
+| **Navegador Desktop (vía web)** | Usar <kbd>Ctrl</kbd> + <kbd>F5</kbd> (limpiar caché y recargar). |
+| **Navegador Mobile** | Arrastrar hacia abajo para refrescar. Si no funciona, cerrar la pestaña y abrir de nuevo. |
 
 ### Build con soporte PWA
 

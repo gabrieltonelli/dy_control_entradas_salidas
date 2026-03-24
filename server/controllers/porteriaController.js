@@ -207,13 +207,13 @@ exports.completeMovimiento = async (req, res) => {
         await connection.query(
             `UPDATE movimientos
              SET idEstado = ?,
-                 fechaHoraRegistro = ?,
-                 fechaHoraCompletado = NULL,
+                 fechaHoraRegistro = ?,   -- Mantenemos la actualización de fechaHoraRegistro para el orden del historial
+                 fechaHoraCompletado = ?, -- Guardamos la hora real de completado
                  observacionPorteria = ?,
                  vigilador = ?,
                  usuario_app = ?
              WHERE id = ?`,
-            [ESTADO_COMPLETADO, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
+            [ESTADO_COMPLETADO, fechaHoraCompletado, fechaHoraCompletado, observacionPorteria || null, vigilador || null, email, id]
         );
 
         // Lógica de Autorización Recurrente
@@ -409,17 +409,17 @@ exports.scanQR = async (req, res) => {
                 return res.status(404).json({ error: 'La autorización no es válida para hoy o ya fue procesada' });
             }
 
-            // 3. Completar usando hora exacta de Argentina
+            const now = getNowArgentina();
             await connection.query(
                 `UPDATE movimientos
                  SET idEstado = ?,
                      fechaHoraRegistro = ?,
-                     fechaHoraCompletado = NULL,
+                     fechaHoraCompletado = ?,
                      observacionPorteria = CONCAT(COALESCE(observacionPorteria, ''), ' [Completado vía QR]'),
                      vigilador = ?,
                      usuario_app = ?
                  WHERE id = ?`,
-                [ESTADO_COMPLETADO, getNowArgentina(), vigilador || 'SISTEMA QR', email, id]
+                [ESTADO_COMPLETADO, now, now, vigilador || 'SISTEMA QR', email, id]
             );
 
             // Lógica de Autorización Recurrente

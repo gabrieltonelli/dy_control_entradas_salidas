@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../config/AuthContext";
 import { Menu, Sun, Moon, LogOut, User, MessageSquarePlus } from 'lucide-react';
 import logo from '../assets/logo-don-yeyo-png-sin-fondo.png';
+import pkg from '../../package.json';
+const appVersion = pkg.version;
 
 const Header = ({ onMenuClick, theme, toggleTheme }) => {
     const { user, logout } = useAuth();
@@ -24,11 +26,17 @@ const Header = ({ onMenuClick, theme, toggleTheme }) => {
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src={logo} alt="Don Yeyo" style={{ height: '36px', objectFit: 'contain' }} />
-                    <h2 className="desktop-only" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800 }}>
-                        Control de Ingresos y Egresos
+                    <h2 className="desktop-only" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        Control de Ingresos y Egresos 
+                        <span style={{ fontSize: '0.65rem', fontWeight: 500, opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                            v{appVersion}
+                        </span>
                     </h2>
-                    <h2 className="mobile-only" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800 }}>
-                        CIE
+                    <h2 className="mobile-only" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        CIE 
+                        <span style={{ fontSize: '0.65rem', fontWeight: 500, opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                            v{appVersion}
+                        </span>
                     </h2>
                 </div>
             </div>

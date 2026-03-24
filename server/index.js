@@ -13,10 +13,10 @@ if (process.env.DB_TIMEZONE) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// rate-limit: Protección Anti-DOS (Máximo 250 reqs / IP cada 15 min)
+// rate-limit: Protección Anti-DOS (Máximo 1000 reqs / IP cada 15 min)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 250, 
+    max: 1000, 
     message: { error: 'Demasiadas solicitudes desde esta IP, por favor intenta en 15 minutos.' }
 });
 
@@ -38,12 +38,14 @@ const movementRoutes = require('./routes/movements');
 const porteriaRoutes = require('./routes/porteria');
 const notificationRoutes = require('./routes/notifications');
 const supportRoutes = require('./routes/support');
+const systemRoutes = require('./routes/system');
 
 app.use('/api/masters', masterRoutes);
 app.use('/api/movements', movementRoutes);
 app.use('/api/porteria', porteriaRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/system', systemRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Control de Ingresos y Egresos API' });

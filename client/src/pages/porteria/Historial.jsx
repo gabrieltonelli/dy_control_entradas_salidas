@@ -11,12 +11,35 @@ function nDaysAgo(n) {
     return d.toISOString().slice(0, 10);
 }
 
+// Extrae la fecha YYYY-MM-DD del campo datetime usando el timezone local
+const extraerFechaStr = (fechaHoraRegistro) => {
+    if (!fechaHoraRegistro) return null;
+    const s = String(fechaHoraRegistro);
+    if (!s.includes('T')) return s.substring(0, 10);
+    const date = new Date(fechaHoraRegistro);
+    if (isNaN(date.getTime())) return s.substring(0, 10);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+// Extrae la hora HH:mm del campo datetime usando el timezone local
+const extraerHoraStr = (fechaHoraRegistro) => {
+    if (!fechaHoraRegistro) return null;
+    const s = String(fechaHoraRegistro);
+    if (!s.includes('T') && s.includes(' ')) {
+        return s.split(' ')[1].substring(0, 5);
+    }
+    const date = new Date(fechaHoraRegistro);
+    if (isNaN(date.getTime())) return null;
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
 // Un movimiento es "vencido visual" si está Pendiente y su fecha de registro ya pasó
 function isVencidoVisual(m) {
     if (m.estado_nombre !== 'Pendiente') return false;
-    const fecha = new Date(m.fechaHoraRegistro);
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    return fecha < hoy;
+    const movDateStr = extraerFechaStr(m.fechaHoraRegistro);
+    if (!movDateStr) return false;
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    return movDateStr < todayStr;
 }
 
 const ESTADOS = [
@@ -42,24 +65,14 @@ const ESTADO_COLORS = {
 
 function formatFecha(str, conHora = false) {
     if (!str) return '—';
-
-    // Extraer solo los números de fecha y hora usando regex
-    const match = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})[T ](\d{1,2}):(\d{1,2})/);
-
-    if (match) {
-        const [_, y, m, d, hh, mm] = match;
-        const res = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
-        return conHora ? `${res} ${hh.padStart(2, '0')}:${mm.padStart(2, '0')}` : res;
+    const fecha = extraerFechaStr(str);
+    if (!fecha) return str;
+    const dmy = fecha.split('-').reverse().join('/');
+    if (conHora) {
+        const hora = extraerHoraStr(str);
+        return hora ? `${dmy} ${hora}` : dmy;
     }
-
-    // Si no tiene hora, intentar solo fecha
-    const dateMatch = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-    if (dateMatch) {
-        const [_, y, m, d] = dateMatch;
-        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
-    }
-
-    return str;
+    return dmy;
 }
 
 function Historial({ porteria }) {
@@ -125,7 +138,7 @@ function Historial({ porteria }) {
 
             const rows = allRows.map(m => ({
                 'ID': m.id,
-                'Fecha': formatFecha(m.fechaHoraRegistro, m.estado_nombre === 'Completado'),
+                'Fecha': formatFecha(m.fechaHoraCompletado || m.fechaHoraRegistro, m.estado_nombre === 'Completado'),
                 'Tipo': m.tipo_nombre,
                 'Persona': m.persona_interna_nombre || m.idPersonaExterna || '',
                 'Origen': m.origen_nombre,
@@ -211,7 +224,7 @@ function Historial({ porteria }) {
                                     const colors = ESTADO_COLORS[estadoLabel] || ESTADO_COLORS[m.estado_nombre] || {};
                                     return (
                                         <tr key={m.id}>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraRegistro, m.estado_nombre === 'Completado')}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{formatFecha(m.fechaHoraCompletado || m.fechaHoraRegistro, m.estado_nombre === 'Completado')}</td>
                                             <td>{m.persona_interna_nombre || m.idPersonaExterna || '—'}</td>
                                             <td>{m.tipo_nombre}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{m.motivo}</td>

@@ -14,7 +14,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Cache de la API
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.includes('/system/version'),
   new NetworkFirst({
     cacheName: 'api-cache',
   })

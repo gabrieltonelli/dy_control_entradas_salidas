@@ -33,4 +33,8 @@ export const SupportService = {
     getVideos: () => api.get('/support/videos'),
 };
 
+export const SystemService = {
+    getVersion: (v) => api.get(`/system/version${v ? `?v=${v}` : ''}`),
+};
+
 export default api;

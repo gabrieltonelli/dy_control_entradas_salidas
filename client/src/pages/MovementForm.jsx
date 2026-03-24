@@ -91,7 +91,13 @@ const MovementForm = () => {
                     } catch (err) {
                         console.error('User legajo lookup error:', err);
                         const status = err.response?.status;
-                        setAuthModalType(status === 404 ? 'not_found' : 'server_error');
+                        if (status === 429) {
+                            setAuthModalType('rate_limit');
+                        } else if (status === 404) {
+                            setAuthModalType('not_found');
+                        } else {
+                            setAuthModalType('server_error');
+                        }
                         setShowAuthModal(true);
                     } finally {
                         setIsVerifyingLegajo(false);
@@ -915,10 +921,22 @@ const MovementForm = () => {
                 title="Acceso Restringido"
                 type="error"
                 message={
-                    <div>
-                        <p>No se pudo encontrar un legajo asociado a tu cuenta (<strong>{currentUser.username || currentUser.email}</strong>).</p>
-                        <p>Por favor, contactá con el Administrador del Sistema para regularizar tu situación antes de generar solicitudes.</p>
-                    </div>
+                    authModalType === 'rate_limit' ? (
+                        <div>
+                            <p><strong>⚠️ Demasiadas solicitudes detectadas.</strong></p>
+                            <p>Tu acceso ha sido bloqueado temporalmente por el servidor por seguridad. Por favor, aguardá unos minutos y refrescá la página para continuar.</p>
+                        </div>
+                    ) : authModalType === 'not_found' ? (
+                        <div>
+                            <p>No se pudo encontrar un legajo asociado a tu cuenta (<strong>{currentUser.username || currentUser.email}</strong>).</p>
+                            <p>Por favor, contactá con el Administrador del Sistema para regularizar tu situación antes de generar solicitudes.</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <p>Ocurrió un error al verificar tus credenciales con el servidor.</p>
+                            <p>Por favor, verificá tu conexión a internet o intentá nuevamente en unos instantes.</p>
+                        </div>
+                    )
                 }
                 confirmLabel="Entendido"
                 showCancel={false}
